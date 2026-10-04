@@ -86,7 +86,7 @@ export default function App() {
     context: string;
   } | null>(null);
   const [isCompact, setIsCompact] = useState(
-    () => window.matchMedia("(max-width: 900px)").matches,
+    () => window.matchMedia("(max-width: 600px)").matches,
   );
   const [previewExpanded, setPreviewExpanded] = useState(!isCompact);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -98,7 +98,7 @@ export default function App() {
   const currentData = !invalidBudget && resultKey === requestKey ? data : null;
 
   useEffect(() => {
-    const viewport = window.matchMedia("(max-width: 900px)");
+    const viewport = window.matchMedia("(max-width: 600px)");
     const updateViewport = () => {
       setIsCompact(viewport.matches);
       setPreviewExpanded(!viewport.matches);
