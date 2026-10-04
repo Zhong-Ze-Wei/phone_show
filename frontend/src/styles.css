@@ -214,6 +214,8 @@ svg {
 }
 .catalog-column {
   min-width: 0;
+  container-name: phone-catalog;
+  container-type: inline-size;
 }
 .filters {
   padding: 19px 24px 13px;
@@ -2124,7 +2126,7 @@ svg {
     display: none;
   }
 }
-@media (max-width: 800px) {
+@media (max-width: 600px) {
   .comparison-rail {
     position: static;
     min-height: 0;
@@ -2389,7 +2391,7 @@ svg {
     font-size: 10px;
   }
 }
-@media (max-width: 900px) {
+@media (max-width: 600px) {
   .workbench {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2452,7 +2454,7 @@ svg {
     margin-bottom: 0;
   }
 }
-@media (max-width: 600px) {
+@media (max-width: 540px) {
   .phone-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 16px;
@@ -2768,7 +2770,7 @@ svg {
   height: 100%;
   padding: 0 15px calc(12px + env(safe-area-inset-bottom));
 }
-@media (min-width: 901px) {
+@media (min-width: 601px) {
   .workbench.chat-open {
     grid-template-columns: minmax(330px, 1fr) minmax(0, 1.94fr);
   }
@@ -2877,7 +2879,7 @@ svg {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (max-width: 900px) {
+@media (max-width: 600px) {
   .chat-header,
   .chat-toolbar,
   .chat-current-context,
@@ -2959,6 +2961,175 @@ svg {
   margin: 15px 0;
   font-size: 12px;
   line-height: 1.9;
+}
+/* 窄电脑窗口按图库宽度排版，右栏保留预览和可投放区域。 */
+@media (min-width: 541px) {
+  @container phone-catalog (max-width: 1030px) {
+    .filters {
+      padding: 14px 12px 10px;
+    }
+    .results {
+      padding: 16px 12px 20px;
+    }
+    .phone-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .phone-picture {
+      padding: 12px;
+    }
+    .phone-card-content {
+      padding: 9px;
+    }
+    .phone-card h2 {
+      font-size: 12px;
+      line-height: 18px;
+      min-height: 36px;
+    }
+    .phone-price {
+      font-size: 16px;
+    }
+    .card-identity {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .phone-brand,
+    .quick-specs > span,
+    .card-detail,
+    .compare-button {
+      font-size: 11px;
+    }
+    .quick-specs {
+      flex-wrap: wrap;
+      gap: 4px 8px;
+    }
+    .usage-match-reference {
+      font-size: 10px;
+    }
+  }
+  @container phone-catalog (min-width: 620px) and (max-width: 1030px) {
+    .phone-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+}
+@media (min-width: 601px) and (max-width: 1370px) {
+  .workbench {
+    grid-template-columns: minmax(0, 1fr) clamp(240px, 28vw, 340px);
+  }
+  .workbench.chat-open {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 1.1fr);
+  }
+  .comparison-rail {
+    padding: 16px 12px;
+  }
+  .chat-open .filters,
+  .chat-open .results {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .chat-open .comparison-rail {
+    padding: 10px 12px 12px;
+  }
+  .chat-toolbar,
+  .chat-current-context {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chat-persona select {
+    width: 112px;
+  }
+  .chat-session-actions button {
+    padding: 7px 8px;
+  }
+  .chat-open .comparison-heading {
+    min-height: 36px;
+    padding-right: 48px;
+  }
+  .chat-open .ai-launcher {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    bottom: auto;
+    left: auto;
+    width: 36px;
+    height: 36px;
+    font-size: 24px;
+  }
+}
+@media (min-width: 601px) {
+  @container phone-catalog (max-width: 439px) {
+    .chat-open .phone-grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .chat-open .phone-card {
+      display: grid;
+      grid-template-columns: minmax(105px, 0.8fr) minmax(0, 1fr);
+    }
+    .chat-open .card-image-wrap {
+      aspect-ratio: auto;
+      border-bottom: 0;
+      border-right: 1px solid #303b4b;
+    }
+    .chat-open .image-selection-label {
+      bottom: 7px;
+      left: 7px;
+      padding: 3px;
+    }
+    .chat-open .save-button {
+      top: 7px;
+      right: 7px;
+      width: 26px;
+      height: 26px;
+    }
+    .chat-open .phone-brand small,
+    .chat-open .usage-match-reference {
+      display: none;
+    }
+    .chat-open .card-actions {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+  }
+  @container phone-catalog (min-width: 440px) {
+    .chat-open .phone-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+}
+@media (min-width: 601px) and (max-width: 1024px) {
+  .selected-phone-panel > summary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+  }
+  .selected-phone-panel > summary > span:first-child {
+    display: contents;
+  }
+  .selected-phone-panel > summary small {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+  .selected-phone-panel > summary strong {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .preview-collapse-label {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .preview-specs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .preview-specs > div:last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 601px) and (max-width: 720px) {
+  .filter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .budget-input-note {
   color: #94abc4;
