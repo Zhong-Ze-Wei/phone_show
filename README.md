@@ -1,8 +1,12 @@
 # 挑一部 · 手机选购工作台
 
+[在线产品介绍与交互演示](https://zhong-ze-wei.github.io/phone_show-demo/) · [本地运行](#直接运行) · [清洗策略](docs/CLEANING_STRATEGY.md)
+
 输入自己的预算与用途，找到适合的手机：看大图和规格，收藏、拖拽对比，再让 **DeepSeek-V4.1-Flash** 解释取舍。
 
 这是使用 **Python + uv、SQLite、FastAPI、React** 的本地选购工作台。筛选与对比无需模型；采集品牌官网与 ZOL 的公开资料，自动清洗并保留字段来源。首次预算留空，推荐以用途为主，近一年机型与主流品牌适度加分。
+
+在线介绍页含真实界面截图、动效和可操作的预算／用途、三机对比、顾问录制演示，手机上也能打开。演示使用 2026-10-04 的真实数据快照，不调用模型；完整筛选与连续聊天需启动本地工作台。[展示页源码](site/)与[发布维护说明](docs/PRODUCT_SITE.md)均随项目保存。
 
 ![桌面选购工作台：左侧大图图库，右侧预览与对比](docs/ui-reference/image-gallery-desktop.png)
 
@@ -125,6 +129,7 @@ uv run phone-assistant status
 | 路径 | 用途 |
 | --- | --- |
 | `frontend/` | React 页面、前端测试与构建配置 |
+| [`site/`](site/) | 独立静态产品介绍页、真实截图与交互演示，发布至 GitHub Pages |
 | `phone_assistant/server.py` | 本地 API 与页面服务 |
 | `phone_assistant/crawler.py` | 列表、型号和参数页面解析 |
 | `phone_assistant/pipeline.py` | 自动采集、检查点、失败与覆盖报告 |
@@ -172,6 +177,7 @@ uv build
 | [推荐策略](docs/RECOMMENDATION_STRATEGY.md) | 硬筛选、显式预算、权重与二手机型参考边界 |
 | [AI 顾问](docs/AI_CHAT.md) | 五角色、真实流式聊天、来源与本地保存规则 |
 | [图片流程](docs/IMAGE_PIPELINE.md) · [界面恢复](docs/UI_RESTORE.md) | 主图修复、原版截图依据与当前交互验收 |
+| [产品介绍页](docs/PRODUCT_SITE.md) | 在线演示入口、快照与录制边界、GitHub Pages 发布维护 |
 | [架构](docs/ARCHITECTURE.md) · [交付验证](docs/VALIDATION.md) | 模块职责、数据结果与测试证据 |
 
 ## 保留的历史资料与财报脚本

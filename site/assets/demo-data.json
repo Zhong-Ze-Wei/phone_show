@@ -1,0 +1,1619 @@
+{
+  "snapshot_date": "2026-10-04",
+  "note": "静态交互演示，候选与参考报价来自该日真实规范资料；不进行实时推荐或调用AI。",
+  "budgets": [
+    3000,
+    4000,
+    8000
+  ],
+  "priorities": [
+    {
+      "id": "daily",
+      "label": "日常使用"
+    },
+    {
+      "id": "gaming",
+      "label": "游戏"
+    },
+    {
+      "id": "camera",
+      "label": "拍照"
+    },
+    {
+      "id": "battery",
+      "label": "续航"
+    }
+  ],
+  "cases": {
+    "3000:daily": [
+      {
+        "id": "2155784",
+        "name": "Redmi Turbo 5 MAX(16GB/512GB)",
+        "brand": "红米",
+        "price": 2799.0,
+        "image_url": "https://2d.zol-img.com.cn/product/274_320x240/165/cek9Jkc5GEfRc.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 9000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-01-29",
+        "recommendation_score": 85.42,
+        "ranking_reasons": [
+          "需求匹配 93 分，是推荐的主要依据",
+          "预算余量 6.7 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "9000mAh 电池，100W 充电",
+          "联发科 天玑 9500S · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 90,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "联发科 天玑 9500S",
+        "price_fetched_at": "2026-10-03T07:48:33.940958+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2156/2155784/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2154428",
+        "name": "iQOO Z11 Turbo(12GB/512GB)",
+        "brand": "iQOO",
+        "price": 2899.0,
+        "image_url": "https://2e.zol-img.com.cn/product/274_280x210/936/ceoiSkNbJiiqg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2154428.shtml",
+        "fetched_at": "2026-10-03T07:52:51.782810+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 7600.0,
+        "storage_gb": 512.0,
+        "ram_gb": 12.0,
+        "os": "OriginOS 6",
+        "release_date": "2026-01-15",
+        "recommendation_score": 83.59,
+        "ranking_reasons": [
+          "需求匹配 91 分，是推荐的主要依据",
+          "预算余量 3.4 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7600mAh 电池，100W 充电",
+          "高通 骁龙8 Gen5 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 82,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T07:48:33.030784+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10922911_1.html",
+        "specs_fetched_at": "2026-10-03T07:52:51.782810+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2155/2154428/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2153078",
+        "name": "一加Turbo 6(12GB/512GB)",
+        "brand": "一加",
+        "price": 2799.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_320x240/406/ceR7H2PJa97Y.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2153078.shtml",
+        "fetched_at": "2026-10-03T07:52:49.453261+00:00",
+        "display_inches": 6.78,
+        "battery_mah": 9000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 12.0,
+        "os": "ColorOS 16",
+        "release_date": "2026-01-08",
+        "recommendation_score": 82.42,
+        "ranking_reasons": [
+          "需求匹配 89 分，是推荐的主要依据",
+          "预算余量 6.7 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "9000mAh 电池，80W 充电",
+          "高通 骁龙 8s Gen4 风驰版 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 82,
+          "camera": 65,
+          "battery": 88
+        },
+        "chipset": "高通 骁龙 8s Gen4 风驰版",
+        "price_fetched_at": "2026-10-03T07:48:29.544349+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2153078.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:49.453261+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2154/2153078/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "3000:gaming": [
+      {
+        "id": "2155784",
+        "name": "Redmi Turbo 5 MAX(16GB/512GB)",
+        "brand": "红米",
+        "price": 2799.0,
+        "image_url": "https://2d.zol-img.com.cn/product/274_320x240/165/cek9Jkc5GEfRc.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 9000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-01-29",
+        "recommendation_score": 82.42,
+        "ranking_reasons": [
+          "需求匹配 89 分，是推荐的主要依据",
+          "预算余量 6.7 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "9000mAh 电池，100W 充电",
+          "联发科 天玑 9500S · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 90,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "联发科 天玑 9500S",
+        "price_fetched_at": "2026-10-03T07:48:33.940958+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2156/2155784/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2129170",
+        "name": "真我Neo7 Turbo(16GB/512GB)",
+        "brand": "realme",
+        "price": 2699.0,
+        "image_url": "https://2f.zol-img.com.cn/product/272_320x240/403/cejBcKRPrdPY.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2129170.shtml",
+        "fetched_at": "2026-10-03T08:05:45.314673+00:00",
+        "display_inches": 6.8,
+        "battery_mah": 7200.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "realme UI 6.0",
+        "release_date": "2025-05-31",
+        "recommendation_score": 81.5,
+        "ranking_reasons": [
+          "需求匹配 94 分，是推荐的主要依据",
+          "预算余量 10.0 分，依据来源参考报价",
+          "上市在一至两年内，少量加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7200mAh 电池，100W 充电",
+          "联发科 天玑 9400e · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 65,
+          "battery": 96
+        },
+        "chipset": "联发科 天玑 9400e",
+        "price_fetched_at": "2026-10-03T08:03:36.830800+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2129170.shtml",
+        "specs_fetched_at": "2026-10-03T08:05:45.314673+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2130/2129170/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2153077",
+        "name": "一加Turbo 6(16GB/256GB)",
+        "brand": "一加",
+        "price": 2599.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_280x210/406/ceR7H2PJa97Y.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2153077.shtml",
+        "fetched_at": "2026-10-03T07:52:48.200818+00:00",
+        "display_inches": 6.78,
+        "battery_mah": 9000.0,
+        "storage_gb": 256.0,
+        "ram_gb": 16.0,
+        "os": "ColorOS 16",
+        "release_date": "2026-01-08",
+        "recommendation_score": 80.84,
+        "ranking_reasons": [
+          "需求匹配 86 分，是推荐的主要依据",
+          "预算余量 13.4 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "9000mAh 电池，80W 充电",
+          "高通 骁龙 8s Gen4 风驰版 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 81,
+          "gaming": 93,
+          "camera": 65,
+          "battery": 88
+        },
+        "chipset": "高通 骁龙 8s Gen4 风驰版",
+        "price_fetched_at": "2026-10-03T07:48:31.178289+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10922592_1.html",
+        "specs_fetched_at": "2026-10-03T07:52:48.200818+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2154/2153077/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "3000:camera": [
+      {
+        "id": "2154046",
+        "name": "真我Neo8(12GB+256GB)",
+        "brand": "realme",
+        "price": 2599.0,
+        "image_url": "https://2f.zol-img.com.cn/product/274_80x60/947/ceT7SjeD6UC6c.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2154046.shtml",
+        "fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "display_inches": 6.78,
+        "battery_mah": 8000.0,
+        "storage_gb": 256.0,
+        "ram_gb": 12.0,
+        "os": "realme UI 7.0",
+        "release_date": "2026-01-22",
+        "recommendation_score": 85.34,
+        "ranking_reasons": [
+          "需求匹配 92 分，是推荐的主要依据",
+          "预算余量 13.4 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "8000mAh 电池，80W 充电",
+          "高通 骁龙8 Gen5 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 81,
+          "gaming": 82,
+          "camera": 100,
+          "battery": 88
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2151921",
+        "name": "华为nova 15(512GB)",
+        "brand": "华为",
+        "price": 2999.0,
+        "image_url": "https://2b.zol-img.com.cn/product/274_280x210/379/cesQexCf9BosI.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2151921.shtml",
+        "fetched_at": "2026-10-03T07:42:26.958227+00:00",
+        "display_inches": 6.7,
+        "battery_mah": 6000.0,
+        "storage_gb": 512.0,
+        "ram_gb": null,
+        "os": "HarmonyOS 6.0",
+        "release_date": "2025-12-22",
+        "recommendation_score": 83.25,
+        "ranking_reasons": [
+          "需求匹配 91 分，是推荐的主要依据",
+          "预算余量 0.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "6000mAh 电池，100W 充电",
+          "海思 麒麟 8020"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 92,
+          "gaming": 71,
+          "camera": 100,
+          "battery": 81
+        },
+        "chipset": "海思 麒麟 8020",
+        "price_fetched_at": "2026-10-03T07:40:31.443454+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10922119_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:26.958227+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2152/2151921/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2147408",
+        "name": "OPPO Reno15(12GB/256GB)",
+        "brand": "OPPO",
+        "price": 2999.0,
+        "image_url": "https://2d.zol-img.com.cn/product/273_320x240/749/cebABfkBHl86A.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2147408.shtml",
+        "fetched_at": "2026-10-03T07:42:16.490005+00:00",
+        "display_inches": 6.32,
+        "battery_mah": 6200.0,
+        "storage_gb": 256.0,
+        "ram_gb": 12.0,
+        "os": "ColorOS 16.0",
+        "release_date": "2025-11-17",
+        "recommendation_score": 80.25,
+        "ranking_reasons": [
+          "需求匹配 87 分，是推荐的主要依据",
+          "预算余量 0.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "6200mAh 电池，80W 充电",
+          "联发科 天玑8450 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 78,
+          "gaming": 73,
+          "camera": 100,
+          "battery": 72
+        },
+        "chipset": "联发科 天玑8450",
+        "price_fetched_at": "2026-10-03T07:40:20.906300+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2147408.shtml",
+        "specs_fetched_at": "2026-10-03T07:42:16.490005+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2148/2147408/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "3000:battery": [
+      {
+        "id": "2155784",
+        "name": "Redmi Turbo 5 MAX(16GB/512GB)",
+        "brand": "红米",
+        "price": 2799.0,
+        "image_url": "https://2d.zol-img.com.cn/product/274_320x240/165/cek9Jkc5GEfRc.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 9000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-01-29",
+        "recommendation_score": 85.42,
+        "ranking_reasons": [
+          "需求匹配 93 分，是推荐的主要依据",
+          "预算余量 6.7 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "9000mAh 电池，100W 充电",
+          "联发科 天玑 9500S · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 90,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "联发科 天玑 9500S",
+        "price_fetched_at": "2026-10-03T07:48:33.940958+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2156/2155784/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2154428",
+        "name": "iQOO Z11 Turbo(12GB/512GB)",
+        "brand": "iQOO",
+        "price": 2899.0,
+        "image_url": "https://2e.zol-img.com.cn/product/274_280x210/936/ceoiSkNbJiiqg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2154428.shtml",
+        "fetched_at": "2026-10-03T07:52:51.782810+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 7600.0,
+        "storage_gb": 512.0,
+        "ram_gb": 12.0,
+        "os": "OriginOS 6",
+        "release_date": "2026-01-15",
+        "recommendation_score": 83.59,
+        "ranking_reasons": [
+          "需求匹配 91 分，是推荐的主要依据",
+          "预算余量 3.4 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7600mAh 电池，100W 充电",
+          "高通 骁龙8 Gen5 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 82,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T07:48:33.030784+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10922911_1.html",
+        "specs_fetched_at": "2026-10-03T07:52:51.782810+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2155/2154428/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2154046",
+        "name": "真我Neo8(12GB+256GB)",
+        "brand": "realme",
+        "price": 2599.0,
+        "image_url": "https://2f.zol-img.com.cn/product/274_80x60/947/ceT7SjeD6UC6c.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2154046.shtml",
+        "fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "display_inches": 6.78,
+        "battery_mah": 8000.0,
+        "storage_gb": 256.0,
+        "ram_gb": 12.0,
+        "os": "realme UI 7.0",
+        "release_date": "2026-01-22",
+        "recommendation_score": 82.34,
+        "ranking_reasons": [
+          "需求匹配 88 分，是推荐的主要依据",
+          "预算余量 13.4 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "8000mAh 电池，80W 充电",
+          "高通 骁龙8 Gen5 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 81,
+          "gaming": 82,
+          "camera": 100,
+          "battery": 88
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "4000:daily": [
+      {
+        "id": "2155215",
+        "name": "真我Neo8(12GB/512GB)",
+        "brand": "realme",
+        "price": 3099.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_320x240/924/cet7Mfl8QhKUo.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155215.shtml",
+        "fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "display_inches": 6.78,
+        "battery_mah": 8000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 12.0,
+        "os": "realme UI 7.0",
+        "release_date": "2026-01-22",
+        "recommendation_score": 88.5,
+        "ranking_reasons": [
+          "需求匹配 95 分，是推荐的主要依据",
+          "预算余量 22.5 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "8000mAh 电池，80W 充电",
+          "高通 骁龙8 Gen5 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 82,
+          "camera": 100,
+          "battery": 88
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2155784",
+        "name": "Redmi Turbo 5 MAX(16GB/512GB)",
+        "brand": "红米",
+        "price": 2799.0,
+        "image_url": "https://2d.zol-img.com.cn/product/274_320x240/165/cek9Jkc5GEfRc.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 9000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-01-29",
+        "recommendation_score": 87.75,
+        "ranking_reasons": [
+          "需求匹配 93 分，是推荐的主要依据",
+          "预算余量 30.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "9000mAh 电池，100W 充电",
+          "联发科 天玑 9500S · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 90,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "联发科 天玑 9500S",
+        "price_fetched_at": "2026-10-03T07:48:33.940958+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2156/2155784/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2154429",
+        "name": "iQOO Z11 Turbo(16GB/512GB)",
+        "brand": "iQOO",
+        "price": 3199.0,
+        "image_url": "https://2e.zol-img.com.cn/product/274_320x240/936/ceoiSkNbJiiqg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2154429.shtml",
+        "fetched_at": "2026-10-03T07:52:52.708049+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 7600.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "OriginOS 6",
+        "release_date": "2026-01-15",
+        "recommendation_score": 86.75,
+        "ranking_reasons": [
+          "需求匹配 93 分，是推荐的主要依据",
+          "预算余量 20.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7600mAh 电池，100W 充电",
+          "高通 骁龙8 Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 93,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T07:48:31.481139+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2154429.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:52.708049+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2155/2154429/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "4000:gaming": [
+      {
+        "id": "2155218",
+        "name": "真我Neo8(16GB/1TB)",
+        "brand": "realme",
+        "price": 3899.0,
+        "image_url": "https://2f.zol-img.com.cn/product/274_320x240/947/ceT7SjeD6UC6c.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155218.shtml",
+        "fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "display_inches": 6.78,
+        "battery_mah": 8000.0,
+        "storage_gb": 1024.0,
+        "ram_gb": 16.0,
+        "os": "realme UI 7.0",
+        "release_date": "2026-01-22",
+        "recommendation_score": 86.5,
+        "ranking_reasons": [
+          "需求匹配 95 分，是推荐的主要依据",
+          "预算余量 2.5 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "8000mAh 电池，80W 充电",
+          "高通 骁龙8 Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 93,
+          "camera": 100,
+          "battery": 88
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2154429",
+        "name": "iQOO Z11 Turbo(16GB/512GB)",
+        "brand": "iQOO",
+        "price": 3199.0,
+        "image_url": "https://2e.zol-img.com.cn/product/274_320x240/936/ceoiSkNbJiiqg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2154429.shtml",
+        "fetched_at": "2026-10-03T07:52:52.708049+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 7600.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "OriginOS 6",
+        "release_date": "2026-01-15",
+        "recommendation_score": 85.25,
+        "ranking_reasons": [
+          "需求匹配 91 分，是推荐的主要依据",
+          "预算余量 20.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7600mAh 电池，100W 充电",
+          "高通 骁龙8 Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 93,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T07:48:31.481139+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2154429.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:52.708049+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2155/2154429/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2155784",
+        "name": "Redmi Turbo 5 MAX(16GB/512GB)",
+        "brand": "红米",
+        "price": 2799.0,
+        "image_url": "https://2d.zol-img.com.cn/product/274_320x240/165/cek9Jkc5GEfRc.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 9000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-01-29",
+        "recommendation_score": 84.75,
+        "ranking_reasons": [
+          "需求匹配 89 分，是推荐的主要依据",
+          "预算余量 30.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "9000mAh 电池，100W 充电",
+          "联发科 天玑 9500S · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 90,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "联发科 天玑 9500S",
+        "price_fetched_at": "2026-10-03T07:48:33.940958+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2156/2155784/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "4000:camera": [
+      {
+        "id": "2155215",
+        "name": "真我Neo8(12GB/512GB)",
+        "brand": "realme",
+        "price": 3099.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_320x240/924/cet7Mfl8QhKUo.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155215.shtml",
+        "fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "display_inches": 6.78,
+        "battery_mah": 8000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 12.0,
+        "os": "realme UI 7.0",
+        "release_date": "2026-01-22",
+        "recommendation_score": 88.5,
+        "ranking_reasons": [
+          "需求匹配 95 分，是推荐的主要依据",
+          "预算余量 22.5 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "8000mAh 电池，80W 充电",
+          "高通 骁龙8 Gen5 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 82,
+          "camera": 100,
+          "battery": 88
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:23:22.766295+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55535/param_10922977_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2173757",
+        "name": "Redmi K100 Pro(12GB/256GB)",
+        "brand": "红米",
+        "price": 3699.0,
+        "image_url": "https://2f.zol-img.com.cn/product/276_80x60/115/ceH5FUsPrL80U.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2173757.shtml",
+        "fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 8580.0,
+        "storage_gb": 256.0,
+        "ram_gb": 12.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-08-11",
+        "recommendation_score": 87.0,
+        "ranking_reasons": [
+          "需求匹配 95 分，是推荐的主要依据",
+          "预算余量 7.5 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "8580mAh 电池，100W 充电",
+          "高通 骁龙 8 Elite Gen5 V Series · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 81,
+          "gaming": 89,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙 8 Elite Gen5 V Series",
+        "price_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2151329",
+        "name": "荣耀WIN(12GB/256GB)",
+        "brand": "荣耀",
+        "price": 3999.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_320x240/542/cedEMqnriHlSY.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2151329.shtml",
+        "fetched_at": "2026-10-03T07:42:26.114202+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 10000.0,
+        "storage_gb": 256.0,
+        "ram_gb": 12.0,
+        "os": "MagicOS 10",
+        "release_date": "2025-12-26",
+        "recommendation_score": 86.25,
+        "ranking_reasons": [
+          "需求匹配 95 分，是推荐的主要依据",
+          "预算余量 0.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "10000mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 81,
+          "gaming": 89,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:33.481077+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2151329.shtml",
+        "specs_fetched_at": "2026-10-03T07:42:26.114202+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2152/2151329/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "4000:battery": [
+      {
+        "id": "2155784",
+        "name": "Redmi Turbo 5 MAX(16GB/512GB)",
+        "brand": "红米",
+        "price": 2799.0,
+        "image_url": "https://2d.zol-img.com.cn/product/274_320x240/165/cek9Jkc5GEfRc.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 9000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-01-29",
+        "recommendation_score": 87.75,
+        "ranking_reasons": [
+          "需求匹配 93 分，是推荐的主要依据",
+          "预算余量 30.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "9000mAh 电池，100W 充电",
+          "联发科 天玑 9500S · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 90,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "联发科 天玑 9500S",
+        "price_fetched_at": "2026-10-03T07:48:33.940958+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2155784.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:58.072785+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2156/2155784/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2173757",
+        "name": "Redmi K100 Pro(12GB/256GB)",
+        "brand": "红米",
+        "price": 3699.0,
+        "image_url": "https://2f.zol-img.com.cn/product/276_80x60/115/ceH5FUsPrL80U.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2173757.shtml",
+        "fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 8580.0,
+        "storage_gb": 256.0,
+        "ram_gb": 12.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-08-11",
+        "recommendation_score": 87.0,
+        "ranking_reasons": [
+          "需求匹配 95 分，是推荐的主要依据",
+          "预算余量 7.5 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "8580mAh 电池，100W 充电",
+          "高通 骁龙 8 Elite Gen5 V Series · 12GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 81,
+          "gaming": 89,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙 8 Elite Gen5 V Series",
+        "price_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2154429",
+        "name": "iQOO Z11 Turbo(16GB/512GB)",
+        "brand": "iQOO",
+        "price": 3199.0,
+        "image_url": "https://2e.zol-img.com.cn/product/274_320x240/936/ceoiSkNbJiiqg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2154429.shtml",
+        "fetched_at": "2026-10-03T07:52:52.708049+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 7600.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "OriginOS 6",
+        "release_date": "2026-01-15",
+        "recommendation_score": 86.75,
+        "ranking_reasons": [
+          "需求匹配 93 分，是推荐的主要依据",
+          "预算余量 20.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7600mAh 电池，100W 充电",
+          "高通 骁龙8 Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 93,
+          "camera": 65,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙8 Gen5",
+        "price_fetched_at": "2026-10-03T07:48:31.481139+00:00",
+        "price_source_url": "https://detail.zol.com.cn/cell_phone/index2154429.shtml",
+        "specs_fetched_at": "2026-10-03T07:52:52.708049+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2155/2154429/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "8000:daily": [
+      {
+        "id": "2152395",
+        "name": "荣耀WIN(16GB/512GB)",
+        "brand": "荣耀",
+        "price": 4699.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_280x210/542/cedEMqnriHlSY.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2152395.shtml",
+        "fetched_at": "2026-10-03T07:42:34.255734+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 10000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "MagicOS 10",
+        "release_date": "2025-12-26",
+        "recommendation_score": 94.13,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 41.3 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "10000mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:34.399456+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10922170_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:34.255734+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2153/2152395/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2174709",
+        "name": "Redmi K100 Pro(16GB/512GB)",
+        "brand": "红米",
+        "price": 4699.0,
+        "image_url": "https://2f.zol-img.com.cn/product/276_320x240/115/ceH5FUsPrL80U.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2174709.shtml",
+        "fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 8580.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-08-11",
+        "recommendation_score": 94.13,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 41.3 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "8580mAh 电池，100W 充电",
+          "高通 骁龙 8 Elite Gen5 V Series · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙 8 Elite Gen5 V Series",
+        "price_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2161566",
+        "name": "一加15T(16GB/512GB)",
+        "brand": "一加",
+        "price": 5199.0,
+        "image_url": "https://2a.zol-img.com.cn/product/275_280x210/290/ceCCmPYExRkg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2161566.shtml",
+        "fetched_at": "2026-10-03T07:42:45.676444+00:00",
+        "display_inches": 6.32,
+        "battery_mah": 7500.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "ColorOS 16",
+        "release_date": "2026-03-24",
+        "recommendation_score": 93.5,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 35.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7500mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:45.263212+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10924646_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:45.676444+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2162/2161566/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "8000:gaming": [
+      {
+        "id": "2152395",
+        "name": "荣耀WIN(16GB/512GB)",
+        "brand": "荣耀",
+        "price": 4699.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_280x210/542/cedEMqnriHlSY.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2152395.shtml",
+        "fetched_at": "2026-10-03T07:42:34.255734+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 10000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "MagicOS 10",
+        "release_date": "2025-12-26",
+        "recommendation_score": 94.13,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 41.3 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "10000mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:34.399456+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10922170_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:34.255734+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2153/2152395/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2174709",
+        "name": "Redmi K100 Pro(16GB/512GB)",
+        "brand": "红米",
+        "price": 4699.0,
+        "image_url": "https://2f.zol-img.com.cn/product/276_320x240/115/ceH5FUsPrL80U.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2174709.shtml",
+        "fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 8580.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-08-11",
+        "recommendation_score": 94.13,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 41.3 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "8580mAh 电池，100W 充电",
+          "高通 骁龙 8 Elite Gen5 V Series · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙 8 Elite Gen5 V Series",
+        "price_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2161566",
+        "name": "一加15T(16GB/512GB)",
+        "brand": "一加",
+        "price": 5199.0,
+        "image_url": "https://2a.zol-img.com.cn/product/275_280x210/290/ceCCmPYExRkg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2161566.shtml",
+        "fetched_at": "2026-10-03T07:42:45.676444+00:00",
+        "display_inches": 6.32,
+        "battery_mah": 7500.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "ColorOS 16",
+        "release_date": "2026-03-24",
+        "recommendation_score": 93.5,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 35.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7500mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "持续帧率、散热与功耗没有实测数据",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:45.263212+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10924646_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:45.676444+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2162/2161566/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "8000:camera": [
+      {
+        "id": "2152395",
+        "name": "荣耀WIN(16GB/512GB)",
+        "brand": "荣耀",
+        "price": 4699.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_280x210/542/cedEMqnriHlSY.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2152395.shtml",
+        "fetched_at": "2026-10-03T07:42:34.255734+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 10000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "MagicOS 10",
+        "release_date": "2025-12-26",
+        "recommendation_score": 94.13,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 41.3 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "10000mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:34.399456+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10922170_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:34.255734+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2153/2152395/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2174709",
+        "name": "Redmi K100 Pro(16GB/512GB)",
+        "brand": "红米",
+        "price": 4699.0,
+        "image_url": "https://2f.zol-img.com.cn/product/276_320x240/115/ceH5FUsPrL80U.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2174709.shtml",
+        "fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 8580.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-08-11",
+        "recommendation_score": 94.13,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 41.3 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "8580mAh 电池，100W 充电",
+          "高通 骁龙 8 Elite Gen5 V Series · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙 8 Elite Gen5 V Series",
+        "price_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2161566",
+        "name": "一加15T(16GB/512GB)",
+        "brand": "一加",
+        "price": 5199.0,
+        "image_url": "https://2a.zol-img.com.cn/product/275_280x210/290/ceCCmPYExRkg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2161566.shtml",
+        "fetched_at": "2026-10-03T07:42:45.676444+00:00",
+        "display_inches": 6.32,
+        "battery_mah": 7500.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "ColorOS 16",
+        "release_date": "2026-03-24",
+        "recommendation_score": 93.5,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 35.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "影像配置：长焦镜头、光学防抖",
+          "7500mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "影像按镜头配置匹配，成片效果仍需实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:45.263212+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10924646_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:45.676444+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2162/2161566/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ],
+    "8000:battery": [
+      {
+        "id": "2152395",
+        "name": "荣耀WIN(16GB/512GB)",
+        "brand": "荣耀",
+        "price": 4699.0,
+        "image_url": "https://2a.zol-img.com.cn/product/274_280x210/542/cedEMqnriHlSY.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2152395.shtml",
+        "fetched_at": "2026-10-03T07:42:34.255734+00:00",
+        "display_inches": 6.83,
+        "battery_mah": 10000.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "MagicOS 10",
+        "release_date": "2025-12-26",
+        "recommendation_score": 94.13,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 41.3 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "10000mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:34.399456+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10922170_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:34.255734+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2153/2152395/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2174709",
+        "name": "Redmi K100 Pro(16GB/512GB)",
+        "brand": "红米",
+        "price": 4699.0,
+        "image_url": "https://2f.zol-img.com.cn/product/276_320x240/115/ceH5FUsPrL80U.png",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2174709.shtml",
+        "fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "display_inches": 6.59,
+        "battery_mah": 8580.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "Xiaomi HyperOS 3",
+        "release_date": "2026-08-11",
+        "recommendation_score": 94.13,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 41.3 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "8580mAh 电池，100W 充电",
+          "高通 骁龙 8 Elite Gen5 V Series · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "高通 骁龙 8 Elite Gen5 V Series",
+        "price_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "specs_fetched_at": "2026-10-03T17:24:28.214544+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/series/57/55731/param_10928908_0_1.html",
+        "release_precision": "day",
+        "origin": "zol"
+      },
+      {
+        "id": "2161566",
+        "name": "一加15T(16GB/512GB)",
+        "brand": "一加",
+        "price": 5199.0,
+        "image_url": "https://2a.zol-img.com.cn/product/275_280x210/290/ceCCmPYExRkg.jpg",
+        "source_url": "https://detail.zol.com.cn/cell_phone/index2161566.shtml",
+        "fetched_at": "2026-10-03T07:42:45.676444+00:00",
+        "display_inches": 6.32,
+        "battery_mah": 7500.0,
+        "storage_gb": 512.0,
+        "ram_gb": 16.0,
+        "os": "ColorOS 16",
+        "release_date": "2026-03-24",
+        "recommendation_score": 93.5,
+        "ranking_reasons": [
+          "需求匹配 100 分，是推荐的主要依据",
+          "预算余量 35.0 分，依据来源参考报价",
+          "上市在近一年内，适度加分",
+          "主流品牌采购偏好适度加分，不代表品质或售后结论"
+        ],
+        "reasons": [
+          "7500mAh 电池，100W 充电",
+          "骁龙 8 Elite Gen5 · 16GB 内存"
+        ],
+        "tradeoffs": [
+          "电池与功率为标称规格，续航时长没有实测",
+          "价格为来源站参考报价，实际渠道价可能不同"
+        ],
+        "metrics": {
+          "daily": 100,
+          "gaming": 100,
+          "camera": 100,
+          "battery": 100
+        },
+        "chipset": "骁龙 8 Elite Gen5",
+        "price_fetched_at": "2026-10-03T07:40:45.263212+00:00",
+        "price_source_url": "https://detail.zol.com.cn/series/57/10924646_1.html",
+        "specs_fetched_at": "2026-10-03T07:42:45.676444+00:00",
+        "specs_source_url": "https://detail.zol.com.cn/2162/2161566/param.shtml",
+        "release_precision": "day",
+        "origin": "zol"
+      }
+    ]
+  },
+  "recorded_chat": [
+    {
+      "role": "user",
+      "content": "你好，我们先交流需求。只回复“可以开始选机”，不要推荐具体机型。"
+    },
+    {
+      "role": "assistant",
+      "content": "可以开始选机"
+    },
+    {
+      "role": "user",
+      "content": "这三台候选中哪款参考价最低？只回复型号与参考价，50字以内。"
+    },
+    {
+      "role": "assistant",
+      "content": "Redmi Turbo 5 MAX(16GB/512GB)，参考价 2799 元。"
+    }
+  ]
+}

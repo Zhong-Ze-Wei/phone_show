@@ -1,5 +1,14 @@
 # 本次重构交付验证
 
+## 2026-10-04 在线产品介绍与静态演示
+
+[GitHub Pages 产品介绍页](https://zhong-ze-wei.github.io/phone_show-demo/)已实际上线，README 顶部新增快捷入口，主应用仍保持私有。展示源码与真实截图在 `site/`；公开演示仓库仅含这 10 个静态文件，没有主应用历史、数据库或密钥。发布与维护说明见 [产品介绍页](PRODUCT_SITE.md)。
+
+- 公开仓库 `master` 为 `8e67dc069551b4595586b3c1bcf546db6602b040`，对应 Pages 构建为 built，HTTPS 可访问；主页及 8 个关键资源均 HTTP 200，与本地文件内容一致。
+- 本地子目录与实际公开地址分别通过 46 项真实 Chromium 检查，含 12 组预算／用途快照、整栏实际拖拽、键盘、参数与来源、截图切换放大、录制对话与剪贴板命令。
+- 初始预算留空；390px 手机端没有横向溢出，减少动效设置有效；无 JavaScript 异常、本站资源失败、后端或模型请求。录制文本与此前真实模型回复一致，候选及芯片与当前规范接口核对一致。
+- `npm run build`、`npm test`、静态 JS 语法检查通过：304 项 Python、28 项前端测试；本轮没有新付费模型调用。
+
 ## 2026-10-04 GitHub 版本与数据库快照
 
 独立网页应用使用 [Zhong-Ze-Wei/phone_show](https://github.com/Zhong-Ze-Wei/phone_show)，保留 `Get_Phone` 独立爬虫。README 包含真实界面截图、克隆后还原和启动步骤、显式预算、AI 会话与清洗文档入口。
