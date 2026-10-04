@@ -6,17 +6,14 @@
     <meta name="theme-color" content="#f5f3ee" />
     <meta
       name="description"
-      content="挑一部：输入自己的预算，浏览有来源的手机资料，拖拽对比，让顾问解释取舍。体验真实数据快照的静态演示，或用 uv 在本地运行。"
+      content="挑一部：预算可留空，浏览有来源的手机资料，拖拽对比，让顾问解释取舍。体验真实数据快照的静态演示，或用 uv 在本地运行。"
     />
     <title>挑一部 — 手机选购工作台</title>
-    <link
-      rel="canonical"
-      href="https://zhong-ze-wei.github.io/phone_show/"
-    />
+    <link rel="canonical" href="https://zhong-ze-wei.github.io/phone_show/" />
     <meta property="og:title" content="挑一部 — 手机选购工作台" />
     <meta
       property="og:description"
-      content="从自己的预算开始，看真实资料，放到一起比较。体验静态演示，或在本地运行选购工作台。"
+      content="预算可留空，按用途看真实资料，放到一起比较。体验静态演示，或在本地运行选购工作台。"
     />
     <meta
       property="og:url"
@@ -108,10 +105,10 @@
         <div class="section-heading">
           <div>
             <p class="section-number">01 / 动手选</p>
-            <h2>从你的预算开始。</h2>
+            <h2>预算可选，用途先选。</h2>
           </div>
           <p>
-            选择一个示例预算，再挑主要用途。<br />演示在浏览器本地运行，不连接模型。
+            不填预算也能看候选，按需再限定价格。<br />演示在浏览器本地运行，不连接模型。
           </p>
         </div>
         <div class="demo-workbench">
@@ -128,8 +125,15 @@
             <div class="demo-catalog">
               <div class="demo-filters">
                 <fieldset>
-                  <legend>示例最高预算 <span>不预填</span></legend>
+                  <legend>示例最高预算 <span>可不限</span></legend>
                   <div class="choice-row" id="budget-options">
+                    <button
+                      data-budget="all"
+                      class="active"
+                      aria-pressed="true"
+                    >
+                      预算不限
+                    </button>
                     <button data-budget="3000" aria-pressed="false">
                       ¥3,000</button
                     ><button data-budget="4000" aria-pressed="false">
@@ -159,16 +163,13 @@
                 </fieldset>
               </div>
               <div class="demo-results-heading">
-                <h3 id="demo-results-title">先选一个示例预算</h3>
+                <h3 id="demo-results-title">预算不限 · 日常候选</h3>
                 <span id="snapshot-label">真实参数与参考报价快照</span>
               </div>
               <div id="demo-phones" class="demo-phone-grid" aria-live="polite">
                 <div class="demo-empty">
-                  <span class="empty-symbol" aria-hidden="true">¥</span>
-                  <h4>你打算花多少？</h4>
-                  <p>
-                    上方选好示例预算，再显示对应的真实候选。<br />正式工作台可输入自己的预算。
-                  </p>
+                  <h4>正在读取真实快照</h4>
+                  <p>预算可以留空，候选按主要用途展示。</p>
                 </div>
               </div>
               <p class="demo-price-note">
@@ -182,13 +183,13 @@
             >
               <div class="demo-side-heading">
                 <h3 id="demo-compare-title">放到一起比较</h3>
-                <span id="compare-count">0 / 3</span>
+                <span id="compare-count">0 部</span>
               </div>
               <p class="side-instruction">
-                点击「加入对比」或把卡片拖到右侧。最多三部。
+                点击「加入对比」或把卡片拖到右侧，数量不限。
               </p>
               <div id="demo-compare" class="demo-compare">
-                <p class="compare-empty">先挑中两三部，再看差别。</p>
+                <p class="compare-empty">挑几部放到一起，再看差别。</p>
               </div>
               <button id="show-comparison" class="demo-compare-button" disabled>
                 查看参数对比
@@ -233,7 +234,7 @@
             </aside>
           </div>
           <div id="demo-status" class="demo-status" role="status">
-            示例预算留空。候选只在你选择后显示。
+            当前预算不限。切换用途查看真实候选，已选对比机型会保留。
           </div>
         </div>
         <div class="demo-under-note">
@@ -331,13 +332,13 @@
               <div>
                 <h3>按需求筛选，再解释取舍</h3>
                 <p>
-                  用途优先，预算是一道边界。顾问依据当前条件与明确选机回答，每条回答保留来源。
+                  用途优先，预算可留空；填写后就是筛选边界。顾问依据当前条件与明确选机回答，每条回答保留来源。
                 </p>
               </div>
             </article>
           </div>
           <div class="ranking-panel">
-            <p>默认综合推荐 / 买新机</p>
+            <p>填写最高预算时的综合推荐 / 买新机</p>
             <div
               class="weight-bar"
               aria-label="用途匹配75%，预算余量10%，上市时效10%，主流品牌5%"
@@ -366,7 +367,9 @@
               </div>
             </dl>
             <p class="ranking-note">
-              一年内机型时效加分。分数是公开参数上的选购规则，不是实测榜单；品牌权重不证明品质。考虑二手时取消时效加分，页面没有二手行情。
+              未填最高预算时，用途匹配为 85%、预算余量为 0%，上市时效仍为
+              10%、品牌仍为
+              5%。一年内机型时效加分。分数是公开参数上的选购规则，不是实测榜单；品牌权重不证明品质。考虑二手时取消时效加分，页面没有二手行情。
             </p>
           </div>
         </div>
@@ -443,14 +446,20 @@ uv run python scripts/restore_snapshot.py
     >
       <div class="dialog-header">
         <div>
-          <p>静态快照 / 最多三部</p>
+          <p>静态快照 / 数量不限，横向滚动查看</p>
           <h2 id="comparison-dialog-title">手机参数对比</h2>
         </div>
         <button data-close-dialog="comparison-dialog" aria-label="关闭参数对比">
           ×
         </button>
       </div>
-      <div id="comparison-table" class="comparison-table"></div>
+      <div
+        id="comparison-table"
+        class="comparison-table"
+        tabindex="0"
+        role="region"
+        aria-label="演示手机参数对比表，可横向滚动查看全部机型"
+      ></div>
       <p class="dialog-note">
         参考价与资料按快照展示，不是当前成交价，也不代表库存。
       </p>
