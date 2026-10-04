@@ -1,8 +1,8 @@
 <p align="center">
   <a href="https://zhong-ze-wei.github.io/phone_show/">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="docs/readme-assets/banner-dark.svg">
-      <img src="docs/readme-assets/banner-light.svg" alt="挑一部 · 手机选购工作台，点击体验在线演示" width="1280">
+      <source media="(prefers-color-scheme: dark)" srcset="https://zhong-ze-wei.github.io/phone_show/assets/banner-dark.svg">
+      <img src="https://zhong-ze-wei.github.io/phone_show/assets/banner-light.svg" alt="挑一部 · 手机选购工作台，点击体验在线演示" width="1280">
     </picture>
   </a>
 </p>
@@ -33,13 +33,13 @@
 
 输入自己的预算与用途，找到适合的手机：看大图和规格，收藏、拖拽对比，再让 **DeepSeek-V4.1-Flash** 解释取舍。点击截图，可以先在浏览器体验静态选机演示。
 
-[![桌面选购工作台：左侧大图图库，右侧预览与对比](docs/ui-reference/image-gallery-desktop.png)](https://zhong-ze-wei.github.io/phone_show/#demo)
+[![桌面选购工作台：左侧大图图库，右侧预览与对比](https://zhong-ze-wei.github.io/phone_show/assets/gallery-desktop.png)](https://zhong-ze-wei.github.io/phone_show/#demo)
 
 ### 放在一起比较，让顾问说清取舍
 
 整个右栏都能接收拖拽，最多对比三台，不必瞄准右下角。点击 AI 球展开连续聊天，左侧仍可浏览手机；五种角色帮助你从不同角度讨论需求。点击截图查看[顾问的事实、来源与会话规则](docs/AI_CHAT.md)。
 
-[![AI 顾问展开：左侧手机列表，右侧角色与连续聊天](docs/ui-reference/advisor-workspace-desktop.png)](docs/AI_CHAT.md)
+[![AI 顾问展开：左侧手机列表，右侧角色与连续聊天](https://zhong-ze-wei.github.io/phone_show/assets/advisor-desktop.png)](docs/AI_CHAT.md)
 
 ### 手机端，一列大图也能选
 
@@ -47,7 +47,7 @@
 
 <p align="center">
   <a href="https://zhong-ze-wei.github.io/phone_show/#demo">
-    <img src="docs/ui-reference/image-gallery-mobile.png" alt="真实手机端工作台：单列大图卡片与底部操作条" width="260">
+    <img src="https://zhong-ze-wei.github.io/phone_show/assets/gallery-mobile.png" alt="真实手机端工作台：单列大图卡片与底部操作条" width="260">
   </a>
 </p>
 

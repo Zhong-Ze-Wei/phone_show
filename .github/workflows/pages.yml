@@ -5,6 +5,7 @@ on:
     branches: [master]
     paths:
       - 'site/**'
+      - 'docs/readme-assets/*.svg'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -30,10 +31,15 @@ jobs:
         run: node --check site/demo.js
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Prepare static site and README covers
+        run: |
+          mkdir -p _pages/assets
+          cp -R site/. _pages/
+          cp docs/readme-assets/banner-*.svg _pages/assets/
       - name: Upload product site
         uses: actions/upload-pages-artifact@v4
         with:
-          path: site
+          path: _pages
       - name: Deploy Pages
         id: deployment
         uses: actions/deploy-pages@v4

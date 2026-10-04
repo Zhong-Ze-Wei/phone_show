@@ -2,7 +2,7 @@
 
 正式地址：[挑一部 · 产品介绍与演示](https://zhong-ze-wei.github.io/phone_show/)。介绍页与主应用统一维护在公开仓库 [Zhong-Ze-Wei/phone_show](https://github.com/Zhong-Ze-Wei/phone_show)，README 顶部提供快捷入口。
 
-`site/` 是介绍页的唯一开发源。[`.github/workflows/pages.yml`](../.github/workflows/pages.yml) 自动发布该目录到主仓库的 GitHub Pages；无需复制到另一个仓库。Pages 产物只包含静态页，主应用源码与版本数据库仍可从同一 GitHub 仓库获取。`.env`、运行日志、虚拟环境和采集缓存保持 Git 忽略。
+`site/` 是介绍页的开发源。[`.github/workflows/pages.yml`](../.github/workflows/pages.yml) 自动发布该目录，并从 `docs/readme-assets/` 加入两张 README 封面到主仓库的 GitHub Pages；无需复制到另一个仓库。Pages 产物只包含静态展示资源，主应用源码与版本数据库仍可从同一 GitHub 仓库获取。`.env`、运行日志、虚拟环境和采集缓存保持 Git 忽略。
 
 ## 页面与数据边界
 
@@ -58,7 +58,7 @@ CSS、JavaScript、JSON 和截图使用相对资源路径，例如 `./styles.css
 
 1. 在主应用的功能分支编辑 `site/`，完成上述构建、测试、脚本语法检查与真实浏览器验证。
 2. 在功能分支提交本次页面更新，切回 `master`，使用 `git merge --no-ff feat/update-product-site` 合并，再执行 `git push origin master`。分支名按本次实际任务调整；每次提交应可独立验证与回滚。
-3. `master` 的推送涉及 `site/**` 或 Pages 工作流时，自动执行 **Publish product site**。工作流检查 JS 语法，配置 Pages、上传 `site/` 并部署；不安装应用依赖、不读取模型密钥、不运行采集。
+3. `master` 的推送涉及 `site/**`、`docs/readme-assets/*.svg` 或 Pages 工作流时，自动执行 **Publish product site**。工作流检查 JS 语法，配置 Pages、将 `site/` 与两张封面整理到临时 `_pages/` 并部署；不安装应用依赖、不读取模型密钥、不运行采集。
 4. 仅修改其他应用模块或文档不会触发部署。需要重发时，可在仓库 Actions 中打开此工作流，点击 **Run workflow**，选择 `master`。
 5. 等待工作流成功，再检查正式主页及 CSS、JS、JSON、截图资源，确认相对路径、交互与录制标识正常。报告应记录部署提交与实际网页结果，不能仅根据推送成功判断上线。
 
