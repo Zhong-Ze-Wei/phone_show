@@ -31,11 +31,11 @@ def main() -> None:
     sync.add_argument("--delay", type=float, default=0.9, help="每次来源请求最小间隔，默认0.9秒")
     sync.add_argument("--latest", action="store_true", help="仅核对官网和品牌新品入口并补采详情，不刷新历史目录")
     choose = commands.add_parser("recommend", help="按参考价预算与需求推荐，不请求模型")
-    choose.add_argument("--budget", type=float, required=True, help="明确输入最高预算，不预设金额")
+    choose.add_argument("--budget", type=float, help="可选最高预算，省略时不限金额")
     choose.add_argument("--min-budget", type=float, default=0)
     choose.add_argument("--brand", action="append", default=[])
     choose.add_argument("--priority", action="append", choices=["daily", "gaming", "camera", "battery"], default=[])
-    choose.add_argument("--storage", type=float, default=256)
+    choose.add_argument("--storage", type=float, default=0, help="最低容量，默认不限")
     choose.add_argument("--compact", action="store_true")
     choose.add_argument("--history", action="store_true")
     choose.add_argument("--query", default="")
@@ -71,9 +71,9 @@ def main() -> None:
                     force=arguments.force or not arguments.resume, limit=arguments.limit, delay=arguments.delay,
                     latest_only=arguments.latest)
             else:
-                if not all(math.isfinite(value) for value in (arguments.budget, arguments.min_budget, arguments.storage)):
+                if not all(math.isfinite(value) for value in (arguments.budget, arguments.min_budget, arguments.storage) if value is not None):
                     raise ValueError("预算和存储容量必须是有限数值。")
-                if arguments.budget <= 0 or arguments.budget < arguments.min_budget or arguments.min_budget < 0:
+                if arguments.min_budget < 0 or (arguments.budget is not None and (arguments.budget <= 0 or arguments.budget < arguments.min_budget)):
                     raise ValueError("预算范围无效。")
                 if not 0 <= arguments.storage <= 4096:
                     raise ValueError("存储容量必须在 0 至 4096GB 之间。")
@@ -84,10 +84,11 @@ def main() -> None:
                     include_history=arguments.history, query=arguments.query, sort=arguments.sort,
                     purchase_mode=arguments.purchase_mode,
                 ), limit=10)
-                display_fields = ("id", "name", "brand", "price", "price_from", "score", "recommendation_score", "ranking_breakdown", "ranking_reasons", "soc", "battery_mah", "storage_gb", "release_date", "release_year", "release_month", "reasons", "tradeoffs", "discovery_reasons", "discovery_status", "source_url", "fetched_at")
+                display_fields = ("id", "name", "brand", "price", "price_from", "score", "recommendation_score", "ranking_breakdown", "ranking_reasons", "soc", "battery_mah", "storage_gb", "release_date", "release_year", "release_month", "reasons", "tradeoffs", "discovery_reasons", "discovery_status", "catalogue_reasons", "catalogue_codes", "catalogue_status", "catalogue_variant_count", "recommendation_eligible", "source_url", "fetched_at")
                 result["phones"] = [{key: phone.get(key) for key in display_fields} for phone in result["phones"]]
                 result["discovery"]["phones"] = [{key: phone.get(key) for key in display_fields} for phone in result["discovery"]["phones"][:10]]
                 result["discovery"]["returned"] = len(result["discovery"]["phones"])
+                result["catalogue"]["phones"] = [{key: phone.get(key) for key in display_fields} for phone in result["catalogue"]["phones"]]
             print(json.dumps(result, ensure_ascii=False, indent=2))
             if arguments.command == "sync" and result["status"] == "partial":
                 raise SystemExit(2)

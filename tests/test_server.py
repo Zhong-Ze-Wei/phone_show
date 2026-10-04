@@ -116,18 +116,73 @@ def test_new_source_search_is_not_silently_hidden_by_budget():
     assert "不能确认是否在预算内" in " ".join(result["discovery"]["phones"][0]["discovery_reasons"])
 
 
-def test_recommend_requires_explicit_budget_without_assuming_4000():
+def test_recommend_accepts_missing_budget_without_assuming_4000():
     client = client_for()
     response = client.post("/api/recommend", json={})
-    assert response.status_code == 422
-    assert any(error["loc"] == ["body", "budget_max"] for error in response.json()["detail"])
+    assert response.status_code == 200
+    assert response.json()["preferences"]["budget_max"] is None
+    assert response.json()["preferences"]["min_storage"] == 0
+    assert response.json()["ranking_policy"]["weights"] == {"usage": 0.85, "value": 0.0, "recency": 0.1, "brand": 0.05}
 
 
-def test_compare_and_explain_require_preferences_and_explicit_budget():
-    client = client_for()
+def test_compare_and_explain_accept_omitted_preferences_without_hidden_budget(monkeypatch):
+    from phone_assistant import server
+
+    explain = Mock(return_value={"content": "用途匹配说明", "sources": []})
+    monkeypatch.setattr(server, "explain", explain)
+    client = client_for([{"id": "a", "name": "选中的手机", "price": 9999}])
     for path in ("/api/compare", "/api/explain"):
         omitted = client.post(path, json={"ids": ["a"]})
-        missing_budget = client.post(path, json={"ids": ["a"], "preferences": {}})
-        assert omitted.status_code == 422
-        assert missing_budget.status_code == 422
-        assert any(error["loc"] == ["body", "preferences", "budget_max"] for error in missing_budget.json()["detail"])
+        no_budget = client.post(path, json={"ids": ["a"], "preferences": {"budget_max": None}})
+        assert omitted.status_code == no_budget.status_code == 200
+        if path == "/api/compare":
+            assert omitted.json()["phones"][0]["budget_warning"] is None
+            assert no_budget.json()["phones"][0]["budget_warning"] is None
+    assert explain.call_args.args[1].budget_max is None
+
+
+def test_all_selection_endpoints_accept_more_than_three_and_preserve_all_ids(monkeypatch):
+    from phone_assistant import server
+
+    phones = [{"id": str(index), "name": f"手机{index}", "price": 3000 + index} for index in range(7)]
+    explain = Mock(return_value={"content": "比较七款", "sources": []})
+    monkeypatch.setattr(server, "explain", explain)
+    client = client_for(phones)
+    ids = [phone["id"] for phone in phones]
+    compared = client.post("/api/compare", json={"ids": ids})
+    assert compared.status_code == 200
+    assert [record["id"] for record in compared.json()["phones"]] == ids
+    assert all(record["budget_warning"] is None for record in compared.json()["phones"])
+    assert client.post("/api/explain", json={"ids": ids}).status_code == 200
+    assert [record["id"] for record in explain.call_args.args[0]] == ids
+
+
+def test_phone_search_catalogue_includes_unpriced_official_and_historical_records_without_new_gate():
+    from datetime import datetime, timezone
+
+    rows = [{"id": "17", "name": "iPhone 17", "brand": "苹果", "family_key": "17", "price": None,
+        "storage_gb": None, "origin": "official", "availability": "unknown", "os_family": "iOS",
+        "fetched_at": datetime.now(timezone.utc).isoformat(), "source_url": "https://www.apple.com.cn/iphone-17/"},
+        {"id": "16", "name": "iPhone 16(128GB)", "brand": "苹果", "family_key": "16", "price": 5999,
+        "storage_gb": 128, "origin": "legacy", "availability": "historical", "os_family": "iOS", "fetched_at": None}]
+    response = client_for(rows).post("/api/recommend", json={"query": "iPhone", "budget_max": None})
+    assert response.status_code == 200
+    result = response.json()
+    assert result["phones"] == result["discovery"]["phones"] == []
+    assert result["catalogue"]["total"] == result["catalogue"]["returned"] == 2
+    records = {record["id"]: record for record in result["catalogue"]["phones"]}
+    assert records["17"]["catalogue_codes"] == ["availability_unknown", "unknown_price"]
+    assert records["16"]["catalogue_codes"] == ["history", "stale_price"]
+    assert all(record["recommendation_eligible"] is False for record in records.values())
+
+
+def test_explicit_zero_or_nonfinite_budget_is_invalid_in_every_filter_endpoint():
+    client = client_for()
+    for path, base in (("/api/recommend", {}), ("/api/compare", {"ids": ["a"]}),
+            ("/api/explain", {"ids": ["a"]}), ("/api/chat", {"message": "你好"})):
+        for value in (0, -1):
+            payload = {**base, "budget_max": value} if path == "/api/recommend" else {**base, "preferences": {"budget_max": value}}
+            assert client.post(path, json=payload).status_code == 422
+    for value in ("NaN", "Infinity"):
+        response = client.post("/api/recommend", content='{"budget_max":' + value + '}', headers={"Content-Type": "application/json"})
+        assert response.status_code == 422

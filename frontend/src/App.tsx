@@ -6,6 +6,9 @@ import {
   dateLabel,
   DEFAULT_PREFERENCES,
   enteredBudget,
+  validBudgetInput,
+  resultPhones,
+  catalogueStatusLabel,
   priceStatusLabel,
   releaseLabel,
   discoveryPriceLabel,
@@ -45,7 +48,11 @@ export default function App() {
     ...DEFAULT_PREFERENCES,
   });
   const [budgetInput, setBudgetInput] = useState("");
-  const budgetReady = enteredBudget(budgetInput) != null;
+  const budgetValid = validBudgetInput(budgetInput);
+  const invalidBudgetRange =
+    preferences.budget_max !== null &&
+    preferences.budget_min > preferences.budget_max;
+  const invalidBudget = !budgetValid || invalidBudgetRange;
   const [meta, setMeta] = useState<Meta | null>(null);
   const [data, setData] = useState<Recommendations | null>(null);
   const [resultKey, setResultKey] = useState<string | null>(null);
@@ -83,8 +90,12 @@ export default function App() {
   );
   const [previewExpanded, setPreviewExpanded] = useState(!isCompact);
   const previewRef = useRef<HTMLDivElement>(null);
-  const requestKey = JSON.stringify([requestPreferences(preferences), reload]);
-  const currentData = resultKey === requestKey ? data : null;
+  const requestKey = JSON.stringify([
+    requestPreferences(preferences),
+    reload,
+    budgetValid,
+  ]);
+  const currentData = !invalidBudget && resultKey === requestKey ? data : null;
 
   useEffect(() => {
     const viewport = window.matchMedia("(max-width: 900px)");
@@ -132,11 +143,10 @@ export default function App() {
   }, [syncStatus.state]);
   useEffect(() => {
     setPage(1);
-    if (!budgetReady || preferences.budget_min > preferences.budget_max) {
+    if (invalidBudget) {
       setData(null);
       setLoading(false);
       setError("");
-      setCompare([]);
       setCompareOpen(false);
       return;
     }
@@ -170,7 +180,7 @@ export default function App() {
       clearTimeout(timer);
       controller.abort();
     };
-  }, [preferences, reload, budgetReady, requestKey]);
+  }, [preferences, reload, invalidBudget, requestKey]);
   useEffect(() => {
     try {
       localStorage.setItem("pick-a-phone.saved.v1", JSON.stringify(saved));
@@ -185,7 +195,7 @@ export default function App() {
   function setBudget(value: string, minimum?: number) {
     setBudgetInput(value);
     update({
-      budget_max: enteredBudget(value) || 0,
+      budget_max: enteredBudget(value),
       ...(minimum != null ? { budget_min: minimum } : {}),
     });
   }
@@ -195,6 +205,7 @@ export default function App() {
         ? preferences.brands.filter((value) => value !== brand)
         : [...preferences.brands, brand],
     });
+  const searchMode = !showSaved && preferences.query.trim().length > 0;
   const phones = showSaved
     ? saved.map(
         (phone) =>
@@ -207,11 +218,10 @@ export default function App() {
             tradeoffs: [],
           },
       )
-    : budgetReady
-      ? currentData?.phones || []
-      : [];
-  const invalidBudget =
-    budgetReady && preferences.budget_min > preferences.budget_max;
+    : resultPhones(currentData, preferences.query);
+  const resultTotal = searchMode
+    ? currentData?.catalogue?.total || 0
+    : currentData?.total || 0;
   const brands =
     meta?.brands.filter((brand) =>
       brand.toLowerCase().includes(brandSearch.toLowerCase()),
@@ -244,7 +254,7 @@ export default function App() {
     setDetails(null);
     setCompareOpen(false);
     setChatChoice({
-      ids: selected.slice(0, 3).map((phone) => phone.id),
+      ids: selected.map((phone) => phone.id),
       context: selectionContext,
       origin: "advice",
     });
@@ -299,13 +309,9 @@ export default function App() {
       setCompareMessage(`${phone.name} 已在对比列表`);
       return;
     }
-    if (compare.length === 3) {
-      setCompareMessage("最多对比 3 部，请先移除一部。");
-      return;
-    }
     clearAdviceTarget();
     setCompare((previous) =>
-      previous.some((item) => item.id === phone.id) || previous.length >= 3
+      previous.some((item) => item.id === phone.id)
         ? previous
         : [...previous, phone],
     );
@@ -380,11 +386,6 @@ export default function App() {
         selectedPhone != null &&
         compare.some((phone) => phone.id === selectedPhone.id)
       }
-      canCompare={
-        compare.length < 3 ||
-        (selectedPhone != null &&
-          compare.some((phone) => phone.id === selectedPhone.id))
-      }
       onCompare={(phone) =>
         compare.some((item) => item.id === phone.id)
           ? removeCompare(phone.id)
@@ -451,7 +452,7 @@ export default function App() {
               <button
                 className="primary-button search-button"
                 onClick={() =>
-                  budgetReady
+                  !invalidBudget
                     ? setReload((value) => value + 1)
                     : budgetRef.current?.focus()
                 }
@@ -477,15 +478,18 @@ export default function App() {
                   <span>¥</span>
                   <input
                     ref={budgetRef}
-                    type="number"
-                    min="1"
-                    step="100"
+                    type="text"
+                    inputMode="decimal"
                     aria-label="最高预算"
-                    placeholder="输入你的预算"
+                    placeholder="留空表示预算不限"
+                    aria-invalid={invalidBudget}
                     value={budgetInput}
                     onChange={(event) => setBudget(event.target.value)}
                   />
                 </div>
+                <small className="budget-input-note">
+                  可留空，最高预算不限
+                </small>
               </label>
               <label className="filter-field">
                 <span>品牌</span>
@@ -701,14 +705,14 @@ export default function App() {
                 </div>
               </details>
             </div>
-            {invalidBudget && (
+            {invalidBudgetRange && (
               <p className="field-error" role="alert">
                 最低预算不能高于最高预算。
               </p>
             )}
-            {!budgetReady && budgetInput !== "" && (
+            {!budgetValid && (
               <p className="field-error" role="alert">
-                请输入大于 0 的预算。
+                预算留空表示不限；填写时请输入大于 0 的数字。
               </p>
             )}
           </section>
@@ -726,14 +730,20 @@ export default function App() {
             <div className="results-heading">
               <div>
                 <h1 id="results-title">
-                  {showSaved ? "我的收藏" : SORT_LABELS[preferences.sort]}
+                  {showSaved
+                    ? "我的收藏"
+                    : searchMode
+                      ? "搜索结果"
+                      : SORT_LABELS[preferences.sort]}
                 </h1>
                 <p>
                   {showSaved
                     ? `当前浏览器保存的 ${saved.length} 部手机`
-                    : !budgetReady
-                      ? "输入预算，再挑选适合你的手机"
-                      : `符合条件 ${currentData?.total || 0} 款 · 已加载 ${phones.length} 款`}
+                    : invalidBudget
+                      ? "请修正预算后继续查看"
+                      : searchMode
+                        ? `匹配目录 ${resultTotal} 款 · 已加载 ${phones.length} 款 · 当前可推荐 ${currentData?.total || 0} 款`
+                        : `符合条件 ${resultTotal} 款 · 已加载 ${phones.length} 款${preferences.budget_max === null ? " · 预算不限" : ""}`}
                 </p>
               </div>
               <span className="loading-label" role="status">
@@ -751,14 +761,24 @@ export default function App() {
                 )}
               </span>
             </div>
-            {!showSaved && (
+            {!showSaved && !searchMode && (
               <details className="ranking-guide">
                 <summary>推荐依据</summary>
-                <p>{rankingExplanation(preferences.purchase_mode)}</p>
+                <p>
+                  {rankingExplanation(
+                    preferences.purchase_mode,
+                    preferences.budget_max,
+                  )}
+                </p>
                 <p>
                   综合推荐分比较当前选择，需求匹配分衡量规格对用途的适合程度，均不是品质测评分。
                 </p>
               </details>
+            )}
+            {searchMode && (
+              <p className="catalogue-note" role="status">
+                搜索展示全部匹配目录，包含历史、待上市、报价待核实与超预算机型；目录资料不等于购买推荐。容量等显式条件仍生效，可点详细参数核对来源。
+              </p>
             )}
             {!showSaved && preferences.purchase_mode === "used" && (
               <p className="purchase-mode-note" role="status">
@@ -783,33 +803,14 @@ export default function App() {
                 </button>
               </div>
             )}
-            {!error && !budgetReady && !showSaved ? (
-              <div className="empty-state budget-empty-state">
-                <BudgetIcon />
-                <h2>输入预算开始推荐</h2>
-                <p>
-                  不替你预设价格。填写最高预算，综合考虑用途、配置、上市时间与品牌。
-                </p>
-                <button
-                  className="primary-button"
-                  onClick={() => budgetRef.current?.focus()}
-                >
-                  填写我的预算
-                </button>
-                <div className="empty-budget-presets">
-                  {[2000, 3500, 5000, 8000].map((max) => (
-                    <button key={max} onClick={() => setBudget(String(max), 0)}>
-                      {max === 2000
-                        ? "2 千以内"
-                        : `预算 ¥${max.toLocaleString()}`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : !error && invalidBudget && !showSaved ? (
+            {!error && invalidBudget && !showSaved ? (
               <div className="empty-state">
-                <h2>请调整预算范围</h2>
-                <p>最低预算不能大于最高预算。</p>
+                <h2>请修正预算</h2>
+                <p>
+                  {invalidBudgetRange
+                    ? "最低预算不能大于最高预算。"
+                    : "预算留空表示不限；填写时请输入大于 0 的数字。"}
+                </p>
               </div>
             ) : !error && phones.length === 0 ? (
               <div className="empty-state">
@@ -819,7 +820,9 @@ export default function App() {
                     ? "正在匹配手机"
                     : showSaved
                       ? "还没有收藏"
-                      : "没有符合全部条件的机型"}
+                      : searchMode
+                        ? "没有找到匹配的目录机型"
+                        : "没有符合全部条件的机型"}
                 </h2>
                 <p>
                   {loading
@@ -916,21 +919,32 @@ export default function App() {
                             <span>{numberSpec(phone.storage_gb, "GB")}</span>
                             <span>{numberSpec(phone.battery_mah, "mAh")}</span>
                           </div>
-                          <div className="card-scores">
-                            <span className="match-badge">
-                              {phone.recommendation_score != null
-                                ? `${Math.round(phone.recommendation_score)} /100 综合推荐`
-                                : phone.score != null
-                                  ? `${Math.round(phone.score)}% 需求匹配`
-                                  : "已收藏"}
-                            </span>
-                            {phone.recommendation_score != null &&
-                              phone.score != null && (
-                                <span className="usage-match-reference">
-                                  匹配 {Math.round(phone.score)}%
-                                </span>
-                              )}
-                          </div>
+                          {searchMode ? (
+                            <div className="catalogue-card-status">
+                              <span>{catalogueStatusLabel(phone)}</span>
+                              {(phone.catalogue_reasons || [])
+                                .slice(0, 2)
+                                .map((reason, index) => (
+                                  <p key={index}>{reason}</p>
+                                ))}
+                            </div>
+                          ) : (
+                            <div className="card-scores">
+                              <span className="match-badge">
+                                {phone.recommendation_score != null
+                                  ? `${Math.round(phone.recommendation_score)} /100 综合推荐`
+                                  : phone.score != null
+                                    ? `${Math.round(phone.score)}% 需求匹配`
+                                    : "已收藏"}
+                              </span>
+                              {phone.recommendation_score != null &&
+                                phone.score != null && (
+                                  <span className="usage-match-reference">
+                                    匹配 {Math.round(phone.score)}%
+                                  </span>
+                                )}
+                            </div>
+                          )}
                           <div className="card-actions">
                             <button
                               className="card-detail"
@@ -946,7 +960,6 @@ export default function App() {
                               }
                               aria-label={`${compared ? "移出对比" : "加入对比"} ${phone.name}`}
                               aria-pressed={compared}
-                              disabled={compare.length === 3 && !compared}
                               onClick={() =>
                                 compared
                                   ? removeCompare(phone.id)
@@ -962,18 +975,20 @@ export default function App() {
                   })}
                 </div>
                 {phones.length > 0 && (
-                  <div className="pagination" aria-label="推荐分页">
+                  <div
+                    className="pagination"
+                    aria-label={searchMode ? "搜索分页" : "推荐分页"}
+                  >
                     <span>
                       第 {(currentPage - 1) * pageSize + 1}–
                       {Math.min(currentPage * pageSize, phones.length)} 项 ·
                       已加载 {phones.length} 项
-                      {!showSaved &&
-                        (currentData?.total || 0) > phones.length && (
-                          <small>
-                            符合条件共 {currentData?.total}{" "}
-                            款，当前展示排名靠前的 {phones.length} 款
-                          </small>
-                        )}
+                      {!showSaved && resultTotal > phones.length && (
+                        <small>
+                          {searchMode ? "匹配目录" : "符合条件"}共 {resultTotal}{" "}
+                          款，当前已加载 {phones.length} 款
+                        </small>
+                      )}
                     </span>
                     <div className="page-controls">
                       <button
@@ -1023,17 +1038,13 @@ export default function App() {
                 )}
               </>
             )}
+            {!showSaved && !loading && currentData?.coverage.excluded && (
+              <FilterCoverage
+                coverage={currentData.coverage}
+                onBudget={(value) => setBudget(String(Math.ceil(value)))}
+              />
+            )}
             {!showSaved &&
-              budgetReady &&
-              !loading &&
-              currentData?.coverage.excluded && (
-                <FilterCoverage
-                  coverage={currentData.coverage}
-                  onBudget={(value) => setBudget(String(Math.ceil(value)))}
-                />
-              )}
-            {!showSaved &&
-              budgetReady &&
               currentData?.discovery &&
               currentData.discovery.phones.length > 0 && (
                 <details
@@ -1071,7 +1082,8 @@ export default function App() {
         >
           {draggedPhone && (
             <p className="rail-drop-notice" role="status">
-              右侧任意位置松手，即可加入对比 <span>{compare.length}/3 部</span>
+              右侧任意位置松手，即可加入对比{" "}
+              <span>已选 {compare.length} 部</span>
             </p>
           )}
           {!isCompact && !chatOpen && (
@@ -1084,7 +1096,7 @@ export default function App() {
                 <h2 id="compare-title">参数对比</h2>
                 <p>拖到右侧任意位置，或点击卡片「+ 对比」</p>
               </div>
-              <span>{compare.length}/3</span>
+              <span>{compare.length} 部</span>
             </div>
             <div
               className={`comparison-dropzone ${dropActive ? "drop-active" : ""} ${draggedId ? "ready-to-drop" : ""}`}
@@ -1094,7 +1106,7 @@ export default function App() {
                 <div className="drop-placeholder">
                   <CompareIcon />
                   <strong>拖到这里开始比较</strong>
-                  <span>最多 3 部手机</span>
+                  <span>数量不限 · 参数表横向滚动</span>
                   <small>也可用卡片按钮加入，支持键盘操作</small>
                 </div>
               ) : (
@@ -1119,17 +1131,17 @@ export default function App() {
                   </article>
                 ))
               )}
-              {compare.length > 0 && compare.length < 3 && (
+              {compare.length > 0 && (
                 <div className="drop-next">继续拖入，或从卡片加入下一部</div>
               )}
             </div>
             <div className="comparison-actions">
               <button
                 className="primary-button"
-                disabled={compare.length < 2 || !budgetReady || invalidBudget}
+                disabled={compare.length < 2 || invalidBudget}
                 onClick={() => setCompareOpen(true)}
               >
-                开始对比 · {compare.length}/3
+                开始对比 · {compare.length} 部
               </button>
               {compare.length > 0 && (
                 <button className="quiet-button" onClick={clearCompare}>
@@ -1170,12 +1182,12 @@ export default function App() {
             compact={isCompact}
             onClose={() => setChatOpen(false)}
             preferences={
-              budgetReady && !invalidBudget
-                ? requestPreferences(preferences)
-                : null
+              !invalidBudget ? requestPreferences(preferences) : null
             }
+            invalidPreferences={invalidBudget}
             selectedIds={chatSelectedIds}
-            candidatePhones={currentData?.phones || []}
+            candidatePhones={resultPhones(currentData, preferences.query)}
+            catalogueContext={preferences.query.trim().length > 0}
             contextKey={chatContextKey}
             budgetInput={budgetInput}
             onBudget={setBudget}
@@ -1199,7 +1211,7 @@ export default function App() {
         <span>参数有来源，推荐有依据。</span>
       </footer>
       <div className="mobile-compare-bar">
-        <span>对比 {compare.length}/3</span>
+        <span>对比 {compare.length} 部</span>
         {compare.length > 0 && (
           <button className="quiet-button" onClick={clearCompare}>
             清空
@@ -1215,7 +1227,7 @@ export default function App() {
         {compare.length >= 2 && (
           <button
             className="primary-button"
-            disabled={compare.length < 2 || !budgetReady || invalidBudget}
+            disabled={compare.length < 2 || invalidBudget}
             onClick={() => setCompareOpen(true)}
           >
             开始对比
@@ -1235,7 +1247,7 @@ export default function App() {
           onExplain={openAdvice}
         />
       )}
-      {compareOpen && (
+      {compareOpen && !invalidBudget && (
         <ComparePanel
           phones={compare}
           preferences={preferences}
@@ -1262,7 +1274,6 @@ function SelectedPhonePanel({
   onExpanded,
   onDetail,
   compared,
-  canCompare,
   onCompare,
 }: {
   phone: Phone | null;
@@ -1270,7 +1281,6 @@ function SelectedPhonePanel({
   onExpanded: (expanded: boolean) => void;
   onDetail: (phone: Phone) => void;
   compared: boolean;
-  canCompare: boolean;
   onCompare: (phone: Phone) => void;
 }) {
   return (
@@ -1318,21 +1328,38 @@ function SelectedPhonePanel({
             </div>
           </dl>
           <p className="preview-soc">{phone.soc || "处理器待核实"}</p>
-          <details className="preview-reasons">
-            <summary>
-              推荐依据
-              {phone.recommendation_score != null && (
-                <span>{Math.round(phone.recommendation_score)} /100</span>
-              )}
-            </summary>
-            {phone.score != null && <p>需求匹配 {Math.round(phone.score)}%</p>}
-            <div className="ranking-reasons">
-              {rankingHighlights(phone).map((reason, index) => (
+          {phone.catalogue_reasons ? (
+            <div className="preview-catalogue-status">
+              <strong>{catalogueStatusLabel(phone)}</strong>
+              {phone.catalogue_reasons.map((reason, index) => (
                 <p key={index}>{reason}</p>
               ))}
+              {(phone.catalogue_variant_count || 0) > 1 && (
+                <p>
+                  匹配 {phone.catalogue_variant_count}{" "}
+                  个配置，此卡显示代表版本。
+                </p>
+              )}
             </div>
-            <p>策略分用于比较当前候选，不是品质测评分。</p>
-          </details>
+          ) : (
+            <details className="preview-reasons">
+              <summary>
+                推荐依据
+                {phone.recommendation_score != null && (
+                  <span>{Math.round(phone.recommendation_score)} /100</span>
+                )}
+              </summary>
+              {phone.score != null && (
+                <p>需求匹配 {Math.round(phone.score)}%</p>
+              )}
+              <div className="ranking-reasons">
+                {rankingHighlights(phone).map((reason, index) => (
+                  <p key={index}>{reason}</p>
+                ))}
+              </div>
+              <p>策略分用于比较当前候选，不是品质测评分。</p>
+            </details>
+          )}
           <div className="preview-actions">
             <button className="quiet-button" onClick={() => onDetail(phone)}>
               详细资料 ↗
@@ -1341,7 +1368,6 @@ function SelectedPhonePanel({
               className={
                 compared ? "compare-button selected" : "compare-button"
               }
-              disabled={!canCompare}
               aria-label={`${compared ? "移出对比" : "加入对比"} ${phone.name}（当前查看）`}
               aria-pressed={compared}
               onClick={() => onCompare(phone)}
@@ -1364,7 +1390,7 @@ function SelectedPhonePanel({
         </div>
       ) : (
         <p className="preview-empty">
-          输入预算获得推荐，再点击手机图片查看资料。选择手机与加入对比分开操作。
+          浏览或搜索手机，再点击图片查看资料。预算可以留空，选择手机与加入对比分开操作。
         </p>
       )}
     </details>
@@ -1412,14 +1438,6 @@ function SearchIcon() {
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <circle cx="10.5" cy="10.5" r="6.5" />
       <path d="m16 16 4 4" />
-    </svg>
-  );
-}
-function BudgetIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <rect x="3" y="5" width="18" height="14" rx="3" />
-      <path d="M3 9h18m-5 5h2" />
     </svg>
   );
 }
@@ -1511,6 +1529,7 @@ function NewReleaseShelf({
             <div className="discovery-actions">
               <button onClick={() => onDetail(phone)}>查看资料 ↗</button>
               {phone.price != null &&
+                preferences.budget_max !== null &&
                 phone.price > preferences.budget_max &&
                 phone.discovery_codes?.includes("over_budget") &&
                 !phone.discovery_codes.includes("upcoming") && (

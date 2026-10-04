@@ -1685,11 +1685,17 @@ svg {
 }
 .comparison-scroll {
   overflow-x: auto;
+  max-width: 100%;
   margin-top: 20px;
+}
+.comparison-scroll:focus-visible {
+  outline: 2px solid #72b5ff;
+  outline-offset: 3px;
 }
 .comparison-table {
   border-collapse: collapse;
   width: 100%;
+  table-layout: fixed;
   font-size: 11px;
 }
 .comparison-table th,
@@ -1702,6 +1708,9 @@ svg {
   line-height: 1.8;
 }
 .comparison-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
   min-width: 100px;
   font-weight: 500;
   color: #8da5c5;
@@ -1709,6 +1718,9 @@ svg {
 }
 .comparison-table thead th {
   background: #16263b;
+}
+.comparison-table thead th:first-child {
+  z-index: 2;
 }
 .comparison-table thead strong {
   display: block;
@@ -2803,7 +2815,9 @@ svg {
     padding: 7px;
     margin-top: 10px;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    max-height: 180px;
+    overflow-y: auto;
     gap: 7px;
   }
   .chat-open .drop-placeholder {
@@ -2935,6 +2949,56 @@ svg {
   .chat-input-hint {
     font-size: 12px;
   }
+}
+.catalogue-note {
+  color: #a5bdd8;
+  background: #182a3e;
+  border: 1px solid #354e6d;
+  border-radius: 6px;
+  padding: 11px 14px;
+  margin: 15px 0;
+  font-size: 12px;
+  line-height: 1.9;
+}
+.budget-input-note {
+  color: #94abc4;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.catalogue-card-status {
+  min-height: 38px;
+  margin-top: 12px;
+  color: #a3b5cc;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.catalogue-card-status > span {
+  display: inline-block;
+  color: #adcaec;
+  padding: 2px 7px;
+  border: 1px solid #40536b;
+  border-radius: 4px;
+  margin-bottom: 5px;
+}
+.catalogue-card-status p {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.preview-catalogue-status {
+  padding: 12px 0;
+  margin: 12px 0;
+  border-top: 1px solid #3a4b61;
+  font-size: 12px;
+  line-height: 1.9;
+  color: #a1b5ce;
+}
+.preview-catalogue-status strong {
+  font-weight: 500;
+  color: #bed5ef;
+}
+.preview-catalogue-status p {
+  margin-top: 6px;
 }
 @media (prefers-reduced-motion: reduce) {
   *,

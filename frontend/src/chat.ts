@@ -27,7 +27,12 @@ export interface ChatPhone {
 export interface ChatContext {
   phones: ChatPhone[];
   sources: string[];
-  mode: "selected" | "recommended" | "needs_budget" | "no_candidates";
+  mode:
+    | "selected"
+    | "recommended"
+    | "catalogue"
+    | "needs_budget"
+    | "no_candidates";
   persona: Persona;
 }
 export interface ChatMessage {
@@ -88,27 +93,25 @@ export function summarizeContext(
 ): ChatContext {
   return {
     ...data,
-    phones: data.phones
-      .slice(0, 3)
-      .map(
-        ({
-          id,
-          name,
-          brand,
-          price,
-          source_url,
-          budget_warning,
-          chat_warnings,
-        }) => ({
-          id,
-          name,
-          brand,
-          price,
-          source_url,
-          budget_warning,
-          chat_warnings,
-        }),
-      ),
+    phones: data.phones.map(
+      ({
+        id,
+        name,
+        brand,
+        price,
+        source_url,
+        budget_warning,
+        chat_warnings,
+      }) => ({
+        id,
+        name,
+        brand,
+        price,
+        source_url,
+        budget_warning,
+        chat_warnings,
+      }),
+    ),
     sources: data.sources,
   };
 }
@@ -209,7 +212,13 @@ export function parseChatSession(raw: string): ChatSession {
   const value = JSON.parse(raw);
   const validPersona = (id: unknown): id is Persona =>
     PERSONAS.some((persona) => persona.id === id);
-  const modes = ["selected", "recommended", "needs_budget", "no_candidates"];
+  const modes = [
+    "selected",
+    "recommended",
+    "catalogue",
+    "needs_budget",
+    "no_candidates",
+  ];
   const statuses = ["streaming", "complete", "cancelled", "error", "truncated"];
   if (
     value?.version !== 1 ||
@@ -238,7 +247,6 @@ export function parseChatSession(raw: string): ChatSession {
         !validPersona(candidate.persona) ||
         !modes.includes(candidate.mode) ||
         !Array.isArray(candidate.phones) ||
-        candidate.phones.length > 3 ||
         !Array.isArray(candidate.sources) ||
         candidate.sources.some(
           (source) => typeof source !== "string" || source.length > 2000,

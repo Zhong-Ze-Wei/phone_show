@@ -52,7 +52,7 @@ def test_capacities_of_one_family_take_one_slot():
 
 
 def test_storage_constraint_excludes_unknown_and_small_variants():
-    result = recommend([phone("a", storage_gb=None), phone("b", storage_gb=128), phone("c", storage_gb=256)], Preferences())
+    result = recommend([phone("a", storage_gb=None), phone("b", storage_gb=128), phone("c", storage_gb=256)], Preferences(min_storage=256))
     assert [record["id"] for record in result["phones"]] == ["c"]
 
 
@@ -109,9 +109,9 @@ def test_future_release_is_not_a_published_budget_recommendation():
 
 def test_price_sorts_and_budget_remain_independent_of_recency():
     rows = [phone("old", price=1000, release_date="2025-01-01"), phone("new", price=3000, release_date="2026-01-01"), phone("too-expensive", price=8000, release_date="2026-03-01")]
-    assert [p["id"] for p in recommend(rows, Preferences(sort="price_asc"))["phones"]] == ["old", "new"]
-    assert [p["id"] for p in recommend(rows, Preferences(sort="price_desc"))["phones"]] == ["new", "old"]
-    result = recommend(rows, Preferences())
+    assert [p["id"] for p in recommend(rows, Preferences(budget_max=4000, sort="price_asc"))["phones"]] == ["old", "new"]
+    assert [p["id"] for p in recommend(rows, Preferences(budget_max=4000, sort="price_desc"))["phones"]] == ["new", "old"]
+    result = recommend(rows, Preferences(budget_max=4000))
     assert result["coverage"]["excluded"]["over_budget"] == 1
     assert result["coverage"]["budget_suggestion"] == 8000
 
@@ -119,7 +119,7 @@ def test_price_sorts_and_budget_remain_independent_of_recency():
 def test_official_and_source_new_entries_are_discoverable_without_price_or_capacity():
     unknown = phone("official:brand:new", origin="official", price=None, storage_gb=None, new_from_source=True, availability="unknown")
     expensive = phone("zol:new", price=7999, new_from_source=True)
-    result = recommend([unknown, expensive], Preferences())
+    result = recommend([unknown, expensive], Preferences(budget_max=4000, min_storage=256))
     assert result["phones"] == []
     discoveries = {p["id"]: p for p in result["discovery"]["phones"]}
     assert set(discoveries) == {unknown["id"], expensive["id"]}
@@ -180,7 +180,7 @@ def test_discovery_when_all_over_budget_chooses_lowest_price_meeting_capacity():
     rows = [phone('tiny', family_key='same', price=4500, storage_gb=128, new_from_source=True),
         phone('middle', family_key='same', price=5500, storage_gb=256, new_from_source=True),
         phone('large', family_key='same', price=6500, storage_gb=1024, new_from_source=True)]
-    discovery = recommend(rows, Preferences())['discovery']['phones'][0]
+    discovery = recommend(rows, Preferences(budget_max=4000, min_storage=256))['discovery']['phones'][0]
     assert discovery['id'] == 'middle'
     assert discovery['discovery_status'] == 'over_budget'
 
@@ -239,7 +239,7 @@ def test_budget_surplus_does_not_override_large_usage_difference(ranking_today):
         refresh_hz=144, specs={"主摄": "OIS光学防抖，潜望长焦"})
     cheap = phone("cheap", price=100, storage_gb=256, ram_gb=4, soc="骁龙460", battery_mah=3500,
         charging_w=15, refresh_hz=60, specs={"主摄": "普通主摄"})
-    result = recommend([cheap, strong], Preferences())
+    result = recommend([cheap, strong], Preferences(budget_max=4000))
     assert result["phones"][0]["id"] == "strong"
     assert "预算余量" in " ".join(result["phones"][1]["ranking_reasons"])
     assert result["ranking_policy"]["value_basis"].endswith("不是实测性价比")
@@ -274,18 +274,18 @@ def test_discovery_qualified_family_variant_follows_the_selected_sort(ranking_to
     base = phone("base", family_key="same", price=1000, storage_gb=256, new_from_source=True, release_date="2026-09-01")
     larger = phone("large", family_key="same", price=3999, storage_gb=300, new_from_source=True, release_date="2026-09-01")
     rows = [base, larger]
-    recommended = recommend(rows, Preferences())
-    usage = recommend(rows, Preferences(sort="match"))
+    recommended = recommend(rows, Preferences(budget_max=4000))
+    usage = recommend(rows, Preferences(budget_max=4000, sort="match"))
     assert recommended["phones"][0]["id"] == "base"
     assert recommended["discovery"]["phones"][0]["id"] == "base"
     assert usage["phones"][0]["id"] == "large"
     assert usage["discovery"]["phones"][0]["id"] == "large"
-    descending = recommend(rows, Preferences(sort="price_desc"))
+    descending = recommend(rows, Preferences(budget_max=4000, sort="price_desc"))
     assert descending["phones"][0]["id"] == descending["discovery"]["phones"][0]["id"] == "large"
 
 
 def test_ranking_breakdown_explains_combined_score_without_replacing_usage(ranking_today):
-    result = recommend([phone(brand="iQOO", release_date="2026-09-01", price=3000)], Preferences())
+    result = recommend([phone(brand="iQOO", release_date="2026-09-01", price=3000)], Preferences(budget_max=4000))
     record = result["phones"][0]
     breakdown = record["ranking_breakdown"]
     assert breakdown["usage"] == record["score"]
@@ -295,3 +295,80 @@ def test_ranking_breakdown_explains_combined_score_without_replacing_usage(ranki
     assert sum(breakdown["weights"].values()) == 1
     assert record["recommendation_score"] == round(record["score"] * 0.75 + 2.5 + 10 + 5, 2)
     assert result["ranking_policy"]["weights"] == breakdown["weights"]
+
+
+@pytest.mark.parametrize("mode,weights", [("new", {"usage": 0.85, "value": 0.0, "recency": 0.1, "brand": 0.05}),
+    ("used", {"usage": 0.95, "value": 0.0, "recency": 0.0, "brand": 0.05})])
+def test_unset_budget_has_no_hidden_amount_or_price_surplus_bonus(ranking_today, mode, weights):
+    rows = [phone("costly", price=19999, release_date="2026-09-01", brand="苹果"),
+        phone("cheap", price=500, release_date="2026-09-01", brand="苹果"),
+        phone("unknown", price=None), phone("stale", price=100, field_sources={"price": {"origin": "legacy"}})]
+    result = recommend(rows, Preferences(purchase_mode=mode))
+    records = {record["id"]: record for record in result["phones"]}
+    assert set(records) == {"costly", "cheap"}
+    assert result["preferences"]["budget_max"] is None
+    assert result["ranking_policy"]["weights"] == weights
+    assert records["costly"]["recommendation_score"] == records["cheap"]["recommendation_score"]
+    assert all(record["ranking_breakdown"]["value"] == 0 for record in records.values())
+    assert result["coverage"]["excluded"]["over_budget"] == 0
+    assert result["catalogue"] == {"phones": [], "total": 0, "returned": 0}
+
+
+def test_default_storage_is_unrestricted_and_only_explicit_capacity_filters():
+    rows = [phone("unknown", storage_gb=None), phone("small", storage_gb=128), phone("large", storage_gb=256)]
+    assert {record["id"] for record in recommend(rows, Preferences())["phones"]} == {"unknown", "small", "large"}
+    assert [record["id"] for record in recommend(rows, Preferences(min_storage=256))["phones"]] == ["large"]
+
+
+def test_catalogue_search_is_complete_beyond_result_limit_and_marks_purchase_restrictions():
+    rows = [phone(str(index), name=f"iPhone Catalogue {index}", origin="legacy", availability="historical", fetched_at=None)
+        for index in range(65)]
+    rows += [phone("official", name="iPhone 17", origin="official", price=None, storage_gb=None, new_from_source=False, availability="unknown"),
+        phone("pending", name="iPhone Future", release_date="2099-01-01", availability="announced"),
+        phone("over", name="iPhone Premium", price=7000), phone("eligible", name="iPhone Current", price=3000)]
+    result = recommend(rows, Preferences(query="iPhone", budget_max=4000), limit=1)
+    assert len(result["phones"]) == result["total"] == 1
+    assert result["catalogue"]["total"] == result["catalogue"]["returned"] == 69
+    records = {record["id"]: record for record in result["catalogue"]["phones"]}
+    assert records["official"]["catalogue_codes"] == ["availability_unknown", "unknown_price"]
+    assert "upcoming" in records["pending"]["catalogue_codes"]
+    assert "over_budget" in records["over"]["catalogue_codes"]
+    assert records["0"]["catalogue_codes"] == ["history", "stale_price"]
+    assert "不代表已正式上市" in " ".join(records["0"]["catalogue_reasons"])
+    assert records["eligible"]["recommendation_eligible"] is True
+    assert all(not record["recommendation_eligible"] for phone_id, record in records.items() if phone_id != "eligible")
+
+
+def test_catalogue_does_not_ignore_identity_or_an_explicit_capacity_requirement():
+    rows = [phone("unknown", name="iPhone 17", brand="苹果", os="iOS", storage_gb=None, price=None),
+        phone("small", name="iPhone 16", brand="苹果", os="iOS", storage_gb=128, origin="legacy", availability="historical"),
+        phone("large", name="iPhone 16 Pro", brand="苹果", os="iOS", storage_gb=512, origin="legacy", availability="historical"),
+        phone("android", name="iPhone 模拟器手机", brand="其他", os="Android", storage_gb=512)]
+    preferences = Preferences(query=" iPhone ", brands=["苹果"], os="iOS")
+    assert {record["id"] for record in recommend(rows, preferences)["catalogue"]["phones"]} == {"unknown", "small", "large"}
+    preferences.min_storage = 256
+    assert [record["id"] for record in recommend(rows, preferences)["catalogue"]["phones"]] == ["large"]
+
+
+def test_catalogue_family_prefers_eligible_variant_and_current_official_facts_over_old_rumors():
+    rows = [phone("base", name="iPhone Current(128GB)", family_key="current", storage_gb=128, price=2999),
+        phone("large", name="iPhone Current(512GB)", family_key="current", storage_gb=512, price=5999),
+        phone("rumor", name="iPhone 17 预测", family_key="17", origin="legacy", availability="historical", price=100),
+        phone("official", name="iPhone 17", family_key="17", origin="official", availability="unknown", price=None, storage_gb=None)]
+    result = recommend(rows, Preferences(query="iPhone", budget_max=4000))["catalogue"]
+    assert result["total"] == 2
+    assert [record["id"] for record in result["phones"]] == ["base", "official"]
+    assert all(record["catalogue_variant_count"] == 2 for record in result["phones"])
+    rows[:2] = [phone("base", name="iPhone Current(256GB)", family_key="current", storage_gb=256, price=5000),
+        phone("large", name="iPhone Current(512GB)", family_key="current", storage_gb=512, price=6000)]
+    records = recommend(rows, Preferences(query="iPhone", budget_max=4000))["catalogue"]["phones"]
+    assert next(record for record in records if record["family_key"] == "current")["id"] == "base"
+
+
+@pytest.mark.parametrize("sort,expected", [("price_asc", ["low", "high", "unknown"]),
+    ("price_desc", ["high", "low", "unknown"])])
+def test_catalogue_explicit_price_sort_never_treats_unknown_as_zero(sort, expected):
+    rows = [phone("unknown", name="iPhone Unknown", price=None), phone("high", name="iPhone High", price=7000),
+        phone("low", name="iPhone Low", price=3000)]
+    result = recommend(rows, Preferences(query="iPhone", sort=sort))["catalogue"]
+    assert [record["id"] for record in result["phones"]] == expected

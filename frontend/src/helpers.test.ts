@@ -4,6 +4,9 @@ import {
   COMPARE_FIELDS,
   DEFAULT_PREFERENCES,
   enteredBudget,
+  validBudgetInput,
+  resultPhones,
+  catalogueStatusLabel,
   isHistoricalPrice,
   numberSpec,
   priceLabel,
@@ -20,7 +23,7 @@ import {
   safeSource,
   toggleSaved,
 } from "./helpers";
-import type { Phone } from "./types";
+import type { Phone, Recommendations } from "./types";
 
 const phone = {
   id: "100",
@@ -33,12 +36,19 @@ afterEach(() => vi.useRealTimers());
 
 describe("需求提交", () => {
   it("预算首次留空，零和无效输入不被当成无限预算", () => {
-    expect(DEFAULT_PREFERENCES.budget_max).toBe(0);
+    expect(DEFAULT_PREFERENCES.budget_max).toBeNull();
+    expect(DEFAULT_PREFERENCES.min_storage).toBe(0);
     expect(enteredBudget("")).toBeNull();
     expect(enteredBudget(" ")).toBeNull();
-    expect(enteredBudget("0")).toBeNull();
-    expect(enteredBudget("-200")).toBeNull();
-    expect(enteredBudget("not a budget")).toBeNull();
+    expect(enteredBudget("0")).toBeNaN();
+    expect(enteredBudget("-200")).toBeNaN();
+    expect(enteredBudget("not a budget")).toBeNaN();
+    expect(validBudgetInput("")).toBe(true);
+    expect(validBudgetInput("   ")).toBe(true);
+    expect(validBudgetInput("0")).toBe(false);
+    expect(validBudgetInput("-200")).toBe(false);
+    expect(validBudgetInput("not a budget")).toBe(false);
+    expect(validBudgetInput("Infinity")).toBe(false);
     expect(enteredBudget("3500")).toBe(3500);
   });
   it("保留多种用途并移除重复品牌、用途，规范预算和检索文字", () => {
@@ -73,8 +83,42 @@ describe("需求提交", () => {
     expect(submitted.purchase_mode).toBe("used");
     expect(submitted.include_history).toBe(false);
     expect(rankingExplanation("used")).toContain("没有二手行情或库存");
-    expect(rankingExplanation("used")).toContain("85%");
+    expect(rankingExplanation("used", 4000)).toContain("85%");
     expect(rankingExplanation("new")).toContain("一年内");
+  });
+  it("空的最高预算保留 null 与用户设定的最低预算，不引入隐藏金额或容量", () => {
+    const submitted = requestPreferences({
+      ...DEFAULT_PREFERENCES,
+      budget_min: 3000,
+      budget_max: enteredBudget(""),
+    });
+    expect(submitted.budget_min).toBe(3000);
+    expect(submitted.budget_max).toBeNull();
+    expect(submitted.min_storage).toBe(0);
+    expect(
+      requestPreferences({ ...submitted, budget_max: 8000 }).budget_max,
+    ).toBe(8000);
+    expect(rankingExplanation("new", null)).toContain("85%");
+    expect(rankingExplanation("used", null)).toContain("95%");
+    expect(rankingExplanation("new", 4000)).toContain("75%");
+  });
+  it("型号搜索显示完整目录而不是合格购买名单，保留历史和缺价项超过60项", () => {
+    const all = Array.from({ length: 67 }, (_, index) => ({
+      ...phone,
+      id: String(index),
+      catalogue_status: index % 2 ? "history" : "unknown_price",
+      price: index % 2 ? 2999 : null,
+    }));
+    const data = {
+      phones: [phone],
+      catalogue: { phones: all, total: 67, returned: 67 },
+    } as Recommendations;
+    expect(resultPhones(data, "iPhone")).toBe(all);
+    expect(resultPhones(data, " iPhone ")).toHaveLength(67);
+    expect(resultPhones(data, " ")).toEqual([phone]);
+    expect(resultPhones(null, "iPhone")).toEqual([]);
+    expect(catalogueStatusLabel(all[0])).toBe("报价待核实");
+    expect(catalogueStatusLabel(all[1])).toBe("历史资料");
   });
   it("卡片突出时效与品牌依据，不重复已有的需求分与预算信息", () => {
     const ranked = {
@@ -198,6 +242,30 @@ describe("新品来源与日期", () => {
 });
 
 describe("收藏与比较", () => {
+  it("比较和明确咨询保留五部完整机型，不再限三部", () => {
+    const phones = Array.from({ length: 5 }, (_, index) => ({
+      ...phone,
+      id: String(index),
+    }));
+    expect(chatPhoneIds(phones, null, "current")).toEqual([
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+    ]);
+    expect(
+      chatPhoneIds(
+        [],
+        {
+          ids: phones.map((item) => item.id),
+          context: "current",
+          origin: "advice",
+        },
+        "current",
+      ),
+    ).toEqual(["0", "1", "2", "3", "4"]);
+  });
   it("详情明确咨询 B 时不会被已有对比 A 覆盖，对比面板咨询使用明确目标", () => {
     expect(
       chatPhoneIds(
