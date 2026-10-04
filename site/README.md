@@ -1,8 +1,8 @@
 # 挑一部 · 静态产品介绍页
 
-公开入口：<https://zhong-ze-wei.github.io/phone_show-demo/>。公开演示源码仓库：<https://github.com/Zhong-Ze-Wei/phone_show-demo>。
+公开入口：<https://zhong-ze-wei.github.io/phone_show/>。介绍页源码：<https://github.com/Zhong-Ze-Wei/phone_show/tree/master/site>。主应用与介绍页位于同一公开仓库，可直接克隆运行。
 
-该目录独立于 Python、React 与模型服务，只包含 HTML、CSS、JavaScript 和展示资产，直接托管到 GitHub Pages。所有本地资源使用 `./` 相对路径，适配 `/phone_show-demo/` 子路径；无需 Node 构建。`.nojekyll` 关闭 Jekyll 处理。
+该目录独立于 Python、React 与模型服务，只包含 HTML、CSS、JavaScript 和展示资产，直接托管到 GitHub Pages。所有本地资源使用 `./` 相对路径，适配 `/phone_show/` 子路径；无需 Node 构建。`.nojekyll` 关闭 Jekyll 处理。
 
 ## 本地查看
 
@@ -21,7 +21,7 @@ uv run python -m http.server 8510 --bind 127.0.0.1 --directory site
 - 手机图片直接使用 JSON 的真实来源 URL；图片失效显示“暂无来源图片”。真实图库、顾问和手机端界面的截图是本地 PNG，全部来自应用实际运行截图，没有生成商品图片。
 - 顾问球只打开明确标注的录制示例：`recorded_chat` 来自实际模型请求日志。显示固定文本，不随当前演示预算变化，不假装实时响应。打开、查看录制内容、对比等不会请求 `/api`、调用模型或上传输入。
 - 截图切换与放大、预算用途、对比增删、录制对话展开、安装命令复制均可操作。原生 `dialog` 支持 Escape、焦点限制和关闭后返回；`prefers-reduced-motion: reduce` 关闭动画、过渡和平滑滚动。
-- 主应用 `phone_show` 仍为私有仓库，运行、克隆和主应用说明链接需要访问权限；公共介绍页源码仓库仅发布该目录，不含数据库、密钥或原始私有运行日志。
+- 主应用 `phone_show` 为公开仓库，可直接克隆并查看运行说明；同仓库 GitHub Pages 仅发布该目录，不发布数据库、密钥或原始运行日志。
 
 ## 主要文件
 

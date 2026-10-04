@@ -1,12 +1,12 @@
 # 挑一部 · 手机选购工作台
 
-[在线产品介绍与交互演示](https://zhong-ze-wei.github.io/phone_show-demo/) · [本地运行](#直接运行) · [清洗策略](docs/CLEANING_STRATEGY.md)
+[在线产品介绍与交互演示](https://zhong-ze-wei.github.io/phone_show/) · [本地运行](#直接运行) · [清洗策略](docs/CLEANING_STRATEGY.md)
 
 输入自己的预算与用途，找到适合的手机：看大图和规格，收藏、拖拽对比，再让 **DeepSeek-V4.1-Flash** 解释取舍。
 
 这是使用 **Python + uv、SQLite、FastAPI、React** 的本地选购工作台。筛选与对比无需模型；采集品牌官网与 ZOL 的公开资料，自动清洗并保留字段来源。首次预算留空，推荐以用途为主，近一年机型与主流品牌适度加分。
 
-在线介绍页含真实界面截图、动效和可操作的预算／用途、三机对比、顾问录制演示，手机上也能打开。演示使用 2026-10-04 的真实数据快照，不调用模型；完整筛选与连续聊天需启动本地工作台。[展示页源码](site/)与[发布维护说明](docs/PRODUCT_SITE.md)均随项目保存。
+在线介绍页含真实界面截图、动效和可操作的预算／用途、三机对比、顾问录制演示，手机上也能打开。演示使用 2026-10-04 的真实数据快照，不调用模型；完整筛选与连续聊天需启动本地工作台。[展示页源码](site/)与[发布维护说明](docs/PRODUCT_SITE.md)均随项目保存，修改 `site/` 并合并到 `master` 后由 GitHub Actions 自动发布，不再维护独立演示项目。
 
 ![桌面选购工作台：左侧大图图库，右侧预览与对比](docs/ui-reference/image-gallery-desktop.png)
 
