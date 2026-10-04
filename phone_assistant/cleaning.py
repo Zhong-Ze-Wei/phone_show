@@ -6,7 +6,7 @@ import re
 import unicodedata
 
 
-CLEANING_VERSION = "2"
+CLEANING_VERSION = "3"
 _BRANDS = {
     "xiaomi": "小米", "小米": "小米", "redmi": "红米", "红米": "红米",
     "huawei": "华为", "华为": "华为", "honor": "荣耀", "荣耀": "荣耀",
@@ -183,6 +183,23 @@ def _camera(specs: dict, issues: list) -> float | None:
     return _quantity(text, "camera_mp", {"万像素": 0.01, "万": 0.01, "mp": 1, "百万像素": 1, "像素": 0.000001}, None, (0.01, 1000), issues)
 
 
+def _apple_sku_storage(name: str, storage: float | None, issues: list) -> float | None:
+    """具体容量 SKU 的标题优先于系列共用 ROM 行，原参数仍完整保留。"""
+    normalized = unicodedata.normalize("NFKC", name)
+    suffix = r"\(\s*(\d+(?:\.\d+)?)\s*(GB|TB)\s*\)"
+    matches = list(re.finditer(suffix, normalized, re.I))
+    if len(matches) != 1 or matches[0].end() != len(normalized.rstrip()):
+        return storage
+    match = matches[0]
+    capacity = float(match.group(1)) * (1024 if match.group(2).casefold() == "tb" else 1)
+    if not 0 < capacity <= 8192:
+        return storage
+    if storage is not None and capacity != storage:
+        _issue(issues, "storage_gb", "sku_storage_conflict",
+            f"具体配置名称标注 {capacity:g}GB，但来源 ROM 行为 {storage:g}GB；采用具体 SKU 标注，原参数保留待核验。")
+    return capacity
+
+
 def clean_phone(raw: dict) -> dict:
     if raw.get("id") is None or not str(raw["id"]).strip():
         raise ValueError("手机原始记录必须有非空 id。")
@@ -255,6 +272,12 @@ def clean_phone(raw: dict) -> dict:
             elif adaptive:
                 value = adaptive.group(1) + "Hz"
         output[field] = _quantity(value, field, units, default if "(" in key else None, bounds, issues)
+    if brand == "苹果" and origin == "zol":
+        storage = _apple_sku_storage(name, output["storage_gb"], issues)
+        if storage != output["storage_gb"]:
+            output["storage_source_url"] = output["source_url"]
+            output["storage_fetched_at"] = fetched_at
+        output["storage_gb"] = storage
     output["camera_mp"] = _camera(specs, issues)
     soc, _ = _spec(specs, "CPU型号", "处理器", "芯片型号")
     output["soc"] = re.split(r"更多|手机性能排行|查看", _text(soc))[0].strip() if _text(soc) else None

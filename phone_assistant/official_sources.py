@@ -36,7 +36,7 @@ _HOSTS = {
 _PATHS = {
     "vivo": r"/vivo/(?:x\d|xfold\d|s\d|y\d|iqoo\d)[a-z0-9-]*/?",
     "oppo": r"/cn/smartphones/series-[a-z0-9-]+/[a-z0-9-]+/?",
-    "apple": r"/iphone-(?:\d[a-z0-9-]*|duo|air|se)/?",
+    "apple": r"/iphone-(?:\d[a-z0-9-]*|duo|air|se)(?:/specs)?/?",
     "huawei": r"/cn/phones/(?:mate|pura|pocket|nova|enjoy|changxiang)[a-z0-9-]*/?",
     "honor": r"/cn/phones/honor-[a-z0-9-]+/?",
 }
@@ -119,13 +119,22 @@ def discover_models(html: str, catalog_url: str, brand: str) -> list[dict]:
         url = _url(url, catalog_url)
         if not _is_phone(url, brand):
             return
-        if url in discovered:
-            discovered[url]["new_from_source"] |= new
-            if not discovered[url].get("image_url") and image:
-                discovered[url]["image_url"] = image
+        # Apple's current catalogue can link directly to an older phone's
+        # specifications instead of a product landing page. Keep that real URL
+        # and combine both link forms when the same model has both.
+        key = _model_slug(url, brand) if brand == "apple" else url
+        specs_url = url if brand == "apple" and urlsplit(url).path.rstrip("/").endswith("/specs") else None
+        if key in discovered:
+            discovered[key]["new_from_source"] |= new
+            if not discovered[key].get("image_url") and image:
+                discovered[key]["image_url"] = image
+            if specs_url:
+                discovered[key]["specs_url"] = specs_url
             return
-        discovered[url] = {"url": url, "name": name, "new_from_source": new,
+        discovered[key] = {"url": url, "name": name, "new_from_source": new,
                            "source_position": len(discovered), "image_url": image, "price_from": price_from}
+        if specs_url:
+            discovered[key]["specs_url"] = specs_url
 
     for node in soup.select("a[href]"):
         url = _url(node["href"], catalog_url)
@@ -335,12 +344,14 @@ def _validate_model_identity(page_name: str, variants: list[dict], soup, source_
     expected = _model_identity(_model_slug(source_url, brand), brand)
     names = {_model_identity(variant["name"], brand) for variant in variants}
     allowed = {expected}
-    if brand == "apple" and re.fullmatch(r"iphone\d+pro", expected):
-        # Apple explicitly puts Pro and Pro Max in the same specification page.
-        # A title or arbitrary sibling link alone cannot authorize the Max model.
+    if brand == "apple":
+        # Apple can put Pro/Pro Max or the base/Plus model on one specification
+        # page. Only explicit same-page columns authorize the companion model.
+        companion = (expected + "max" if re.fullmatch(r"iphone\d+pro", expected)
+                     else expected + "plus" if re.fullmatch(r"iphone\d+", expected) else None)
         columns = {_model_identity(_text(node), brand) for node in soup.select(".techspecs-columnheader")}
-        if {expected, expected + "max"}.issubset(columns):
-            allowed.add(expected + "max")
+        if companion and {expected, companion}.issubset(columns):
+            allowed.add(companion)
     if _model_identity(page_name, brand) != expected or expected not in names or not names.issubset(allowed):
         raise ValueError("官网正文机型与请求不一致，未发布记录：" + source_url + "；正文：" + ", ".join(variant["name"] for variant in variants))
 
@@ -489,10 +500,12 @@ def sync_official(storage=None, *, brands=None, timeout: float = 20, delay: floa
                                     peer["catalog_fetched_at"] = landing_time
                                     peer["catalog_url"] = model["url"]
                                     models.append(peer)
-                        links = _specification_links(soup, model["url"], brand)
-                        if not links:
-                            raise ValueError("产品页没有公开规格链接：" + model["url"])
-                        specs_url = links[0]
+                        specs_url = model.get("specs_url")
+                        if not specs_url:
+                            links = _specification_links(soup, model["url"], brand)
+                            if not links:
+                                raise ValueError("产品页没有公开规格链接：" + model["url"])
+                            specs_url = links[0]
                         specs_html, specs_time = pages.get(specs_url)
                         raws = parse_specifications(specs_html, specs_url, brand, fetched_at=specs_time,
                                                     catalog_url=model["catalog_url"], model=model)
