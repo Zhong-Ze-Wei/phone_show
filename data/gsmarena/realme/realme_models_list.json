@@ -1,0 +1,134 @@
+{
+  "brand_info": {
+    "brand_name": "Realme",
+    "gsmarena_brand_url": "https://www.gsmarena.com/realme-phones-118.php",
+    "total_models": 0,
+    "last_updated": "2025-10-29"
+  },
+  "series": {
+    "flagship": [
+      {
+        "series_name": "GT Series",
+        "models": [
+          "Realme GT 7 Pro",
+          "Realme GT 6",
+          "Realme GT 5 Pro",
+          "Realme GT 5",
+          "Realme GT 3",
+          "Realme GT 2 Pro",
+          "Realme GT 2",
+          "Realme GT Neo 6 SE",
+          "Realme GT Neo 6",
+          "Realme GT Neo 5 SE",
+          "Realme GT Neo 5",
+          "Realme GT Neo 3",
+          "Realme GT Neo 2",
+          "Realme GT Neo",
+          "Realme GT"
+        ]
+      }
+    ],
+    "mid_range": [
+      {
+        "series_name": "Number Series",
+        "models": [
+          "Realme 12 Pro+ 5G",
+          "Realme 12 Pro 5G",
+          "Realme 12 5G",
+          "Realme 12",
+          "Realme 11 Pro+ 5G",
+          "Realme 11 Pro 5G",
+          "Realme 11 5G",
+          "Realme 11",
+          "Realme 10 Pro+ 5G",
+          "Realme 10 Pro 5G",
+          "Realme 10 5G",
+          "Realme 10",
+          "Realme 9 Pro+ 5G",
+          "Realme 9 Pro 5G",
+          "Realme 9 5G",
+          "Realme 9",
+          "Realme 8 Pro",
+          "Realme 8",
+          "Realme 7 Pro",
+          "Realme 7",
+          "Realme 6 Pro",
+          "Realme 6",
+          "Realme 5 Pro",
+          "Realme 5",
+          "Realme 3 Pro",
+          "Realme 3",
+          "Realme 2 Pro",
+          "Realme 2",
+          "Realme 1"
+        ]
+      }
+    ],
+    "budget": [
+      {
+        "series_name": "C Series",
+        "models": [
+          "Realme C65",
+          "Realme C64",
+          "Realme C63",
+          "Realme C61",
+          "Realme C55",
+          "Realme C53",
+          "Realme C51",
+          "Realme C50",
+          "Realme C33",
+          "Realme C31",
+          "Realme C30",
+          "Realme C25Y",
+          "Realme C25",
+          "Realme C21",
+          "Realme C20",
+          "Realme C15",
+          "Realme C12",
+          "Realme C11",
+          "Realme C3",
+          "Realme C2",
+          "Realme C1"
+        ]
+      },
+      {
+        "series_name": "V Series",
+        "models": [
+          "Realme V30",
+          "Realme V25",
+          "Realme V23",
+          "Realme V15",
+          "Realme V13",
+          "Realme V11",
+          "Realme V5"
+        ]
+      },
+      {
+        "series_name": "Narzo Series",
+        "models": [
+          "Realme Narzo 70 Pro 5G",
+          "Realme Narzo 70 5G",
+          "Realme Narzo 70x 5G",
+          "Realme Narzo 60 Pro 5G",
+          "Realme Narzo 60 5G",
+          "Realme Narzo 60x 5G",
+          "Realme Narzo 50 Pro 5G",
+          "Realme Narzo 50 5G",
+          "Realme Narzo 50i",
+          "Realme Narzo 50A",
+          "Realme Narzo 30 Pro 5G",
+          "Realme Narzo 30 5G",
+          "Realme Narzo 30A",
+          "Realme Narzo 20 Pro",
+          "Realme Narzo 20"
+        ]
+      }
+    ]
+  },
+  "data_collection_status": {
+    "completed_models": [],
+    "in_progress": [],
+    "pending": "all_models"
+  },
+  "notes": "Realme为OPPO子品牌，主打性价比，GT系列为旗舰，Number系列为主力中端，C系列为入门级"
+}

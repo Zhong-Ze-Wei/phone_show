@@ -1,0 +1,37 @@
+from phone_assistant.advisor import build_advice_messages
+from phone_assistant.recommendation import Preferences
+
+
+def test_model_receives_only_selected_phone_evidence_with_field_provenance():
+    phones = [{"id": "1", "name": "选中的手机", "price": 3000, "soc": None, "field_sources": {"price": {"origin": "legacy", "fetched_at": None}}, "source_url": "https://example.com/phone", "issues": [{"message": "内部质量日志"}]}]
+    messages = build_advice_messages(phones, Preferences(priorities=["battery"]), "续航如何？")
+    context = messages[0]["content"]
+    assert "legacy" in context and '"soc": null' in context
+    assert "https://example.com/phone" in context
+    assert "内部质量日志" not in context
+    assert "不要编造评测跑分" in context and "资料不足" in context
+    assert messages[-1]["content"] == "续航如何？"
+
+
+def test_official_upcoming_model_and_starting_price_remain_distinct():
+    messages = build_advice_messages([{"id": "official:apple:duo", "name": "iPhone Duo",
+        "origin": "official", "availability": "announced", "price": None, "price_from": 16999,
+        "new_from_source": True, "release_date": "2026-10-23"}], Preferences(), "能买吗？")
+
+    context = messages[0]["content"]
+    assert '"origin": "official"' in context
+    assert '"price": null' in context
+    assert "不能据起价宣称满足预算" in context
+    assert "不能宣称已在售" in context
+
+
+def test_used_mode_keeps_quote_evidence_distinct_from_second_hand_market():
+    phones = [{"id": "1", "name": "机型参考", "brand": "苹果", "price": 3000}]
+    context = build_advice_messages(phones, Preferences(purchase_mode="used"), "二手能买吗？")[0]["content"]
+    assert '"purchase_mode": "used"' in context
+    assert '"recommendation_score":' in context
+    assert '"ranking_breakdown":' in context
+    assert '"recency": 0' in context
+    assert "不是二手售价" in context
+    assert "成色、电池健康、保修" in context
+    assert "不能证明质量、售后或实测优劣" in context

@@ -1,0 +1,87 @@
+{
+  "brand_info": {
+    "brand_name": "OnePlus",
+    "gsmarena_brand_url": "https://www.gsmarena.com/oneplus-phones-95.php",
+    "total_models": 0,
+    "last_updated": "2025-10-29"
+  },
+  "series": {
+    "flagship": [
+      {
+        "series_name": "Number Series",
+        "models": [
+          "OnePlus 12",
+          "OnePlus 12R",
+          "OnePlus 11",
+          "OnePlus 10 Pro",
+          "OnePlus 10",
+          "OnePlus 9 Pro",
+          "OnePlus 9RT",
+          "OnePlus 9",
+          "OnePlus 8 Pro",
+          "OnePlus 8",
+          "OnePlus 7T Pro",
+          "OnePlus 7T",
+          "OnePlus 7 Pro",
+          "OnePlus 7",
+          "OnePlus 6T",
+          "OnePlus 6",
+          "OnePlus 5T",
+          "OnePlus 5",
+          "OnePlus 3T",
+          "OnePlus 3",
+          "OnePlus 2",
+          "OnePlus One"
+        ]
+      },
+      {
+        "series_name": "Ace Series (China Market)",
+        "models": [
+          "OnePlus Ace 3 Pro",
+          "OnePlus Ace 3",
+          "OnePlus Ace 2 Pro",
+          "OnePlus Ace 2",
+          "OnePlus Ace Pro",
+          "OnePlus Ace"
+        ]
+      }
+    ],
+    "foldable": [
+      {
+        "series_name": "Open Series",
+        "models": [
+          "OnePlus Open",
+          "OnePlus Open (2024)"
+        ]
+      }
+    ],
+    "mid_range": [
+      {
+        "series_name": "Nord Series",
+        "models": [
+          "OnePlus Nord 4",
+          "OnePlus Nord 3",
+          "OnePlus Nord N30 5G",
+          "OnePlus Nord N20 5G",
+          "OnePlus Nord N200 5G",
+          "OnePlus Nord N100",
+          "OnePlus Nord CE 3 Lite",
+          "OnePlus Nord CE 3",
+          "OnePlus Nord CE 2 Lite 5G",
+          "OnePlus Nord CE 2",
+          "OnePlus Nord CE 5G",
+          "OnePlus Nord 2",
+          "OnePlus Nord N10 5G",
+          "OnePlus Nord N100",
+          "OnePlus Nord"
+        ]
+      }
+    ]
+  },
+  "data_collection_status": {
+    "completed_models": [],
+    "in_progress": [],
+    "pending": "all_models"
+  },
+  "notes": "一加以性能和性价比著称，Number系列为旗舰，Nord系列为中端，Ace系列主要面向中国市场"
+}

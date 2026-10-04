@@ -1,0 +1,83 @@
+{
+  "brand_info": {
+    "brand_name": "Honor",
+    "gsmarena_brand_url": "https://www.gsmarena.com/honor-phones-96.php",
+    "total_models": 0,
+    "last_updated": "2025-10-29"
+  },
+  "series": {
+    "flagship": [
+      {
+        "series_name": "Magic Series",
+        "models": [
+          "Honor Magic 6 Pro",
+          "Honor Magic 6",
+          "Honor Magic 5 Pro",
+          "Honor Magic 5",
+          "Honor Magic 4 Pro",
+          "Honor Magic 4",
+          "Honor Magic 3 Pro+",
+          "Honor Magic 3 Pro",
+          "Honor Magic 3"
+        ]
+      },
+      {
+        "series_name": "Magic V Series (Foldable)",
+        "models": [
+          "Honor Magic V2",
+          "Honor Magic Vs",
+          "Honor Magic V"
+        ]
+      }
+    ],
+    "mid_range": [
+      {
+        "series_name": "Number Series",
+        "models": [
+          "Honor 90",
+          "Honor 90 Pro",
+          "Honor 80",
+          "Honor 80 Pro",
+          "Honor 70",
+          "Honor 70 Pro+",
+          "Honor 70 Pro",
+          "Honor 60",
+          "Honor 60 Pro",
+          "Honor 50",
+          "Honor 50 Pro",
+          "Honor 50 Pro+"
+        ]
+      }
+    ],
+    "budget": [
+      {
+        "series_name": "X Series",
+        "models": [
+          "Honor X9b",
+          "Honor X9a",
+          "Honor X8",
+          "Honor X7",
+          "Honor X6",
+          "Honor X5"
+        ]
+      },
+      {
+        "series_name": "Play Series",
+        "models": [
+          "Honor Play 8T",
+          "Honor Play 7T",
+          "Honor Play 6T Pro",
+          "Honor Play 6T",
+          "Honor Play 5",
+          "Honor Play 4"
+        ]
+      }
+    ]
+  },
+  "data_collection_status": {
+    "completed_models": [],
+    "in_progress": [],
+    "pending": "all_models"
+  },
+  "notes": "荣耀独立后发展迅速，Magic系列对标华为Mate和P系列"
+}

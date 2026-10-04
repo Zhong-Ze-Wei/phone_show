@@ -1,0 +1,133 @@
+from unittest.mock import Mock
+
+from fastapi.testclient import TestClient
+
+from phone_assistant.config import Settings
+from phone_assistant.server import create_app
+
+
+def client_for(phones=None):
+    storage = Mock()
+    storage.list_phones.return_value = phones or []
+    storage.summary.return_value = {"records": len(phones or [])}
+    storage.get_phone.side_effect = lambda id: next((phone for phone in (phones or []) if phone["id"] == id), None)
+    return TestClient(create_app(storage=storage, settings=Settings("private-test-secret")))
+
+
+def test_metadata_never_returns_api_key():
+    response = client_for().get("/api/meta")
+    assert response.status_code == 200
+    assert response.json()["api_configured"] is True
+    assert "private-test-secret" not in response.text
+
+
+def test_reversed_budget_rejected_before_recommendation():
+    response = client_for().post("/api/recommend", json={"budget_min": 5000, "budget_max": 3000})
+    assert response.status_code == 422
+
+
+def test_unknown_priority_rejected():
+    assert client_for().post("/api/recommend", json={"budget_max": 3000, "priorities": ["imaginary-benchmark"]}).status_code == 422
+
+
+def test_unknown_phone_returns_404():
+    assert client_for().get("/api/phones/missing").status_code == 404
+
+
+def test_explain_rejects_missing_candidate_without_api_call():
+    assert client_for().post("/api/explain", json={"ids": ["missing"], "preferences": {"budget_max": 3000}}).status_code == 404
+
+
+def test_filter_preserves_unknowns_and_budget_boundary():
+    from datetime import datetime, timezone
+
+    phones = [{"id": "test", "name": "测试型号", "brand": "测试", "price": 3000, "storage_gb": 256, "origin": "zol", "availability": "listed", "fetched_at": datetime.now(timezone.utc).isoformat()}]
+    response = client_for(phones).post("/api/recommend", json={"budget_max": 3000})
+    assert response.status_code == 200
+    record = response.json()["phones"][0]
+    assert record["price"] == 3000
+    assert record["metrics"]["camera"] is None
+    assert "待补充" in " ".join(record["tradeoffs"])
+
+
+def test_partial_coverage_without_request_errors_is_not_announced_as_complete(monkeypatch):
+    from phone_assistant.server import SyncJob
+
+    monkeypatch.setattr("phone_assistant.pipeline.run_sync", lambda **kwargs: {"status": "partial", "errors": [], "list_count_mismatch": True})
+    job = SyncJob(Mock())
+    job.run()
+    assert job.snapshot()["stage"] == "部分完成"
+    assert "覆盖仍有缺口" in job.snapshot()["message"]
+
+
+def test_comparison_recalculates_same_preferences_and_marks_out_of_budget():
+    from datetime import datetime, timezone
+
+    phones = [{"id": "a", "name": "手机A", "price": 3999, "ram_gb": 12, "storage_gb": 512,
+        "battery_mah": 7000, "charging_w": 100, "origin": "zol", "availability": "listed",
+        "fetched_at": datetime.now(timezone.utc).isoformat()}]
+    client = client_for(phones)
+    result = client.post("/api/compare", json={"ids": ["a"], "preferences": {"budget_max": 3000, "priorities": ["battery"]}})
+    assert result.status_code == 200
+    phone = result.json()["phones"][0]
+    assert phone["metrics"]["battery"] is not None
+    assert phone["budget_warning"] == "超出当前预算范围"
+    assert phone["price"] == 3999
+
+
+def test_sort_is_explicit_and_validated():
+    assert client_for().post("/api/recommend", json={"budget_max": 3000}).json()["preferences"]["sort"] == "recommended"
+    assert client_for().post("/api/recommend", json={"budget_max": 3000, "sort": "recommended"}).status_code == 200
+    assert client_for().post("/api/recommend", json={"budget_max": 3000, "sort": "newest"}).json()["preferences"]["sort"] == "newest"
+    assert client_for().post("/api/recommend", json={"budget_max": 3000, "sort": "imaginary"}).status_code == 422
+
+
+def test_purchase_mode_is_validated_and_does_not_enable_history():
+    result = client_for().post("/api/recommend", json={"budget_max": 3000, "purchase_mode": "used"})
+    assert result.status_code == 200
+    payload = result.json()
+    assert payload["preferences"]["purchase_mode"] == "used"
+    assert payload["preferences"]["include_history"] is False
+    assert payload["ranking_policy"]["weights"]["recency"] == 0
+    assert client_for().post("/api/recommend", json={"budget_max": 3000, "purchase_mode": "refurbished"}).status_code == 422
+
+
+def test_compare_and_recommend_share_explainable_ranking():
+    from datetime import datetime, timezone
+
+    phones = [{"id": "a", "name": "手机A", "brand": "荣耀", "price": 2500, "storage_gb": 256,
+        "battery_mah": 6000, "charging_w": 80, "origin": "zol", "availability": "listed",
+        "fetched_at": datetime.now(timezone.utc).isoformat(), "release_date": "2023-01-01"}]
+    client = client_for(phones)
+    preferences = {"budget_max": 3000, "purchase_mode": "used", "priorities": ["battery"]}
+    recommended = client.post("/api/recommend", json=preferences).json()["phones"][0]
+    compared = client.post("/api/compare", json={"ids": ["a"], "preferences": preferences}).json()["phones"][0]
+    for field in ("score", "recommendation_score", "ranking_breakdown", "ranking_reasons"):
+        assert recommended[field] == compared[field]
+
+
+def test_new_source_search_is_not_silently_hidden_by_budget():
+    from datetime import datetime, timezone
+    phone = {"id": "official:vivo:x500", "name": "vivo X500", "brand": "vivo", "price": None, "storage_gb": None,
+        "origin": "official", "availability": "unknown", "fetched_at": datetime.now(timezone.utc).isoformat(), "new_from_source": True}
+    result = client_for([phone]).post("/api/recommend", json={"budget_max": 3000, "query": "X500"}).json()
+    assert result["total"] == 0
+    assert result["discovery"]["phones"][0]["name"] == "vivo X500"
+    assert "不能确认是否在预算内" in " ".join(result["discovery"]["phones"][0]["discovery_reasons"])
+
+
+def test_recommend_requires_explicit_budget_without_assuming_4000():
+    client = client_for()
+    response = client.post("/api/recommend", json={})
+    assert response.status_code == 422
+    assert any(error["loc"] == ["body", "budget_max"] for error in response.json()["detail"])
+
+
+def test_compare_and_explain_require_preferences_and_explicit_budget():
+    client = client_for()
+    for path in ("/api/compare", "/api/explain"):
+        omitted = client.post(path, json={"ids": ["a"]})
+        missing_budget = client.post(path, json={"ids": ["a"], "preferences": {}})
+        assert omitted.status_code == 422
+        assert missing_budget.status_code == 422
+        assert any(error["loc"] == ["body", "preferences", "budget_max"] for error in missing_budget.json()["detail"])

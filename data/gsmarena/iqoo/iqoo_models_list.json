@@ -1,0 +1,88 @@
+{
+  "brand_info": {
+    "brand_name": "iQOO",
+    "gsmarena_brand_url": "https://www.gsmarena.com/iqoo-phones-119.php",
+    "total_models": 0,
+    "last_updated": "2025-10-29"
+  },
+  "series": {
+    "flagship": [
+      {
+        "series_name": "Number Series",
+        "models": [
+          "iQOO 13",
+          "iQOO 12",
+          "iQOO 11 Pro",
+          "iQOO 11",
+          "iQOO 10 Pro",
+          "iQOO 10",
+          "iQOO 9 Pro",
+          "iQOO 9",
+          "iQOO 8 Pro",
+          "iQOO 8",
+          "iQOO 7",
+          "iQOO 5 Pro",
+          "iQOO 5",
+          "iQOO 3",
+          "iQOO Pro",
+          "iQOO"
+        ]
+      }
+    ],
+    "gaming": [
+      {
+        "series_name": "Legend Series",
+        "models": [
+          "iQOO 13 Legend Edition",
+          "iQOO 12 Legend Edition",
+          "iQOO 11S Legend Edition",
+          "iQOO 9 SE Legend Edition",
+          "iQOO 7 Legend Edition",
+          "iQOO 5 Pro Legend Edition",
+          "iQOO 3 Legend Edition"
+        ]
+      }
+    ],
+    "mid_range": [
+      {
+        "series_name": "Neo Series",
+        "models": [
+          "iQOO Neo 10 Pro",
+          "iQOO Neo 10",
+          "iQOO Neo 9 Pro",
+          "iQOO Neo 9",
+          "iQOO Neo 8 Pro",
+          "iQOO Neo 8",
+          "iQOO Neo 7 Pro",
+          "iQOO Neo 7",
+          "iQOO Neo 6 SE",
+          "iQOO Neo 6",
+          "iQOO Neo 5",
+          "iQOO Neo 3"
+        ]
+      },
+      {
+        "series_name": "Z Series",
+        "models": [
+          "iQOO Z9 Turbo",
+          "iQOO Z9 Pro",
+          "iQOO Z9",
+          "iQOO Z8",
+          "iQOO Z7",
+          "iQOO Z6 Pro",
+          "iQOO Z6",
+          "iQOO Z5",
+          "iQOO Z3",
+          "iQOO Z1x 5G",
+          "iQOO Z1 5G"
+        ]
+      }
+    ]
+  },
+  "data_collection_status": {
+    "completed_models": [],
+    "in_progress": [],
+    "pending": "all_models"
+  },
+  "notes": "iQOO为vivo子品牌，主打游戏和性能，数字系列为旗舰，Neo系列为次旗舰，Z系列为中端"
+}

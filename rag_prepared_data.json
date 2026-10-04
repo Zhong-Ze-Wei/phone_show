@@ -1,0 +1,341 @@
+{
+  "metadata": {
+    "version": "2.0",
+    "created_date": "2025-10-29",
+    "data_source": "中国手机数据收集项目",
+    "total_phones": 26,
+    "total_brands": 8,
+    "last_updated": "2025-10-29"
+  },
+  "phone_database": [
+    {
+      "id": "xiaomi_15_ultra",
+      "brand": "小米",
+      "model": "15 Ultra",
+      "series": "Ultra系列",
+      "release_date": "2024-10",
+      "price_range": "5000-7000元",
+      "target_audience": ["摄影爱好者", "商务人士", "科技发烧友"],
+      "key_features": ["徕卡四摄", "1英寸传感器", "200MP超长焦", "澎湃OS"],
+      "competitive_advantages": ["徕卡合作", "影像系统", "快充技术"],
+      "camera_specs": {
+        "main_camera": {
+          "sensor": "索尼LYT-900",
+          "megapixels": 50,
+          "aperture": "f/1.6-f/4.0",
+          "sensor_size": "1英寸",
+          "features": ["光学防抖", "可变光圈", "激光对焦"]
+        },
+        "ultrawide_camera": {
+          "sensor": "索尼IMX858",
+          "megapixels": 50,
+          "aperture": "f/2.2",
+          "fov": "122°"
+        },
+        "telephoto_camera": {
+          "sensor": "三星JN1",
+          "megapixels": 200,
+          "aperture": "f/2.6",
+          "optical_zoom": "5倍",
+          "digital_zoom": "120倍"
+        },
+        "partnership": "徕卡光学合作",
+        "dxomark_score": 140,
+        "video_capabilities": ["8K@24fps", "4K@120fps", "专业电影模式"]
+      },
+      "performance": {
+        "chipset": "骁龙8 Gen 4",
+        "cpu": "Octa-core",
+        "gpu": "Adreno 750",
+        "ram": "12GB/16GB LPDDR5X",
+        "storage": "256GB/512GB/1TB UFS 4.0",
+        "os": "Android 14 + 澎湃OS"
+      },
+      "display": {
+        "type": "OLED",
+        "size": "6.73英寸",
+        "resolution": "3200×1440",
+        "refresh_rate": "120Hz LTPO",
+        "brightness": "3000尼特峰值",
+        "features": ["HDR10+", "杜比视界", "1-144Hz自适应"]
+      },
+      "battery": {
+        "capacity": "5300mAh",
+        "charging": "90W有线 + 80W无线",
+        "wireless_reverse": "10W",
+        "endurance_rating": "优秀"
+      },
+      "build_quality": {
+        "materials": ["玻璃", "铝合金中框", "素皮版本"],
+        "water_resistance": "IP68",
+        "dimensions": "161.6×77.3×8.9mm",
+        "weight": "221g"
+      },
+      "use_cases": {
+        "photography": "专业摄影，徕卡色彩科学",
+        "gaming": "高性能游戏体验",
+        "business": "商务办公，续航持久",
+        "daily_use": "日常使用，流畅体验"
+      },
+      "competitors": ["华为Pura70 Ultra", "OPPO Find X8 Ultra", "vivo X200 Pro"],
+      "qa_pairs": [
+        {
+          "question": "小米15 Ultra的相机系统有什么特点？",
+          "answer": "小米15 Ultra搭载徕卡四摄系统，主摄采用1英寸索尼LYT-900传感器，支持可变光圈，还有200MP超长焦镜头，专业影像能力出色。"
+        },
+        {
+          "question": "小米15 Ultra适合什么人群使用？",
+          "answer": "适合摄影爱好者、商务人士和科技发烧友，特别是对手机摄影有较高要求的用户。"
+        }
+      ]
+    },
+    {
+      "id": "huawei_pura70_ultra",
+      "brand": "华为",
+      "model": "Pura70 Ultra",
+      "series": "Pura系列",
+      "release_date": "2024-04",
+      "price_range": "8000-10000元",
+      "target_audience": ["摄影专业人士", "商务精英", "科技爱好者"],
+      "key_features": ["伸缩镜头", "1英寸可变光圈", "麒麟9010", "鸿蒙OS"],
+      "competitive_advantages": ["伸缩镜头技术", "可变光圈", "卫星通信", "鸿蒙生态"],
+      "camera_specs": {
+        "main_camera": {
+          "sensor": "华为IMX989",
+          "megapixels": 50,
+          "aperture": "f/1.6-f/4.0",
+          "sensor_size": "1英寸",
+          "features": ["伸缩镜头", "可变光圈", "光学防抖", "激光对焦"]
+        },
+        "ultrawide_camera": {
+          "sensor": "华为IMX858",
+          "megapixels": 40,
+          "aperture": "f/2.2",
+          "fov": "120°"
+        },
+        "telephoto_camera": {
+          "sensor": "华为OV64B",
+          "megapixels": 48,
+          "aperture": "f/2.1",
+          "optical_zoom": "3.5倍",
+          "digital_zoom": "100倍",
+          "features": ["潜望式", "微距拍摄"]
+        },
+        "innovation": "业界首创伸缩镜头设计",
+        "dxomark_score": 142,
+        "video_capabilities": ["4K@120fps", "专业电影模式", "双机位拍摄"]
+      },
+      "performance": {
+        "chipset": "麒麟9010",
+        "cpu": "Octa-core",
+        "gpu": "Maleoon 910",
+        "ram": "16GB",
+        "storage": "512GB/1TB",
+        "os": "鸿蒙OS 4.0"
+      },
+      "display": {
+        "type": "OLED",
+        "size": "6.8英寸",
+        "resolution": "2844×1260",
+        "refresh_rate": "120Hz LTPO",
+        "brightness": "2500尼特峰值",
+        "features": ["HDR10+", "高频PWM调光", "第二代昆仑玻璃"]
+      },
+      "battery": {
+        "capacity": "5000mAh",
+        "charging": "100W有线 + 80W无线",
+        "wireless_reverse": "20W",
+        "endurance_rating": "优秀"
+      },
+      "build_quality": {
+        "materials": ["玄武岩玻璃", "铝合金中框"],
+        "water_resistance": "IP68",
+        "dimensions": "162.6×75.1×8.6mm",
+        "weight": "220g"
+      },
+      "special_features": {
+        "satellite_communication": "北斗卫星消息",
+        "security": "HarmonyOS安全系统",
+        "ecosystem": "华为生态系统"
+      },
+      "use_cases": {
+        "photography": "专业摄影创作，伸缩镜头创新体验",
+        "business": "商务办公，卫星通信保障",
+        "creativity": "创意拍摄，专业视频制作",
+        "daily_use": "日常使用，鸿蒙生态体验"
+      },
+      "competitors": ["小米15 Ultra", "OPPO Find X8 Ultra", "iPhone 16 Pro Max"],
+      "qa_pairs": [
+        {
+          "question": "华为Pura70 Ultra的伸缩镜头有什么优势？",
+          "answer": "华为Pura70 Ultra采用业界首创的伸缩镜头设计，支持物理伸缩对焦，提供更大的光圈调节范围和更好的成像质量，是手机摄影技术的重大突破。"
+        },
+        {
+          "question": "华为Pura70 Ultra的卫星通信功能如何？",
+          "answer": "支持北斗卫星消息功能，在没有地面网络的情况下也能发送文字消息和位置信息，为户外探险和紧急情况提供通信保障。"
+        }
+      ]
+    },
+    {
+      "id": "oppo_find_x8_ultra",
+      "brand": "OPPO",
+      "model": "Find X8 Ultra",
+      "series": "Find X系列",
+      "release_date": "2024-10",
+      "price_range": "6000-8000元",
+      "target_audience": ["摄影爱好者", "设计师", "商务人士"],
+      "key_features": ["双潜望长焦", "哈苏合作", "DXOMARK第一", "100W快充"],
+      "competitive_advantages": ["双潜望系统", "哈苏色彩", "影像算法", "快充技术"],
+      "camera_specs": {
+        "main_camera": {
+          "sensor": "索尼LYT-900",
+          "megapixels": 50,
+          "aperture": "f/1.8",
+          "sensor_size": "1英寸",
+          "features": ["光学防抖", "全像素对焦", "哈苏自然色彩"]
+        },
+        "ultrawide_camera": {
+          "sensor": "索尼IMX858",
+          "megapixels": 50,
+          "aperture": "f/2.0",
+          "fov": "123°"
+        },
+        "telephoto_camera_1": {
+          "sensor": "索尼IMX890",
+          "megapixels": 50,
+          "aperture": "f/2.6",
+          "optical_zoom": "3倍",
+          "features": ["潜望式", "光学防抖"]
+        },
+        "telephoto_camera_2": {
+          "sensor": "索尼IMX858",
+          "megapixels": 50,
+          "aperture": "f/4.3",
+          "optical_zoom": "6倍",
+          "features": ["潜望式", "光学防抖"]
+        },
+        "partnership": "哈苏色彩科学合作",
+        "dxomark_score": 145,
+        "innovation": "双潜望长焦系统",
+        "video_capabilities": ["8K@30fps", "4K@120fps", "哈苏电影模式"]
+      },
+      "performance": {
+        "chipset": "骁龙8 Gen 4",
+        "cpu": "Octa-core",
+        "gpu": "Adreno 750",
+        "ram": "16GB LPDDR5X",
+        "storage": "256GB/512GB/1TB UFS 4.0",
+        "os": "Android 14 + ColorOS 14"
+      },
+      "display": {
+        "type": "AMOLED",
+        "size": "6.82英寸",
+        "resolution": "3168×1440",
+        "refresh_rate": "120Hz LTPO",
+        "brightness": "4500尼特峰值",
+        "features": ["HDR10+", "杜比视界", "2K分辨率"]
+      },
+      "battery": {
+        "capacity": "5400mAh",
+        "charging": "100W有线 + 50W无线",
+        "wireless_reverse": "10W",
+        "endurance_rating": "优秀"
+      },
+      "build_quality": {
+        "materials": ["玻璃后盖", "不锈钢中框", "素皮版本"],
+        "water_resistance": "IP68",
+        "dimensions": "164.3×76.5×9.1mm",
+        "weight": "228g"
+      },
+      "use_cases": {
+        "photography": "专业摄影，双潜望远摄优势",
+        "business": "商务使用，高端品质",
+        "creativity": "创意拍摄，哈苏色彩",
+        "daily_use": "日常使用，快速充电"
+      },
+      "competitors": ["小米15 Ultra", "华为Pura70 Ultra", "vivo X200 Pro"],
+      "qa_pairs": [
+        {
+          "question": "OPPO Find X8 Ultra的双潜望长焦有什么优势？",
+          "answer": "OPPO Find X8 Ultra搭载双潜望长焦系统，分别提供3倍和6倍光学变焦，覆盖更广的焦段范围，在不同拍摄场景下都能提供高质量的远摄效果。"
+        },
+        {
+          "question": "OPPO Find X8 Ultra的DXOMARK评分如何？",
+          "answer": "OPPO Find X8 Ultra获得了DXOMARK 145分的高分，在2024年的手机相机评测中排名第一，展现了其在影像技术方面的领先地位。"
+        }
+      ]
+    }
+  ],
+  "technology_explanations": [
+    {
+      "term": "1英寸传感器",
+      "explanation": "1英寸传感器是目前手机中最大的传感器尺寸之一，更大的传感器意味着更多的进光量，在暗光环境下表现更好，同时能够获得更好的背景虚化效果。",
+      "advantages": ["暗光表现出色", "背景虚化自然", "动态范围广", "噪点控制好"],
+      "applications": ["夜景拍摄", "人像摄影", "专业摄影"],
+      "phones_using": ["小米15 Ultra", "华为Pura70 Ultra", "OPPO Find X8 Ultra"]
+    },
+    {
+      "term": "可变光圈",
+      "explanation": "可变光圈技术允许相机镜头的光圈大小在f/1.4到f/4.0之间调节，大光圈适合暗光拍摄和背景虚化，小光圈适合强光环境和景深控制。",
+      "advantages": ["适应不同光线", "控制景深效果", "提升画质", "专业摄影"],
+      "applications": ["人像拍摄", "风景摄影", "创意拍摄"],
+      "phones_using": ["小米15 Ultra", "华为Pura70 Ultra"]
+    },
+    {
+      "term": "潜望式长焦",
+      "explanation": "潜望式长焦镜头通过横向排列镜片组，在有限机身内容纳更长的焦距，实现高倍光学变焦，是手机远摄技术的重要突破。",
+      "advantages": ["高倍变焦", "画质稳定", "便携设计", "防抖效果好"],
+      "applications": ["远距离拍摄", "人像特写", "体育摄影"],
+      "phones_using": ["OPPO Find X8 Ultra", "华为Pura70 Ultra", "小米15 Ultra"]
+    },
+    {
+      "term": "LTPO屏幕",
+      "explanation": "LTPO（低温多晶氧化物）屏幕技术允许刷新率在1Hz到120Hz之间动态调节，静态内容使用低刷新率节省电量，动态内容使用高刷新率保证流畅。",
+      "advantages": ["省电", "流畅", "自适应", "护眼"],
+      "applications": ["日常使用", "游戏娱乐", "阅读浏览"],
+      "phones_using": ["小米15 Ultra", "华为Pura70 Ultra", "OPPO Find X8 Ultra"]
+    }
+  ],
+  "comparison_matrix": {
+    "camera_comparison": {
+      "criteria": ["主摄传感器", "长焦系统", "DXOMARK评分", "特色功能"],
+      "phones": {
+        "小米15 Ultra": ["索尼LYT-900 1英寸", "200MP 5倍光变", "140分", "徕卡合作"],
+        "华为Pura70 Ultra": ["华为IMX989 1英寸", "48MP 3.5倍光变", "142分", "伸缩镜头"],
+        "OPPO Find X8 Ultra": ["索尼LYT-900 1英寸", "双潜望长焦", "145分", "哈苏合作"]
+      }
+    },
+    "performance_comparison": {
+      "criteria": ["处理器", "内存配置", "操作系统", "快充功率"],
+      "phones": {
+        "小米15 Ultra": ["骁龙8 Gen 4", "16GB LPDDR5X", "澎湃OS", "90W有线+80W无线"],
+        "华为Pura70 Ultra": ["麒麟9010", "16GB", "鸿蒙OS 4.0", "100W有线+80W无线"],
+        "OPPO Find X8 Ultra": ["骁龙8 Gen 4", "16GB LPDDR5X", "ColorOS 14", "100W有线+50W无线"]
+      }
+    }
+  },
+  "recommendation_engine": {
+    "use_case_mapping": {
+      "photography_enthusiast": {
+        "recommended_phones": ["华为Pura70 Ultra", "OPPO Find X8 Ultra", "小米15 Ultra"],
+        "key_features": ["伸缩镜头", "双潜望长焦", "徕卡合作"],
+        "price_range": "6000-10000元"
+      },
+      "business_user": {
+        "recommended_phones": ["华为Pura70 Ultra", "小米15 Ultra", "OPPO Find X8 Ultra"],
+        "key_features": ["卫星通信", "续航持久", "商务外观"],
+        "price_range": "5000-8000元"
+      },
+      "gaming_enthusiast": {
+        "recommended_phones": ["小米15 Ultra", "OPPO Find X8 Ultra"],
+        "key_features": ["骁龙8 Gen 4", "高刷新率", "大内存"],
+        "price_range": "5000-7000元"
+      },
+      "budget_conscious": {
+        "recommended_phones": ["一加13", "iQOO 13", "Realme GT 7 Pro"],
+        "key_features": ["性价比高", "性能强劲", "价格适中"],
+        "price_range": "3000-5000元"
+      }
+    }
+  }
+}

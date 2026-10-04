@@ -1,0 +1,9 @@
+{
+  "name": "choise-phone-workspace",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix frontend run build",
+    "test": "npm --prefix frontend test && uv run --no-sync pytest -q",
+    "dev": "npm --prefix frontend run dev"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "brand_info": {
+    "brand_name": "Huawei",
+    "gsmarena_brand_url": "https://www.gsmarena.com/huawei-phones-58.php",
+    "total_models": 0,
+    "last_updated": "2025-10-29"
+  },
+  "series": {
+    "flagship": [
+      {
+        "series_name": "P Series",
+        "models": [
+          "Huawei Pura 70 Ultra",
+          "Huawei Pura 70 Pro",
+          "Huawei Pura 70",
+          "Huawei P60 Pro",
+          "Huawei P60",
+          "Huawei P50 Pro",
+          "Huawei P50",
+          "Huawei P40 Pro+",
+          "Huawei P40 Pro",
+          "Huawei P40",
+          "Huawei P30 Pro",
+          "Huawei P30",
+          "Huawei P20 Pro",
+          "Huawei P20"
+        ]
+      },
+      {
+        "series_name": "Mate Series",
+        "models": [
+          "Huawei Mate 60 Pro+",
+          "Huawei Mate 60 Pro",
+          "Huawei Mate 60",
+          "Huawei Mate 50 Pro",
+          "Huawei Mate 50 RS Porsche Design",
+          "Huawei Mate 50",
+          "Huawei Mate 40 Pro+",
+          "Huawei Mate 40 Pro",
+          "Huawei Mate 40",
+          "Huawei Mate 30 Pro",
+          "Huawei Mate 30",
+          "Huawei Mate 20 Pro",
+          "Huawei Mate 20"
+        ]
+      },
+      {
+        "series_name": "Mate X Series (Foldable)",
+        "models": [
+          "Huawei Mate X5",
+          "Huawei Mate Xs 2",
+          "Huawei Mate X2",
+          "Huawei Mate Xs",
+          "Huawei Mate X"
+        ]
+      }
+    ],
+    "mid_range": [
+      {
+        "series_name": "Nova Series",
+        "models": [
+          "Huawei Nova 13 Pro",
+          "Huawei Nova 13",
+          "Huawei Nova 12 Pro",
+          "Huawei Nova 12",
+          "Huawei Nova 11 Pro",
+          "Huawei Nova 11",
+          "Huawei Nova 10 Pro",
+          "Huawei Nova 10",
+          "Huawei Nova 9 Pro",
+          "Huawei Nova 9",
+          "Huawei Nova 8 Pro",
+          "Huawei Nova 8",
+          "Huawei Nova 7 Pro",
+          "Huawei Nova 7"
+        ]
+      }
+    ],
+    "budget": [
+      {
+        "series_name": "Y Series",
+        "models": [
+          "Huawei Y9a",
+          "Huawei Y9 Prime 2019",
+          "Huawei Y9 2019",
+          "Huawei Y8p",
+          "Huawei Y7p",
+          "Huawei Y7 Prime 2019",
+          "Huawei Y7 2019",
+          "Huawei Y6p",
+          "Huawei Y6 2019",
+          "Huawei Y5 2019"
+        ]
+      },
+      {
+        "series_name": "Enjoy Series",
+        "models": [
+          "Huawei Enjoy 20e",
+          "Huawei Enjoy 20 Plus",
+          "Huawei Enjoy 20",
+          "Huawei Enjoy 10 Plus",
+          "Huawei Enjoy 10"
+        ]
+      }
+    ]
+  },
+  "data_collection_status": {
+    "completed_models": [],
+    "in_progress": [],
+    "pending": "all_models"
+  },
+  "notes": "华为机型因制裁可能缺少Google服务，需要在规格中特别标注GMS支持情况"
+}

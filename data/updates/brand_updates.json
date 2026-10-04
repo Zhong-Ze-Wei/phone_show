@@ -1,0 +1,50 @@
+[
+  {
+    "brand": "xiaomi",
+    "update_time": "2025-10-29T00:54:28.580877",
+    "source": "https://www.mi.com/",
+    "status": "checked"
+  },
+  {
+    "brand": "huawei",
+    "update_time": "2025-10-29T00:54:28.580877",
+    "source": "https://consumer.huawei.com/",
+    "status": "checked"
+  },
+  {
+    "brand": "oppo",
+    "update_time": "2025-10-29T00:54:28.580877",
+    "source": "https://www.oppo.com/",
+    "status": "checked"
+  },
+  {
+    "brand": "honor",
+    "update_time": "2025-10-29T00:54:28.580877",
+    "source": "https://www.honor.com/",
+    "status": "checked"
+  },
+  {
+    "brand": "vivo",
+    "update_time": "2025-10-29T00:54:28.580877",
+    "source": "https://www.vivo.com/",
+    "status": "checked"
+  },
+  {
+    "brand": "oneplus",
+    "update_time": "2025-10-29T00:54:28.580877",
+    "source": "https://www.oneplus.com/",
+    "status": "checked"
+  },
+  {
+    "brand": "iqoo",
+    "update_time": "2025-10-29T00:54:28.580877",
+    "source": "https://www.iqoo.com/",
+    "status": "checked"
+  },
+  {
+    "brand": "realme",
+    "update_time": "2025-10-29T00:54:28.580877",
+    "source": "https://www.realme.com/",
+    "status": "checked"
+  }
+]

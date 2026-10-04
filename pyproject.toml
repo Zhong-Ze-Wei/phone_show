@@ -1,0 +1,49 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "choise-phone"
+version = "0.2.0"
+description = "采集、清洗与按需求推荐手机的本地选购工作台"
+readme = "README.md"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "openai>=2.0,<3",
+    "python-dotenv>=1.0,<2",
+    "openpyxl>=3.1,<4",
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.34,<1",
+    "httpx>=0.28,<1",
+    "beautifulsoup4>=4.13,<5",
+    "filelock>=3.18,<4",
+]
+
+[project.optional-dependencies]
+crawler = [
+    "agno>=2.1,<3",
+    "ddgs>=9,<10",
+    "crawl4ai>=0.7,<1",
+]
+
+[dependency-groups]
+dev = ["pytest>=8,<10"]
+
+[project.scripts]
+phone-assistant = "phone_assistant.cli:main"
+phone-finder = "phone_assistant.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["phone_assistant"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/phone_assistant", "/get_data", "/scripts", "/tests", "/docs/*.md", "/docs/ui-reference/*.png", "/README.md",
+    "/pyproject.toml", "/uv.lock", "/.python-version", "/.env.example",
+    "/app.py", "/start.ps1", "/package.json", "/frontend/src", "/frontend/index.html",
+    "/frontend/package.json", "/frontend/package-lock.json", "/frontend/README.md",
+    "/frontend/tsconfig.json", "/frontend/vite.config.ts",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

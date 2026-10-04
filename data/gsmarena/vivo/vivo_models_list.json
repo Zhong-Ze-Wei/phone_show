@@ -1,0 +1,94 @@
+{
+  "brand_info": {
+    "brand_name": "vivo",
+    "gsmarena_brand_url": "https://www.gsmarena.com/vivo-phones-106.php",
+    "total_models": 0,
+    "last_updated": "2025-10-29"
+  },
+  "series": {
+    "flagship": [
+      {
+        "series_name": "X Series",
+        "models": [
+          "vivo X100 Ultra",
+          "vivo X100 Pro",
+          "vivo X100",
+          "vivo X90 Pro+",
+          "vivo X90 Pro",
+          "vivo X90",
+          "vivo X80 Pro",
+          "vivo X80",
+          "vivo X70 Pro+",
+          "vivo X70 Pro",
+          "vivo X70",
+          "vivo X60 Pro+",
+          "vivo X60 Pro",
+          "vivo X60"
+        ]
+      },
+      {
+        "series_name": "X Fold Series (Foldable)",
+        "models": [
+          "vivo X Fold3 Pro",
+          "vivo X Fold3",
+          "vivo X Fold2",
+          "vivo X Fold",
+          "vivo X Fold+"
+        ]
+      }
+    ],
+    "mid_range": [
+      {
+        "series_name": "S Series",
+        "models": [
+          "vivo S19 Pro",
+          "vivo S19",
+          "vivo S18 Pro",
+          "vivo S18",
+          "vivo S17 Pro",
+          "vivo S17",
+          "vivo S16 Pro",
+          "vivo S16",
+          "vivo S15 Pro",
+          "vivo S15",
+          "vivo S12 Pro",
+          "vivo S12"
+        ]
+      }
+    ],
+    "budget": [
+      {
+        "series_name": "Y Series",
+        "models": [
+          "vivo Y200 Pro 5G",
+          "vivo Y200 5G",
+          "vivo Y100 5G",
+          "vivo Y78+ 5G",
+          "vivo Y78 5G",
+          "vivo Y77 5G",
+          "vivo Y76 5G",
+          "vivo Y75 5G",
+          "vivo Y74 5G",
+          "vivo Y73 5G",
+          "vivo Y72 5G",
+          "vivo Y71 5G"
+        ]
+      },
+      {
+        "series_name": "T Series",
+        "models": [
+          "vivo T2 Pro 5G",
+          "vivo T2 5G",
+          "vivo T1 Pro 5G",
+          "vivo T1 5G"
+        ]
+      }
+    ]
+  },
+  "data_collection_status": {
+    "completed_models": [],
+    "in_progress": [],
+    "pending": "all_models"
+  },
+  "notes": "vivo以影像功能闻名，X系列主打专业拍照，S系列针对年轻用户，Y系列主打性价比"
+}

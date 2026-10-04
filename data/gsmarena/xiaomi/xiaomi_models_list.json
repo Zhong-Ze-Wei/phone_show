@@ -1,0 +1,133 @@
+{
+  "brand_info": {
+    "brand_name": "Xiaomi",
+    "gsmarena_brand_url": "https://www.gsmarena.com/xiaomi-phones-58.php",
+    "total_models": 0,
+    "last_updated": "2025-10-29"
+  },
+  "series": {
+    "flagship": [
+      {
+        "series_name": "Mi Series",
+        "models": [
+          "Xiaomi 14 Ultra",
+          "Xiaomi 14 Pro",
+          "Xiaomi 14",
+          "Xiaomi 13 Ultra",
+          "Xiaomi 13 Pro",
+          "Xiaomi 13",
+          "Xiaomi 12S Ultra",
+          "Xiaomi 12 Pro",
+          "Xiaomi 12",
+          "Xiaomi Mi 11 Ultra",
+          "Xiaomi Mi 11 Pro",
+          "Xiaomi Mi 11",
+          "Xiaomi Mi 10 Pro",
+          "Xiaomi Mi 10"
+        ]
+      },
+      {
+        "series_name": "MIX Series",
+        "models": [
+          "Xiaomi MIX Fold 4",
+          "Xiaomi MIX Fold 3",
+          "Xiaomi MIX Alpha",
+          "Xiaomi MIX 4",
+          "Xiaomi MIX 3",
+          "Xiaomi MIX 2S",
+          "Xiaomi MIX 2"
+        ]
+      }
+    ],
+    "mid_range": [
+      {
+        "series_name": "Redmi K Series",
+        "models": [
+          "Redmi K70 Ultra",
+          "Redmi K70 Pro",
+          "Redmi K70",
+          "Redmi K60 Ultra",
+          "Redmi K60 Pro",
+          "Redmi K60",
+          "Redmi K50 Pro",
+          "Redmi K50 Gaming",
+          "Redmi K50",
+          "Redmi K40 Pro+",
+          "Redmi K40 Pro",
+          "Redmi K40 Gaming",
+          "Redmi K40"
+        ]
+      },
+      {
+        "series_name": "Redmi Note Series",
+        "models": [
+          "Redmi Note 13 Pro+ 5G",
+          "Redmi Note 13 Pro 5G",
+          "Redmi Note 13 5G",
+          "Redmi Note 13",
+          "Redmi Note 12 Turbo",
+          "Redmi Note 12 Pro+ 5G",
+          "Redmi Note 12 Pro 5G",
+          "Redmi Note 12 5G",
+          "Redmi Note 12",
+          "Redmi Note 11 Pro+ 5G",
+          "Redmi Note 11 Pro 5G",
+          "Redmi Note 11 5G",
+          "Redmi Note 11",
+          "Redmi Note 10 Pro 5G",
+          "Redmi Note 10 Pro",
+          "Redmi Note 10 5G",
+          "Redmi Note 10"
+        ]
+      }
+    ],
+    "budget": [
+      {
+        "series_name": "Redmi Series",
+        "models": [
+          "Redmi 13C",
+          "Redmi 13",
+          "Redmi 12C",
+          "Redmi 12",
+          "Redmi 11 Prime",
+          "Redmi 11",
+          "Redmi 10A",
+          "Redmi 10",
+          "Redmi 9A",
+          "Redmi 9",
+          "Redmi 8A",
+          "Redmi 8",
+          "Redmi 7A",
+          "Redmi 7"
+        ]
+      },
+      {
+        "series_name": "POCO Series",
+        "models": [
+          "POCO X6 Pro",
+          "POCO X6",
+          "POCO X5 Pro",
+          "POCO X5",
+          "POCO F5 Pro",
+          "POCO F5",
+          "POCO F4 GT",
+          "POCO F4",
+          "POCO M6 Pro",
+          "POCO M6",
+          "POCO M5",
+          "POCO M4 Pro",
+          "POCO M4",
+          "POCO C65",
+          "POCO C61",
+          "POCO C55"
+        ]
+      }
+    ]
+  },
+  "data_collection_status": {
+    "completed_models": [],
+    "in_progress": [],
+    "pending": "all_models"
+  },
+  "notes": "需要从GSMArena收集每个型号的详细规格数据，重点关注2020年后的机型"
+}

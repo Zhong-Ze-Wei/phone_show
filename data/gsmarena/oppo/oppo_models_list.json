@@ -1,0 +1,104 @@
+{
+  "brand_info": {
+    "brand_name": "OPPO",
+    "gsmarena_brand_url": "https://www.gsmarena.com/oppo-phones-82.php",
+    "total_models": 0,
+    "last_updated": "2025-10-29"
+  },
+  "series": {
+    "flagship": [
+      {
+        "series_name": "Find X Series",
+        "models": [
+          "OPPO Find X7 Ultra",
+          "OPPO Find X7 Pro",
+          "OPPO Find X7",
+          "OPPO Find X6 Pro",
+          "OPPO Find X6",
+          "OPPO Find X5 Pro",
+          "OPPO Find X5",
+          "OPPO Find X3 Pro",
+          "OPPO Find X3",
+          "OPPO Find X2 Pro",
+          "OPPO Find X2",
+          "OPPO Find X"
+        ]
+      },
+      {
+        "series_name": "Find N Series (Foldable)",
+        "models": [
+          "OPPO Find N3 Flip",
+          "OPPO Find N3",
+          "OPPO Find N2 Flip",
+          "OPPO Find N2",
+          "OPPO Find N"
+        ]
+      }
+    ],
+    "mid_range": [
+      {
+        "series_name": "Reno Series",
+        "models": [
+          "OPPO Reno 12 Pro",
+          "OPPO Reno 12",
+          "OPPO Reno 11 Pro",
+          "OPPO Reno 11",
+          "OPPO Reno 10 Pro+ 5G",
+          "OPPO Reno 10 Pro 5G",
+          "OPPO Reno 10 5G",
+          "OPPO Reno 9 Pro+ 5G",
+          "OPPO Reno 9 Pro 5G",
+          "OPPO Reno 9 5G",
+          "OPPO Reno 8 Pro 5G",
+          "OPPO Reno 8 5G",
+          "OPPO Reno 7 Pro 5G",
+          "OPPO Reno 7 5G",
+          "OPPO Reno 6 Pro 5G",
+          "OPPO Reno 6 5G",
+          "OPPO Reno 5 Pro 5G",
+          "OPPO Reno 5 5G"
+        ]
+      }
+    ],
+    "budget": [
+      {
+        "series_name": "A Series",
+        "models": [
+          "OPPO A98 5G",
+          "OPPO A79 5G",
+          "OPPO A78 5G",
+          "OPPO A78",
+          "OPPO A77s",
+          "OPPO A77",
+          "OPPO A58 5G",
+          "OPPO A58",
+          "OPPO A57 5G",
+          "OPPO A57",
+          "OPPO A55 5G",
+          "OPPO A55",
+          "OPPO A54 5G",
+          "OPPO A54"
+        ]
+      },
+      {
+        "series_name": "K Series",
+        "models": [
+          "OPPO K12x",
+          "OPPO K12",
+          "OPPO K11x",
+          "OPPO K11",
+          "OPPO K10 5G",
+          "OPPO K10",
+          "OPPO K9 5G",
+          "OPPO K9"
+        ]
+      }
+    ]
+  },
+  "data_collection_status": {
+    "completed_models": [],
+    "in_progress": [],
+    "pending": "all_models"
+  },
+  "notes": "OPPO机型以拍照和快充为主要卖点，需要特别关注相机规格和充电技术"
+}

@@ -1,0 +1,94 @@
+{
+  "brand_info": {
+    "brand_name": "",
+    "gsmarena_brand_url": "",
+    "total_models": 0,
+    "last_updated": ""
+  },
+  "models": [
+    {
+      "model_name": "",
+      "gsmarena_url": "",
+      "release_date": "",
+      "price": {
+        "launch_price": "",
+        "current_price": ""
+      },
+      "hardware": {
+        "chipset": "",
+        "cpu": "",
+        "gpu": "",
+        "memory": "",
+        "storage": "",
+        "card_slot": ""
+      },
+      "display": {
+        "type": "",
+        "size": "",
+        "resolution": "",
+        "refresh_rate": "",
+        "brightness": "",
+        "protection": ""
+      },
+      "camera": {
+        "main": {
+          "primary": "",
+          "ultrawide": "",
+          "telephoto": "",
+          "macro": "",
+          "depth": "",
+          "features": ""
+        },
+        "front": {
+          "primary": "",
+          "features": ""
+        },
+        "video": {
+          "main": "",
+          "front": ""
+        }
+      },
+      "battery": {
+        "capacity": "",
+        "charging": {
+          "wired": "",
+          "wireless": "",
+          "reverse": ""
+        }
+      },
+      "network": {
+        "technology": "",
+        "bands": {
+          "2g": "",
+          "3g": "",
+          "4g": "",
+          "5g": ""
+        }
+      },
+      "body": {
+        "dimensions": "",
+        "weight": "",
+        "build": "",
+        "sim": "",
+        "colors": ""
+      },
+      "connectivity": {
+        "wifi": "",
+        "bluetooth": "",
+        "gps": "",
+        "nfc": "",
+        "radio": "",
+        "usb": ""
+      },
+      "features": {
+        "sensors": "",
+        "jack": "",
+        "other": ""
+      },
+      "os": {
+        "initial": "",
+        "upgradable_to": ""
+      }
+    }
+  ]
+}

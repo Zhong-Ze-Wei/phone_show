@@ -1,0 +1,11 @@
+{
+  "created_at": "2026-10-04T06:35:49.497994+00:00",
+  "description": "SQLite backup一致快照；备份时间不改变原资料、字段来源或报价核验时间。",
+  "phone_count": 4428,
+  "raw_snapshot_count": 5777,
+  "image_override_count": 795,
+  "database_bytes": 108621824,
+  "database_sha256": "812664f0bc2558c09d05121ff0bcff7b4057229a123691544aadce8a97d02ffe",
+  "compressed_bytes": 11064658,
+  "compressed_sha256": "e5112dd0c5bd48f16ecb23f6720a73fb8e49caf59d8d271a66555727ab89ef76"
+}
