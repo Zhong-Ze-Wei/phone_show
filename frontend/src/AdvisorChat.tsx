@@ -30,8 +30,10 @@ export default function AdvisorChat({
   compact,
   onClose,
   preferences,
+  invalidPreferences,
   selectedIds,
   candidatePhones,
+  catalogueContext,
   contextKey,
   budgetInput,
   onBudget,
@@ -41,8 +43,10 @@ export default function AdvisorChat({
   compact: boolean;
   onClose: () => void;
   preferences: Preferences | null;
+  invalidPreferences: boolean;
   selectedIds: string[];
   candidatePhones: Phone[];
+  catalogueContext: boolean;
   contextKey: string;
   budgetInput: string;
   onBudget: (value: string) => void;
@@ -111,7 +115,13 @@ export default function AdvisorChat({
 
   async function send() {
     const question = draft.trim();
-    if (!question || question.length > 1600 || active.current) return;
+    if (
+      !question ||
+      question.length > 1600 ||
+      active.current ||
+      invalidPreferences
+    )
+      return;
     const id = crypto.randomUUID();
     const controller = new AbortController();
     active.current = { id, controller };
@@ -300,23 +310,27 @@ export default function AdvisorChat({
         <label>
           本次预算 <span>¥</span>
           <input
-            type="number"
-            min="1"
-            step="100"
+            type="text"
+            inputMode="decimal"
             aria-label="聊天最高预算"
-            placeholder="输入预算"
+            placeholder="留空表示不限"
+            aria-invalid={invalidPreferences}
             value={budgetInput}
             onChange={(event) => onBudget(event.target.value)}
           />
         </label>
         <p>
-          {selectedIds.length
-            ? `优先使用已明确选择的 ${selectedIds.length} 部手机。`
-            : preferences
-              ? candidatePhones.length
-                ? "发送时从当前条件的真实候选中比较。"
-                : "当前条件尚无候选；可先调整预算或筛选。"
-              : "预算留空；可以先聊需求，再输入预算找机型。"}
+          {invalidPreferences
+            ? "请先修正预算；留空表示不限，填写时须大于 0。"
+            : selectedIds.length
+              ? `优先使用已明确选择的 ${selectedIds.length} 部手机。`
+              : preferences
+                ? candidatePhones.length
+                  ? catalogueContext
+                    ? "发送时读取当前匹配目录，历史与未核价资料会明确说明，不等于购买推荐。"
+                    : "发送时从当前条件的真实候选中比较。"
+                  : "当前条件尚无候选；可先调整预算或筛选。"
+                : "预算不限，可直接描述需求并比较机型。"}
         </p>
       </div>
       {notice && (
@@ -408,7 +422,7 @@ export default function AdvisorChat({
           ) : (
             <button
               className="primary-button chat-send-button"
-              disabled={!draft.trim()}
+              disabled={!draft.trim() || invalidPreferences}
               onClick={() => void send()}
             >
               发送
@@ -451,7 +465,7 @@ function MessageSources({ message }: { message: ChatMessage }) {
     <details className="chat-message-sources">
       <summary>
         {context.phones.length
-          ? `本次依据 · ${context.phones.map((phone) => phone.name).join(" / ")}`
+          ? `${context.mode === "catalogue" ? "本次目录资料" : "本次依据"} · ${context.phones.map((phone) => phone.name).join(" / ")}`
           : context.mode === "needs_budget"
             ? "本次未指定预算，未选取推荐机型"
             : "当前条件无候选机型"}

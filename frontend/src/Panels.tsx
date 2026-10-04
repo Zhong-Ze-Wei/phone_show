@@ -96,11 +96,7 @@ export function DetailPanel({
     return () => controller.abort();
   }, [initialPhone]);
   return (
-    <Dialog
-      title={phone.name}
-      eyebrow="参数与来源"
-      onClose={onClose}
-    >
+    <Dialog title={phone.name} eyebrow="参数与来源" onClose={onClose}>
       <div className="detail-subtitle">
         <span>{phone.brand}</span>
         <span>{discoveryPriceLabel(phone)}</span>
@@ -313,8 +309,25 @@ export function ComparePanel({
         </div>
       )}
       {!loading && !error && (
-        <div className="comparison-scroll">
-          <table className="comparison-table">
+        <div
+          className="comparison-scroll"
+          tabIndex={0}
+          role="region"
+          aria-label="手机参数对比表，可横向滚动查看全部机型"
+        >
+          <table
+            className="comparison-table"
+            style={{
+              minWidth: 120 + phones.length * 230,
+              width: 120 + phones.length * 230,
+            }}
+          >
+            <colgroup>
+              <col style={{ width: 120 }} />
+              {phones.map((phone) => (
+                <col key={phone.id} style={{ width: 230 }} />
+              ))}
+            </colgroup>
             <thead>
               <tr>
                 <th scope="col">看看这些</th>

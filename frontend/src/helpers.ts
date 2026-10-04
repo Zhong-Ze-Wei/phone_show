@@ -1,4 +1,4 @@
-import type { Phone, Preferences, SortOrder } from "./types";
+import type { Phone, Preferences, Recommendations, SortOrder } from "./types";
 
 export const SORT_LABELS: Record<SortOrder, string> = {
   recommended: "综合推荐",
@@ -10,12 +10,12 @@ export const SORT_LABELS: Record<SortOrder, string> = {
 
 export const DEFAULT_PREFERENCES: Preferences = {
   budget_min: 0,
-  budget_max: 0,
+  budget_max: null,
   brands: [],
   os: "all",
   priorities: ["daily"],
   compact: false,
-  min_storage: 256,
+  min_storage: 0,
   include_history: false,
   query: "",
   sort: "recommended",
@@ -25,13 +25,48 @@ export const DEFAULT_PREFERENCES: Preferences = {
 export function enteredBudget(value: string): number | null {
   if (!value.trim()) return null;
   const budget = Number(value);
-  return Number.isFinite(budget) && budget > 0 ? budget : null;
+  return Number.isFinite(budget) && budget > 0 ? budget : Number.NaN;
 }
 
-export function rankingExplanation(mode: Preferences["purchase_mode"]): string {
+export function validBudgetInput(value: string): boolean {
+  const budget = enteredBudget(value);
+  return budget === null || Number.isFinite(budget);
+}
+
+export function rankingExplanation(
+  mode: Preferences["purchase_mode"],
+  budget: number | null = null,
+): string {
+  if (budget === null)
+    return mode === "used"
+      ? "预算不限的二手机型参考按需求匹配 95%、主流品牌 5% 综合排序，没有预算余量或上市时效加分。当前价格仍为来源的新机参考价，没有二手行情或库存，请自行核对二手报价、成色与保修。"
+      : "预算不限时，综合推荐按需求匹配 85%、上市时效 10%、主流品牌 5% 排序，不计算预算余量。一年内上市的机型获得更多时效加分，日期未知时不假定为新机。品牌加分是选购策略，不代表质量测评。";
   return mode === "used"
     ? "二手机型参考按需求匹配 85%、预算余量 10%、主流品牌 5% 综合排序，不因机型较老扣分。当前价格仍为来源的新机参考价，没有二手行情或库存，请自行核对二手报价、成色与保修。"
     : "综合推荐按需求匹配 75%、预算余量 10%、上市时效 10%、主流品牌 5% 排序。一年内上市的机型获得更多时效加分，日期未知时不假定为新机。品牌加分是选购策略，不代表质量测评。";
+}
+
+export function resultPhones(
+  data: Recommendations | null,
+  query: string,
+): Phone[] {
+  return query.trim() ? data?.catalogue?.phones || [] : data?.phones || [];
+}
+
+export function catalogueStatusLabel(phone: Phone): string {
+  const labels: Record<string, string> = {
+    history: "历史资料",
+    upcoming: "待上市",
+    availability_unknown: "销售状态待核实",
+    unknown_price: "报价待核实",
+    stale_price: "历史价 · 请核价",
+    over_budget: "超出当前预算",
+    under_budget: "低于预算下限",
+  };
+  return (
+    labels[phone.catalogue_status || ""] ||
+    (phone.recommendation_eligible ? "符合当前推荐条件" : "目录资料")
+  );
 }
 
 export function rankingHighlights(phone: Phone): string[] {
@@ -73,7 +108,7 @@ export function requestPreferences(value: Preferences): Preferences {
   return {
     ...value,
     budget_min: Math.max(0, Number(value.budget_min)),
-    budget_max: Math.max(0, Number(value.budget_max)),
+    budget_max: value.budget_max === null ? null : Number(value.budget_max),
     brands: [...new Set(value.brands)],
     priorities: [...new Set(value.priorities)],
     query: value.query.trim(),

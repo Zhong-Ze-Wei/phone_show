@@ -54,6 +54,25 @@ def test_unknown_price_capture_time_is_not_borrowed_from_parameter_page(storage)
     assert phone["field_sources"]["ram_gb"]["fetched_at"] is not None
 
 
+def test_apple_sku_capacity_keeps_its_identity_source_through_reclean(storage):
+    stamp = "2026-10-03T17:25:10+00:00"
+    raw = raw_phone(name="苹果iPhone 18 Pro（2TB）", brand="苹果",
+        source_url="https://detail.zol.com.cn/cell_phone/index2177482.shtml",
+        fetched_at=stamp, specs_fetched_at=stamp,
+        specs_source_url="https://detail.zol.com.cn/series/57/544/param_10929893_0_1.html",
+        specs={"ROM容量": "256GB"})
+    storage.upsert_raw(raw)
+    storage.reclean()
+    phone = storage.get_phone("1")
+
+    assert phone["storage_gb"] == 2048
+    assert phone["field_sources"]["storage_gb"] == {
+        "origin": "zol", "source_url": raw["source_url"], "fetched_at": stamp}
+    assert phone["specs_sources"]["ROM容量"]["source_url"] == raw["specs_source_url"]
+    assert phone["specs"]["ROM容量"] == "256GB"
+    assert phone["field_sources"]["price"]["fetched_at"] == stamp
+
+
 def test_official_evidence_survives_later_directory_estimates_and_reclean(storage):
     storage.upsert_raw(raw_phone(origin="official", price=None, price_from=5499,
         fetched_at="2026-10-03T01:00:00+00:00", specs={"电池容量": "8000mAh", "上市日期": "2026年09月"},

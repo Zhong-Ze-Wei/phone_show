@@ -14,7 +14,7 @@ from phone_assistant.images import IMAGE_FIELDS, apply_image_override, image_qua
 
 DEFAULT_STORAGE_PATH = PROJECT_ROOT / "data" / "phones.sqlite3"
 _METADATA = {"id", "specs", "issues", "quality_score", "cleaning_version", "field_sources", "specs_sources", "_corrects_fetched_at"}
-_SOURCE_FIELDS = {"origin", "availability", "fetched_at", "source_url", "price_source_url", "specs_source_url", "price_fetched_at", "specs_fetched_at", "release_source_url", "release_fetched_at", "image_source_url", "image_fetched_at"}
+_SOURCE_FIELDS = {"origin", "availability", "fetched_at", "source_url", "price_source_url", "specs_source_url", "price_fetched_at", "specs_fetched_at", "release_source_url", "release_fetched_at", "image_source_url", "image_fetched_at", "storage_source_url", "storage_fetched_at"}
 _RELEASE_FIELDS = ("release_date", "release_year", "release_month", "release_precision")
 
 
@@ -57,6 +57,9 @@ def _merge(existing: dict | None, incoming: dict) -> dict:
         elif field not in {"name", "brand", "family_key", "image_url"}:
             field_source["source_url"] = incoming.get("specs_source_url") or source["source_url"]
             field_source["fetched_at"] = incoming.get("specs_fetched_at")
+        if field == "storage_gb" and incoming.get("storage_source_url"):
+            field_source["source_url"] = incoming["storage_source_url"]
+            field_source["fetched_at"] = incoming.get("storage_fetched_at")
         if field in {"release_date", "release_year", "release_month", "release_precision"} and incoming.get("release_source_url"):
             field_source["source_url"] = incoming["release_source_url"]
             field_source["fetched_at"] = incoming.get("release_fetched_at")

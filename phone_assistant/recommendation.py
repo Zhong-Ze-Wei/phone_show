@@ -20,12 +20,12 @@ MAINSTREAM_BRANDS = ("苹果", "三星", "华为", "荣耀", "小米", "红米",
 @dataclass
 class Preferences:
     budget_min: float = 0
-    budget_max: float = 4000
+    budget_max: float | None = None
     brands: list[str] = field(default_factory=list)
     os: str = "all"
     priorities: list[str] = field(default_factory=lambda: ["daily"])
     compact: bool = False
-    min_storage: float = 256
+    min_storage: float = 0
     include_history: bool = False
     query: str = ""
     sort: str = "recommended"
@@ -90,7 +90,11 @@ def release_age_days(phone: dict, today: date | None = None) -> int | None:
 
 def ranking_weights(preferences: Preferences) -> dict[str, float]:
     if preferences.purchase_mode == "used":
+        if preferences.budget_max is None:
+            return {"usage": 0.95, "value": 0.0, "recency": 0.0, "brand": 0.05}
         return {"usage": 0.85, "value": 0.1, "recency": 0.0, "brand": 0.05}
+    if preferences.budget_max is None:
+        return {"usage": 0.85, "value": 0.0, "recency": 0.1, "brand": 0.05}
     return {"usage": 0.75, "value": 0.1, "recency": 0.1, "brand": 0.05}
 
 
@@ -100,7 +104,7 @@ def ranking_policy(preferences: Preferences) -> dict:
         "purchase_mode": preferences.purchase_mode,
         "weights": ranking_weights(preferences),
         "mainstream_brands": list(MAINSTREAM_BRANDS),
-        "value_basis": "预算余量，依据来源参考报价，不是实测性价比",
+        "value_basis": "未设置最高预算，预算余量权重转给需求匹配" if preferences.budget_max is None else "预算余量，依据来源参考报价，不是实测性价比",
         "recency_basis": "真实上市日期；月份或年份按区间最早端保守计算，未知不加分",
         "brand_basis": "主流品牌采购偏好，不证明品质或售后",
         "used_basis": "二手机型参考沿用已核验的新机参考报价，未接入二手价格、成色或库存",
@@ -117,7 +121,9 @@ def _ranking_fields(phone: dict, preferences: Preferences, usage: int) -> dict:
     weights = ranking_weights(preferences)
     scores = {"usage": usage, "value": round(value, 2), "recency": recency, "brand": brand}
     reasons = [f"需求匹配 {usage} 分，是推荐的主要依据"]
-    if price_usable:
+    if preferences.budget_max is None:
+        reasons.append("未设置最高预算，预算余量权重转给需求匹配")
+    elif price_usable:
         reasons.append(f"预算余量 {value:.1f} 分，依据来源参考报价")
     if preferences.purchase_mode == "used":
         reasons.append("二手机型参考不因上市较新加分；未接入二手价格、成色或库存")
@@ -139,15 +145,17 @@ def _ranking_fields(phone: dict, preferences: Preferences, usage: int) -> dict:
 
 
 def _recommendation_sort_key(phone: dict, preferences: Preferences) -> tuple:
+    price = phone.get("price")
+    price_key = (price is None, price if price is not None else 0)
     if preferences.sort == "newest":
-        return *(-part for part in release_sort_key(phone)), -phone["score"], phone["price"], phone["id"]
+        return *(-part for part in release_sort_key(phone)), -phone["score"], *price_key, phone["id"]
     if preferences.sort == "price_asc":
-        return phone["price"], -phone["score"], phone["id"]
+        return *price_key, -phone["score"], phone["id"]
     if preferences.sort == "price_desc":
-        return -phone["price"], -phone["score"], phone["id"]
+        return price is None, -price if price is not None else 0, -phone["score"], phone["id"]
     if preferences.sort == "match":
-        return -phone["score"], phone["price"], phone["id"]
-    return -phone["recommendation_score"], -phone["score"], phone["price"], phone["id"]
+        return -phone["score"], *price_key, phone["id"]
+    return -phone["recommendation_score"], -phone["score"], *price_key, phone["id"]
 
 
 def _matches_identity(phone: dict, preferences: Preferences, *, discovery: bool = False) -> bool:
@@ -175,10 +183,10 @@ def _constraint_reasons(phone: dict, preferences: Preferences) -> list[tuple[str
         reasons.append(("upcoming", "尚未上市或上市时间在未来"))
     price = phone.get("price")
     if price is None:
-        reasons.append(("unknown_price", "价格待核实，不能确认是否在预算内"))
+        reasons.append(("unknown_price", "价格待核实，不能用于当前购买推荐" if preferences.budget_max is None else "价格待核实，不能确认是否在预算内"))
     elif not preferences.include_history and not _price_is_current(phone):
-        reasons.append(("stale_price", "参考报价未近期核验，不能用于当前预算推荐"))
-    elif price > preferences.budget_max:
+        reasons.append(("stale_price", "参考报价未近期核验，不能用于当前购买推荐"))
+    elif preferences.budget_max is not None and price > preferences.budget_max:
         reasons.append(("over_budget", f"参考价 ¥{price:g}，超过当前 ¥{preferences.budget_max:g} 预算"))
     elif price < preferences.budget_min:
         reasons.append(("under_budget", f"参考价 ¥{price:g}，低于当前预算下限"))
@@ -196,6 +204,101 @@ def card_record(phone: dict) -> dict:
     price_source = phone.get("field_sources", {}).get("price")
     compact["field_sources"] = {"price": price_source} if price_source else {}
     return compact
+
+
+def is_purchase_candidate(phone: dict, preferences: Preferences) -> bool:
+    """当前购买资格与历史探索分开；空预算也不放宽核价证据。"""
+    return (_matches_identity(phone, preferences) and is_current(phone)
+        and _price_is_current(phone) and not _constraint_reasons(phone, preferences))
+
+
+def budget_warning(phone: dict, preferences: Preferences) -> str | None:
+    if preferences.budget_max is None and not preferences.budget_min:
+        return None
+    price = phone.get("price")
+    if price is None:
+        return "价格未知，无法确认预算"
+    if preferences.budget_max is not None and price > preferences.budget_max:
+        return "超出当前预算范围"
+    if price < preferences.budget_min:
+        return "低于当前预算下限"
+    if not _price_is_current(phone):
+        return "参考报价未近期核验，不能确认当前预算"
+    return None
+
+
+def _catalogue_reasons(phone: dict, preferences: Preferences) -> list[tuple[str, str]]:
+    reasons = []
+    days = fetched_days(phone)
+    if phone.get("origin") == "legacy" or phone.get("availability") == "historical":
+        reasons.append(("history", "历史来源记录，型号、上市与现价未作本轮核验，不代表已正式上市或当前在售"))
+    elif days is None or days > 30:
+        reasons.append(("history", "资料较旧或采集时间未知，仅作目录浏览，购买前需重新核实"))
+    if not is_released(phone):
+        reasons.append(("upcoming", "尚未上市或上市时间在未来，只能查看已公布资料"))
+    elif phone.get("availability") not in ("listed", "historical"):
+        reasons.append(("availability_unknown", "上市或销售状态待核实，不能确认在售或库存"))
+    price = phone.get("price")
+    if price is None:
+        reasons.append(("unknown_price", "参考报价待核实，不属于当前可核价推荐"))
+    else:
+        if not _price_is_current(phone):
+            reasons.append(("stale_price", "历史或未近期核验的参考报价，购买前须重新核价"))
+        if preferences.budget_max is not None and price > preferences.budget_max:
+            reasons.append(("over_budget", f"参考价 ¥{price:g}，超过当前 ¥{preferences.budget_max:g} 预算"))
+        elif price < preferences.budget_min:
+            reasons.append(("under_budget", f"参考价 ¥{price:g}，低于当前预算下限"))
+    return reasons
+
+
+def _catalogue_variant_key(phone: dict, preferences: Preferences) -> tuple:
+    if is_purchase_candidate(phone, preferences):
+        return 0, *_recommendation_sort_key(phone, preferences)
+    price = phone.get("price")
+    if price is not None and _price_is_current(phone) and is_current(phone) and is_released(phone):
+        return 1, price, -phone["score"], phone["id"]
+    days = fetched_days(phone)
+    recent_source = phone.get("origin") in ("official", "zol") and days is not None and days <= 30
+    # 官网近期未知价优先于历史传闻报价；未知价不会当作零元最便宜。
+    return 2 if recent_source else 3, not is_released(phone), price is None, price if price is not None else 0, -phone["score"], phone["id"]
+
+
+def _catalogue_sort_key(phone: dict, preferences: Preferences) -> tuple:
+    if preferences.sort != "recommended":
+        return _recommendation_sort_key(phone, preferences)
+    if phone["recommendation_eligible"]:
+        return 0, *_recommendation_sort_key(phone, preferences)
+    days = fetched_days(phone)
+    recent_source = phone.get("origin") in ("official", "zol") and days is not None and days <= 30
+    return (1, not recent_source, not is_released(phone), *(-part for part in release_sort_key(phone)),
+        -phone["score"], phone["name"], phone["id"])
+
+
+def search_catalogue(phones: list[dict], preferences: Preferences) -> dict:
+    """完整型号搜索，不把旧资料、未售或缺价记录伪装成购买推荐。"""
+    if not preferences.query.strip():
+        return {"phones": [], "total": 0, "returned": 0}
+    families: dict[str, list[dict]] = {}
+    for phone in phones:
+        if not _matches_identity(phone, preferences):
+            continue
+        storage = phone.get("storage_gb")
+        if preferences.min_storage and (storage is None or storage < preferences.min_storage):
+            continue
+        record = match_phone(phone, preferences)
+        families.setdefault(phone.get("family_key") or phone["id"], []).append(record)
+    result = []
+    for members in families.values():
+        representative = min(members, key=lambda phone: _catalogue_variant_key(phone, preferences))
+        reasons = _catalogue_reasons(representative, preferences)
+        representative.update(catalogue_reasons=[message for _, message in reasons],
+            catalogue_codes=[code for code, _ in reasons],
+            catalogue_status=reasons[0][0] if reasons else "current",
+            catalogue_variant_count=len(members),
+            recommendation_eligible=is_purchase_candidate(representative, preferences))
+        result.append(representative)
+    result.sort(key=lambda phone: _catalogue_sort_key(phone, preferences))
+    return {"phones": [card_record(phone) for phone in result], "total": len(result), "returned": len(result)}
 
 
 def _discovery_variant_key(phone: dict, preferences: Preferences) -> tuple:
@@ -228,7 +331,7 @@ def discover_new_releases(phones: list[dict], preferences: Preferences) -> dict:
             reasons.insert(0, ("availability_unknown", "官网已列出，上市或销售状态待核实"))
         record["discovery_reasons"] = [message for _, message in reasons]
         record["discovery_codes"] = [code for code, _ in reasons]
-        record["discovery_status"] = reasons[0][0] if reasons else "within_budget"
+        record["discovery_status"] = reasons[0][0] if reasons else "current" if preferences.budget_max is None else "within_budget"
         discoveries.append(record)
     families: dict[str, list[dict]] = {}
     for phone in discoveries:
@@ -365,4 +468,4 @@ def recommend(phones: list[dict], preferences: Preferences, limit: int = 60) -> 
     results = list(families.values())
     matching_families = set(families)
     counts = {key: len(value - matching_families) for key, value in excluded.items()}
-    return {"phones": [card_record(phone) for phone in results[:limit]], "total": len(results), "coverage": {"records": len(phones), "current_records": current, "unknown_price": len((excluded["unknown_price"] | excluded["stale_price"]) - matching_families), "excluded": counts, "budget_suggestion": min((price for family, price in over_budget_prices if family not in matching_families), default=None), "matching_variants": len(candidates), "returned": min(limit, len(results))}, "discovery": discover_new_releases(phones, preferences), "updated_at": max((phone.get("fetched_at") or "" for phone in phones), default="") or None, "preferences": asdict(preferences), "ranking_policy": ranking_policy(preferences)}
+    return {"phones": [card_record(phone) for phone in results[:limit]], "total": len(results), "coverage": {"records": len(phones), "current_records": current, "unknown_price": len((excluded["unknown_price"] | excluded["stale_price"]) - matching_families), "excluded": counts, "budget_suggestion": min((price for family, price in over_budget_prices if family not in matching_families), default=None), "matching_variants": len(candidates), "returned": min(limit, len(results))}, "catalogue": search_catalogue(phones, preferences), "discovery": discover_new_releases(phones, preferences), "updated_at": max((phone.get("fetched_at") or "" for phone in phones), default="") or None, "preferences": asdict(preferences), "ranking_policy": ranking_policy(preferences)}

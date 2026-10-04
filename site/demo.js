@@ -54,9 +54,7 @@ function announce(text) {
   $("#demo-status").textContent = text;
 }
 function candidates() {
-  return budget == null || !snapshot
-    ? []
-    : snapshot.cases[`${budget}:${purpose}`] || [];
+  return !snapshot ? [] : snapshot.cases[`${budget ?? "all"}:${purpose}`] || [];
 }
 function photo(phone) {
   const src = sourceUrl(phone.image_url);
@@ -85,7 +83,10 @@ function sourceLink(phone) {
 }
 function updateChoices() {
   document.querySelectorAll("[data-budget]").forEach((button) => {
-    const active = Number(button.dataset.budget) === budget;
+    const active =
+      button.dataset.budget === "all"
+        ? budget === null
+        : Number(button.dataset.budget) === budget;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
@@ -98,25 +99,8 @@ function updateChoices() {
 function renderPhones() {
   const list = $("#demo-phones");
   list.replaceChildren();
-  if (budget == null) {
-    const empty = node("div", "demo-empty");
-    const symbol = node("span", "empty-symbol", "¥");
-    symbol.setAttribute("aria-hidden", "true");
-    empty.append(
-      symbol,
-      node("h4", "", "你打算花多少？"),
-      node(
-        "p",
-        "",
-        "上方选好示例预算，再显示对应的真实候选。正式工作台可输入自己的预算。",
-      ),
-    );
-    list.append(empty);
-    $("#demo-results-title").textContent = "先选一个示例预算";
-    return;
-  }
   $("#demo-results-title").textContent =
-    `¥${budget.toLocaleString("zh-CN")} · ${purposeLabels[purpose]}候选`;
+    `${budget === null ? "预算不限" : `¥${budget.toLocaleString("zh-CN")}`} · ${purposeLabels[purpose]}候选`;
   const phones = candidates();
   if (!phones.length) {
     const empty = node("div", "demo-empty");
@@ -178,11 +162,11 @@ function renderPhones() {
 function renderCompare() {
   const list = $("#demo-compare");
   list.replaceChildren();
-  $("#compare-count").textContent = `${compared.length} / 3`;
+  $("#compare-count").textContent = `${compared.length} 部`;
   $("#show-comparison").disabled = compared.length < 2;
   $("#clear-comparison").hidden = compared.length === 0;
   if (!compared.length)
-    list.append(node("p", "compare-empty", "先挑中两三部，再看差别。"));
+    list.append(node("p", "compare-empty", "挑几部放到一起，再看差别。"));
   compared.forEach((phone) => {
     const item = node("div", "compare-item");
     const identity = node("div");
@@ -202,10 +186,6 @@ function addCompare(phone) {
     announce("这部手机已在演示对比中。");
     return;
   }
-  if (compared.length === 3) {
-    announce("最多对比三部，请先移除一部。");
-    return;
-  }
   compared.push(phone);
   renderPhones();
   renderCompare();
@@ -218,19 +198,17 @@ function removeCompare(id) {
   announce(`当前对比 ${compared.length} 部。`);
 }
 function changeCase() {
-  compared = [];
   updateChoices();
   renderPhones();
   renderCompare();
   announce(
-    budget == null
-      ? "示例预算留空。候选只在你选择后显示。"
-      : `已切换到 ¥${budget.toLocaleString("zh-CN")} / ${purposeLabels[purpose]}的真实快照，旧对比已清空。`,
+    `已切换到 ${budget === null ? "预算不限" : `¥${budget.toLocaleString("zh-CN")}`} / ${purposeLabels[purpose]}的真实快照，保留已选对比机型。`,
   );
 }
 document.querySelectorAll("[data-budget]").forEach((button) =>
   button.addEventListener("click", () => {
-    budget = Number(button.dataset.budget);
+    budget =
+      button.dataset.budget === "all" ? null : Number(button.dataset.budget);
     changeCase();
   }),
 );
@@ -282,15 +260,32 @@ side.addEventListener("drop", (event) => {
 $("#show-comparison").addEventListener("click", () => {
   if (compared.length < 2) return;
   const table = node("table");
+  table.style.minWidth = `${100 + compared.length * 230}px`;
+  table.style.width = `${100 + compared.length * 230}px`;
+  const columns = node("colgroup");
+  const firstColumn = node("col");
+  firstColumn.style.width = "100px";
+  columns.append(firstColumn);
+  compared.forEach(() => {
+    const column = node("col");
+    column.style.width = "230px";
+    columns.append(column);
+  });
+  table.append(columns);
   const header = node("tr");
-  header.append(node("th", "", "机型"));
+  const label = node("th", "", "机型");
+  header.append(label);
   compared.forEach((phone) => {
     const cell = node("th");
     cell.scope = "col";
     cell.append(photo(phone), node("p", "", phone.name));
     header.append(cell);
   });
-  table.append(header);
+  const head = node("thead");
+  head.append(header);
+  table.append(head);
+  const body = node("tbody");
+  table.append(body);
   const fields = [
     ["参考报价", price],
     ["品牌", (phone) => phone.brand],
@@ -311,7 +306,7 @@ $("#show-comparison").addEventListener("click", () => {
     title.scope = "row";
     row.append(title);
     compared.forEach((phone) => row.append(node("td", "", getValue(phone))));
-    table.append(row);
+    body.append(row);
   });
   const sourceRow = node("tr");
   sourceRow.append(node("th", "", "资料来源"));
@@ -320,7 +315,7 @@ $("#show-comparison").addEventListener("click", () => {
     cell.append(sourceLink(phone));
     sourceRow.append(cell);
   });
-  table.append(sourceRow);
+  body.append(sourceRow);
   $("#comparison-table").replaceChildren(table);
   $("#comparison-dialog").showModal();
 });
@@ -475,8 +470,8 @@ fetch("./assets/demo-data.json")
   .then((data) => {
     snapshot = data;
     $("#snapshot-label").textContent =
-      `快照 ${data.snapshot_date} · 每组前三候选`;
-    if (budget != null) renderPhones();
+      `快照 ${data.snapshot_date} · 按真实推荐顺序`;
+    renderPhones();
   })
   .catch(() => {
     announce(

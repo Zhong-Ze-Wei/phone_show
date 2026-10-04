@@ -10,7 +10,7 @@ export type PurchaseMode = "new" | "used";
 
 export interface Preferences {
   budget_min: number;
-  budget_max: number;
+  budget_max: number | null;
   brands: string[];
   os: OS;
   priorities: Priority[];
@@ -71,6 +71,10 @@ export interface Phone {
   new_release_catalog_url?: string | null;
   discovery_reasons?: string[];
   discovery_codes?: string[];
+  catalogue_reasons?: string[];
+  catalogue_codes?: string[];
+  catalogue_status?: string;
+  catalogue_variant_count?: number;
   discovery_status?: string;
   quality_score: number;
   issues?: QualityIssue[];
@@ -118,6 +122,7 @@ export interface Recommendations {
     budget_suggestion?: number | null;
   };
   discovery?: { phones: Phone[]; total: number; returned: number };
+  catalogue?: { phones: Phone[]; total: number; returned: number };
   updated_at: string | null;
 }
 

@@ -1106,10 +1106,16 @@ dialog::backdrop {
 }
 .comparison-table {
   overflow: auto;
+  max-width: 100%;
   padding: 22px;
+}
+.comparison-table:focus-visible {
+  outline: 3px solid #4690ff;
+  outline-offset: -3px;
 }
 .comparison-table table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: 12px;
   line-height: 1.8;
@@ -1123,10 +1129,20 @@ dialog::backdrop {
   min-width: 165px;
 }
 .comparison-table th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #162130;
   width: 100px;
   min-width: 85px;
   color: #8da8c9;
   font-weight: 400;
+}
+.comparison-table thead th {
+  background: #1b2a3f;
+}
+.comparison-table thead th:first-child {
+  z-index: 2;
 }
 .comparison-table th img {
   width: 110px;

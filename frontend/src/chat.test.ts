@@ -9,6 +9,7 @@ import {
   type ChatMessage,
 } from "./chat";
 import type { Phone } from "./types";
+import { DEFAULT_PREFERENCES } from "./helpers";
 
 afterEach(() => vi.unstubAllGlobals());
 const encoder = new TextEncoder();
@@ -147,6 +148,92 @@ describe("会话历史", () => {
 });
 
 describe("手动保存与加载", () => {
+  it("目录检索上下文可恢复，保留未核价与历史说明", () => {
+    const context = summarizeContext({
+      phones: [
+        {
+          id: "iphone",
+          name: "iPhone",
+          brand: "苹果",
+          price: null,
+          source_url: "https://example.com/iphone",
+          chat_warnings: ["历史目录，价格待核实"],
+        } as Phone,
+      ],
+      sources: [],
+      mode: "catalogue",
+      persona: "tech",
+    });
+    const session = parseChatSession(
+      JSON.stringify({
+        version: 1,
+        persona: "tech",
+        messages: [question("1"), { ...answer("1"), context }],
+      }),
+    );
+    expect(session.messages[1].context?.mode).toBe("catalogue");
+    expect(session.messages[1].context?.phones[0].price).toBeNull();
+    expect(session.messages[1].context?.phones[0].chat_warnings).toContain(
+      "历史目录，价格待核实",
+    );
+  });
+  it("五部明确比较机型在流上下文和保存加载中完整保留", async () => {
+    const phones = Array.from(
+      { length: 5 },
+      (_, index) =>
+        ({
+          id: String(index),
+          name: `手机${index}`,
+          brand: "品牌",
+          price: 2999,
+          source_url: `https://example.com/${index}`,
+        }) as Phone,
+    );
+    const context = summarizeContext({
+      phones,
+      sources: [],
+      mode: "selected",
+      persona: "tech",
+    });
+    expect(context.phones.map((phone) => phone.id)).toEqual([
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+    ]);
+    const session = parseChatSession(
+      JSON.stringify({
+        version: 1,
+        persona: "tech",
+        messages: [question("1"), { ...answer("1"), context }],
+      }),
+    );
+    expect(session.messages[1].context?.phones).toHaveLength(5);
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(new Response(stream("event: done\ndata: {}\n\n")));
+    vi.stubGlobal("fetch", fetch);
+    await streamChat(
+      {
+        message: "比较这五部",
+        history: [],
+        selected_ids: phones.map((phone) => phone.id),
+        preferences: {
+          ...DEFAULT_PREFERENCES,
+          budget_min: 1000,
+          budget_max: null,
+        },
+        persona: "tech",
+      },
+      new AbortController().signal,
+      () => {},
+    );
+    const request = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(request.selected_ids).toEqual(["0", "1", "2", "3", "4"]);
+    expect(request.preferences.budget_max).toBeNull();
+    expect(request.preferences.budget_min).toBe(1000);
+  });
   it("保留第 13 条及其后的来源编号，加载中的回答转为未完成", () => {
     const context = summarizeContext({
       phones: [

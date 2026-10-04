@@ -77,6 +77,39 @@ def test_ambiguous_configuration_is_not_guessed():
     assert sum(issue["code"] == "ambiguous_quantity" for issue in phone["issues"]) == 3
 
 
+@pytest.mark.parametrize("label,expected", [("512GB", 512), (" 1TB", 1024), ("2TB", 2048)])
+def test_apple_exact_sku_capacity_does_not_inherit_series_rom(label, expected):
+    specs = {"ROM容量": "256GB"}
+    phone = clean_phone(raw_phone(name=f"苹果iPhone 18 Pro（{label}）", brand="苹果", specs=specs))
+
+    assert phone["storage_gb"] == expected
+    assert phone["specs"] == specs
+    assert any(issue["code"] == "sku_storage_conflict" for issue in phone["issues"])
+    assert phone["fetched_at"] == "2026-10-03T02:00:00+00:00"
+
+
+def test_generic_official_apple_capacity_list_stays_unknown():
+    phone = clean_phone(raw_phone(name="iPhone 18 Pro", brand="Apple", origin="official",
+        specs={"ROM容量": "256GB 512GB 1TB 2TB"}))
+
+    assert phone["storage_gb"] is None
+    assert not any(issue["code"] == "sku_storage_conflict" for issue in phone["issues"])
+
+
+def test_apple_capacity_range_in_name_is_not_a_single_configuration():
+    phone = clean_phone(raw_phone(name="苹果iPhone 18 Pro（256GB/512GB）", brand="苹果",
+        specs={"ROM容量": "256GB/512GB"}))
+    assert phone["storage_gb"] is None
+
+
+@pytest.mark.parametrize("name", ["苹果iPhone 18 Pro（256GB）（512GB）",
+    "苹果iPhone 18 Pro（16GB）内存版（512GB）", "苹果iPhone 18 Pro（512GB）套装"])
+def test_apple_non_unique_or_non_suffix_capacity_does_not_override_specs(name):
+    phone = clean_phone(raw_phone(name=name, brand="苹果", specs={"ROM容量": "1TB"}))
+    assert phone["storage_gb"] == 1024
+    assert not any(issue["code"] == "sku_storage_conflict" for issue in phone["issues"])
+
+
 def test_typical_battery_value_has_explicit_source_label():
     phone = clean_phone(raw_phone(specs={"电池容量": "6000mAh（典型值）；5800mAh（额定值）"}))
 

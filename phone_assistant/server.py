@@ -9,7 +9,8 @@ from typing import Literal
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from openai import APIConnectionError, APIStatusError
 from pydantic import BaseModel, Field, field_validator, model_validator
@@ -18,7 +19,7 @@ from phone_assistant.advisor import explain
 from phone_assistant.assistant import api_error_message
 from phone_assistant.chat import ChatStreamingResponse, Persona, prepare_chat_context, stream_chat
 from phone_assistant.config import PROJECT_ROOT, Settings
-from phone_assistant.recommendation import PRIORITIES, Preferences, match_phone, recommend
+from phone_assistant.recommendation import PRIORITIES, Preferences, budget_warning, is_purchase_candidate, match_phone, recommend
 from phone_assistant.storage import Storage
 
 logger = logging.getLogger(__name__)
@@ -26,12 +27,12 @@ logger = logging.getLogger(__name__)
 
 class FilterRequest(BaseModel):
     budget_min: float = Field(default=0, ge=0, le=10_000_000, allow_inf_nan=False)
-    budget_max: float = Field(..., ge=0, le=10_000_000, allow_inf_nan=False)
+    budget_max: float | None = Field(default=None, gt=0, le=10_000_000, allow_inf_nan=False)
     brands: list[str] = Field(default_factory=list, max_length=100)
     os: Literal["all", "Android", "iOS", "HarmonyOS"] = "all"
     priorities: list[Literal["daily", "gaming", "camera", "battery"]] = Field(default_factory=lambda: ["daily"], max_length=4)
     compact: bool = False
-    min_storage: float = Field(default=256, ge=0, le=4096, allow_inf_nan=False)
+    min_storage: float = Field(default=0, ge=0, le=4096, allow_inf_nan=False)
     include_history: bool = False
     query: str = Field(default="", max_length=160)
     sort: Literal["recommended", "newest", "match", "price_asc", "price_desc"] = "recommended"
@@ -39,7 +40,7 @@ class FilterRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_budget(self):
-        if self.budget_max < self.budget_min:
+        if self.budget_max is not None and self.budget_max < self.budget_min:
             raise ValueError("最高预算不能低于最低预算。")
         return self
 
@@ -48,14 +49,14 @@ class FilterRequest(BaseModel):
 
 
 class ExplainRequest(BaseModel):
-    ids: list[str] = Field(min_length=1, max_length=3)
-    preferences: FilterRequest
+    ids: list[str] = Field(min_length=1)
+    preferences: FilterRequest = Field(default_factory=FilterRequest)
     question: str = Field(default="", max_length=1000)
 
 
 class CompareRequest(BaseModel):
-    ids: list[str] = Field(min_length=1, max_length=3)
-    preferences: FilterRequest
+    ids: list[str] = Field(min_length=1)
+    preferences: FilterRequest = Field(default_factory=FilterRequest)
 
 
 class ChatMessage(BaseModel):
@@ -66,7 +67,7 @@ class ChatMessage(BaseModel):
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=1600)
     history: list[ChatMessage] = Field(default_factory=list, max_length=12)
-    selected_ids: list[str] = Field(default_factory=list, max_length=3)
+    selected_ids: list[str] = Field(default_factory=list)
     preferences: FilterRequest | None = None
     persona: Persona = "tech"
 
@@ -77,13 +78,6 @@ class ChatRequest(BaseModel):
         if not value:
             raise ValueError("请输入手机选购或技术问题。")
         return value
-
-    @model_validator(mode="after")
-    def validate_chat_budget(self):
-        if self.preferences is not None and self.preferences.budget_max <= 0:
-            raise ValueError("请填写大于 0 的预算，或先不填写预算交流需求。")
-        return self
-
 
 class SyncRequest(BaseModel):
     mode: Literal["current"] = "current"
@@ -145,6 +139,12 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
     app.state.storage = storage
     app.state.sync_job = job
 
+    @app.exception_handler(RequestValidationError)
+    async def invalid_request(_request, error: RequestValidationError):
+        # 不回传原始输入，避免 NaN/Infinity 让校验错误本身无法编码为 JSON。
+        detail = [{key: item[key] for key in ("type", "loc", "msg")} for item in error.errors()]
+        return JSONResponse(status_code=422, content={"detail": detail})
+
     @app.get("/api/meta")
     def meta():
         phones = storage.list_phones()
@@ -173,9 +173,8 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
             if phone is None:
                 raise HTTPException(status_code=404, detail="对比机型不存在，请重新选择。")
             record = match_phone(phone, preferences)
-            price = phone.get("price")
-            record["budget_warning"] = ("价格未知，无法确认预算" if price is None
-                else "超出当前预算范围" if not preferences.budget_min <= price <= preferences.budget_max else None)
+            record["budget_warning"] = budget_warning(phone, preferences)
+            record["recommendation_eligible"] = is_purchase_candidate(phone, preferences)
             phones.append(record)
         return {"phones": phones}
 
@@ -193,7 +192,7 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
 
     @app.post("/api/chat")
     def chat(request: ChatRequest):
-        preferences = request.preferences.preferences() if request.preferences is not None else None
+        preferences = request.preferences.preferences() if request.preferences is not None else Preferences()
         try:
             context = prepare_chat_context(storage, request.selected_ids, preferences, request.persona)
         except LookupError as error:

@@ -5,6 +5,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from phone_assistant import official_sources as official
+from phone_assistant.cleaning import clean_phone
 
 
 TIME = "2026-10-04T08:00:00+00:00"
@@ -31,9 +32,32 @@ def test_catalog_only_discovers_real_phone_links_and_local_badges():
     <a href="https://evil.example/iphone-18/">Fake</a>
     <a href="/ipad/">iPad</a><a href="/iphone-18-pro/specs/">规格</a>'''
     models = official.discover_models(html, official.CATALOGS['apple'], 'apple')
-    assert len(models) == 2
-    assert [model['new_from_source'] for model in models] == [True, False]
+    assert len(models) == 3
+    assert [model['new_from_source'] for model in models] == [True, False, False]
     assert models[1]['source_position'] == 1
+    assert models[2]['specs_url'] == 'https://www.apple.com.cn/iphone-18-pro/specs/'
+
+
+@pytest.mark.parametrize('links', [
+    '<a href="/iphone-16/">iPhone 16</a><a href="/iphone-16/specs/">技术规格</a>',
+    '<a href="/iphone-16/specs/">技术规格</a><a href="/iphone-16/">iPhone 16</a>',
+])
+def test_apple_specification_and_landing_links_are_one_real_model(links):
+    models = official.discover_models(links, official.CATALOGS['apple'], 'apple')
+    assert len(models) == 1
+    assert models[0]['url'] in {'https://www.apple.com.cn/iphone-16/',
+                                'https://www.apple.com.cn/iphone-16/specs/'}
+    assert models[0]['specs_url'] == 'https://www.apple.com.cn/iphone-16/specs/'
+    assert models[0]['new_from_source'] is False
+
+
+def test_apple_direct_specs_link_retains_host_and_path_validation():
+    html = '''<a href="/iphone-16/specs/">进一步了解</a>
+    <a href="https://evil.example/iphone-16/specs/">假链接</a>
+    <a href="/iphone-16/specs/extra/">不是规格页</a>
+    <a href="/ipad/specs/">不是手机</a>'''
+    models = official.discover_models(html, official.CATALOGS['apple'], 'apple')
+    assert [model['url'] for model in models] == ['https://www.apple.com.cn/iphone-16/specs/']
 
 
 def test_honor_explicit_latest_section_and_expired_badge():
@@ -105,6 +129,28 @@ def test_apple_pro_and_max_columns_stay_separate():
     assert raws[0]['id'] != raws[1]['id']
 
 
+def test_apple_explicit_operating_system_is_available_to_os_filter():
+    html = '''<title>iPhone 17 - 技术规格</title>
+    <div class="techspecs-row"><div class="techspecs-rowheader">操作系统</div>
+    <div class="techspecs-column">iOS 移动操作系统</div></div>'''
+    source = 'https://www.apple.com.cn/iphone-17/specs/'
+    raw = official.parse_specifications(html, source, 'apple', fetched_at=TIME)[0]
+    phone = clean_phone(raw)
+    assert raw['specs']['操作系统'] == 'iOS 移动操作系统'
+    assert phone['os_family'] == 'iOS'
+    assert phone['specs_source_url'] == source
+    assert phone['specs_fetched_at'] == TIME
+
+
+def test_apple_brand_does_not_fill_missing_operating_system():
+    html = '''<title>iPhone 17 - 技术规格</title>
+    <div class="techspecs-row"><div class="techspecs-rowheader">芯片</div>
+    <div class="techspecs-column">A19 芯片</div></div>'''
+    raw = official.parse_specifications(html, 'https://www.apple.com.cn/iphone-17/specs/',
+                                        'apple', fetched_at=TIME)[0]
+    assert clean_phone(raw)['os_family'] is None
+
+
 def test_oppo_camera_and_video_labels_do_not_merge():
     html = '''<h1>Find X10</h1>
     <div class="param-detail-item"><div class="item-left-heading"><span>相机</span></div>
@@ -133,6 +179,45 @@ def install_transport(monkeypatch, pages):
     monkeypatch.setattr(official.httpx, 'Client', lambda **kwargs: original(transport=httpx.MockTransport(handler), **kwargs))
     monkeypatch.setattr(official, '_utc', lambda: TIME)
     return requested
+
+
+def test_sync_apple_direct_specs_page_without_guessing_landing_url(monkeypatch, tmp_path):
+    catalog = official.CATALOGS['apple']
+    specs = 'https://www.apple.com.cn/iphone-16/specs/'
+    requested = install_transport(monkeypatch, {
+        catalog: '<a href="/iphone-16/specs/">进一步了解</a>',
+        specs: '<title>iPhone 16 - 技术规格</title><div class="techspecs-row">'
+               '<div class="techspecs-rowheader">芯片</div>'
+               '<div class="techspecs-column">A18 芯片</div></div>',
+    })
+    report = official.sync_official(brands=['apple'], delay=0, cache_dir=tmp_path)
+    assert requested == [catalog, specs]
+    assert report['errors'] == []
+    assert report['coverage']['apple']['discovered'] == 1
+    assert report['coverage']['apple']['collected'] == 1
+    assert report['coverage']['apple']['models'][0]['specs_url'] == specs
+    assert len(report['raws']) == 1
+    raw = report['raws'][0]
+    assert raw['name'] == 'iPhone 16'
+    assert raw['source_url'] == raw['specs_source_url'] == specs
+    assert raw['fetched_at'] == raw['catalog_fetched_at'] == TIME
+    assert raw['current_source'] is True
+    assert raw['new_from_source'] is False
+
+
+def test_apple_plus_only_parsed_with_explicit_same_page_columns():
+    html = '''<title>iPhone 16 - 技术规格</title>
+    <div class="techspecs-columnheader">iPhone 16</div>
+    <div class="techspecs-columnheader">iPhone 16 Plus</div>
+    <div class="techspecs-row"><div class="techspecs-rowheader">尺寸与重量</div>
+    <div class="techspecs-column">重量：170克</div>
+    <div class="techspecs-column">重量：199克</div></div>'''
+    raws = official.parse_specifications(html, 'https://www.apple.com.cn/iphone-16/specs/',
+                                        'apple', fetched_at=TIME)
+    assert [raw['name'] for raw in raws] == ['iPhone 16', 'iPhone 16 Plus']
+    assert raws[0]['specs']['机身重量(克)'] == '170克'
+    assert raws[1]['specs']['机身重量(克)'] == '199克'
+    assert raws[0]['id'] != raws[1]['id']
 
 
 def test_sync_cap_report_atomic_publish_and_true_source_times(monkeypatch, tmp_path):
