@@ -38,7 +38,7 @@ packages = ["phone_assistant"]
 
 [tool.hatch.build.targets.sdist]
 include = [
-    "/phone_assistant", "/get_data", "/scripts", "/tests", "/docs/*.md", "/docs/ui-reference/*.png", "/README.md",
+    "/phone_assistant", "/get_data", "/scripts", "/tests", "/docs/*.md", "/docs/ui-reference/*.png", "/docs/readme-assets/*.svg", "/README.md",
     "/pyproject.toml", "/uv.lock", "/.python-version", "/.env.example",
     "/app.py", "/start.ps1", "/package.json", "/frontend/src", "/frontend/index.html",
     "/frontend/package.json", "/frontend/package-lock.json", "/frontend/README.md",

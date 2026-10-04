@@ -1,18 +1,55 @@
-# 挑一部 · 手机选购工作台
+<p align="center">
+  <a href="https://zhong-ze-wei.github.io/phone_show/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="docs/readme-assets/banner-dark.svg">
+      <img src="docs/readme-assets/banner-light.svg" alt="挑一部 · 手机选购工作台，点击体验在线演示" width="1280">
+    </picture>
+  </a>
+</p>
 
-[在线产品介绍与交互演示](https://zhong-ze-wei.github.io/phone_show/) · [本地运行](#直接运行) · [清洗策略](docs/CLEANING_STRATEGY.md)
+<h1 align="center">挑一部 · 手机选购工作台</h1>
 
-输入自己的预算与用途，找到适合的手机：看大图和规格，收藏、拖拽对比，再让 **DeepSeek-V4.1-Flash** 解释取舍。
+<p align="center">输入自己的预算，找到适合你的手机。</p>
+
+<p align="center">
+  <a href="https://zhong-ze-wei.github.io/phone_show/">在线演示</a> ·
+  <a href="#直接运行">运行</a> ·
+  <a href="#如何快速选">选机</a> ·
+  <a href="#更新与自动清洗">数据清洗</a> ·
+  <a href="#数据与文档说明">文档</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Zhong-Ze-Wei/phone_show/actions/workflows/pages.yml">
+    <img src="https://github.com/Zhong-Ze-Wei/phone_show/actions/workflows/pages.yml/badge.svg?branch=master" alt="GitHub Pages 发布状态">
+  </a>
+</p>
 
 这是使用 **Python + uv、SQLite、FastAPI、React** 的本地选购工作台。筛选与对比无需模型；采集品牌官网与 ZOL 的公开资料，自动清洗并保留字段来源。首次预算留空，推荐以用途为主，近一年机型与主流品牌适度加分。
 
 在线介绍页含真实界面截图、动效和可操作的预算／用途、三机对比、顾问录制演示，手机上也能打开。演示使用 2026-10-04 的真实数据快照，不调用模型；完整筛选与连续聊天需启动本地工作台。[展示页源码](site/)与[发布维护说明](docs/PRODUCT_SITE.md)均随项目保存，修改 `site/` 并合并到 `master` 后由 GitHub Actions 自动发布，不再维护独立演示项目。
 
-![桌面选购工作台：左侧大图图库，右侧预览与对比](docs/ui-reference/image-gallery-desktop.png)
+## 看大图，按自己的需求挑
 
-点击 AI 球展开连续聊天，左侧仍可浏览手机。整个右栏都能接收拖拽，最多对比三台，不必瞄准右下角。手机端使用单列图卡和底部操作条。
+输入自己的预算与用途，找到适合的手机：看大图和规格，收藏、拖拽对比，再让 **DeepSeek-V4.1-Flash** 解释取舍。点击截图，可以先在浏览器体验静态选机演示。
 
-![AI 顾问展开：左侧手机列表，右侧角色与连续聊天](docs/ui-reference/advisor-workspace-desktop.png)
+[![桌面选购工作台：左侧大图图库，右侧预览与对比](docs/ui-reference/image-gallery-desktop.png)](https://zhong-ze-wei.github.io/phone_show/#demo)
+
+### 放在一起比较，让顾问说清取舍
+
+整个右栏都能接收拖拽，最多对比三台，不必瞄准右下角。点击 AI 球展开连续聊天，左侧仍可浏览手机；五种角色帮助你从不同角度讨论需求。点击截图查看[顾问的事实、来源与会话规则](docs/AI_CHAT.md)。
+
+[![AI 顾问展开：左侧手机列表，右侧角色与连续聊天](docs/ui-reference/advisor-workspace-desktop.png)](docs/AI_CHAT.md)
+
+### 手机端，一列大图也能选
+
+手机端使用单列图卡和底部操作条，继续浏览、对比与打开顾问。点击截图查看在线演示；完整功能在本地工作台使用。
+
+<p align="center">
+  <a href="https://zhong-ze-wei.github.io/phone_show/#demo">
+    <img src="docs/ui-reference/image-gallery-mobile.png" alt="真实手机端工作台：单列大图卡片与底部操作条" width="260">
+  </a>
+</p>
 
 ## 直接运行
 
@@ -27,6 +64,9 @@ uv run python scripts/restore_snapshot.py
 
 先还原版本数据，再启动页面。已有项目直接运行 `.\start.ps1`；还原脚本检测到已有数据库会保留它，不覆盖。uv 管理 Python 与依赖，启动脚本再安装前端依赖、构建页面并启动服务。浏览器打开 [http://127.0.0.1:8501](http://127.0.0.1:8501)。终端按 `Ctrl+C` 停止。
 
+<details>
+<summary>分步启动、其他入口与端口设置</summary>
+
 也可以分步运行：
 
 ```powershell
@@ -38,6 +78,8 @@ uv run phone-finder
 
 `uv run python app.py` 同样启动新版。端口占用时用 `uv run phone-finder --port 8502`。Python 由 uv 管理，依赖由 `uv.lock` 固定；前端依赖由 `frontend/package-lock.json` 固定。
 
+</details>
+
 仓库包含约 10.6 MB 的 [压缩数据库快照](data/snapshots/phones.sqlite3.gz)，保存本版 **4,428 条机型配置、5,777 条原始记录快照和 795 条主图修复记录**。还原前校验压缩文件 SHA-256；[清单](data/snapshots/manifest.json)记录版本与校验摘要。运行数据库、外部 HTML 缓存和采集检查点不随 Git 提交。如果未还原且数据库为空，启动会导入随项目保留的 Excel 历史资料。
 
 **版本快照保留原采集和报价核验时间，不会因还原而变新。** 默认推荐仍执行最近 30 天资料与独立报价时效检查；过期或缺价时需点击“更新资料”，或在另一终端执行 `uv run phone-assistant sync --latest` 获取近期机型资料。日常定期执行 `uv run phone-assistant sync` 刷新完整目录与已知报价。
@@ -45,6 +87,15 @@ uv run phone-finder
 AI 顾问需另外配置自己的密钥，见 [DeepSeek 配置](#deepseek-配置)。不配置密钥也能采集、筛选、收藏与对比。
 
 ## 如何快速选
+
+1. 输入自己的最高预算，选择日常、游戏、拍照或续航用途。
+2. 看大图与规格，按需限制品牌、系统、容量；把两三款放进右侧对比，收藏候选。
+3. 有具体问题时打开顾问、选择角色并发送。打开面板不会调用模型，预算也不会被聊天文字擅自修改。
+
+默认按综合推荐排序，用途是主要依据；新机适度加分，旧款好价仍可能进入候选。规则与数据边界见 [推荐策略](docs/RECOMMENDATION_STRATEGY.md)。
+
+<details>
+<summary>完整选机步骤、推荐权重、新机发现与二手说明</summary>
 
 1. 首次打开不预填预算。输入自己的最高预算或主动选择预算档，再选最重要的用途：日常、游戏、拍照或续航。
 2. 按需限制品牌、系统、存储容量与轻巧偏好。默认使用最近 30 天抓取、来源标为在售且报价近期核实的记录；上市年龄用于评分，不因旧款年龄直接排除。历史资料是独立探索选项。
@@ -58,6 +109,11 @@ AI 顾问需另外配置自己的密钥，见 [DeepSeek 配置](#deepseek-配置
 
 “考虑二手”取消上市时效加分，权重为用途 85%、预算余量 10%、品牌 5%，不自动启用历史报价。现有来源没有二手行情、成色、电池健康或保修证据；价格仍为来源参考价，页面仅帮助挑选机型，不能据此确认二手预算与库存。
 
+</details>
+
+<details>
+<summary>在命令行按预算与用途选机</summary>
+
 命令行同样可快速选机：
 
 ```powershell
@@ -68,7 +124,21 @@ uv run phone-assistant recommend --budget 6000 --query X500 --sort newest
 uv run phone-assistant recommend --budget 5000 --purchase-mode used
 ```
 
+</details>
+
 ## 更新与自动清洗
+
+采集完成后自动清洗、校验并保留字段来源；缺失参数留空，冲突与失败保留证据。先更新公开资料，再查看质量结果：
+
+```powershell
+uv run phone-assistant sync
+uv run phone-assistant quality
+```
+
+字段语义、单位转换、去重和异常处理见 [清洗策略](docs/CLEANING_STRATEGY.md)，采集与恢复见 [采集流程](docs/DATA_PIPELINE.md)。
+
+<details>
+<summary>完整同步命令、失败恢复与重新清洗</summary>
 
 ```powershell
 # 发现已配置的公开列表、容量版本并抓详情；自动清洗和发布
@@ -98,9 +168,16 @@ uv run phone-assistant import-legacy
 
 正常同步带请求间隔、有限重试和可恢复检查点；无效响应、验证页面或缺少参数的页面进入失败报告。不会删除整个旧数据库，也不会为了补齐字段而生成参数。普通 `sync` 或 `--force` 获取新快照，`--resume` 接续未完成批次。部分完成退出码为 2，完整完成为 0，执行错误为 1。
 
+</details>
+
 图片解析优先使用实际产品主图，避免系列小缩略图覆盖大图。已有缓存可用 `uv run python -m phone_assistant.images --apply --report data/reports/image_replay.json` 离线补图；只修改图片及来源，原报价时间不变，重清洗后保留。先省略 `--apply` 可预览改动。完整依据见 [图片采集与修复](docs/IMAGE_PIPELINE.md)。
 
 ## DeepSeek 配置
+
+筛选、收藏与对比无需模型密钥。需要真实顾问聊天时，再配置自己的 AIPing 密钥；只有明确发送时才调用模型。
+
+<details>
+<summary>配置 DeepSeek、检查 API 与常见错误</summary>
 
 首次使用 AI 顾问时，复制 `.env.example` 为 `.env`，填入自己的 AIPing 密钥；已有 `.env` 时直接编辑它：
 
@@ -124,7 +201,12 @@ uv run phone-assistant status
 
 `check-api` 获取模型列表并发送一次真实短请求。常见错误：401 检查密钥，402 检查余额，404/422 检查模型和路由，429 等待后再试。模型不可用时，本地筛选和比较仍可使用。
 
+</details>
+
 ## 数据与文件
+
+<details>
+<summary>模块职责、数据目录与本地 API 入口</summary>
 
 | 路径 | 用途 |
 | --- | --- |
@@ -148,7 +230,12 @@ uv run phone-assistant status
 
 规范记录可通过 `/api/phones/{id}` 查看，对比通过 `/api/compare` 按当前需求重算，质量信息通过 `/api/quality` 查看，API 说明位于 [http://127.0.0.1:8501/docs](http://127.0.0.1:8501/docs)。
 
+</details>
+
 ## 开发与验证
+
+<details>
+<summary>构建、测试、开发启动与验收结果</summary>
 
 ```powershell
 uv run pytest -q
@@ -165,6 +252,8 @@ uv build
 
 测试使用本地页面片段和模拟模型，不消费 API 额度。构建产物只包含 Python 包；运行网页仍需完整项目中的前端产物和数据文件。
 
+</details>
+
 ## 数据与文档说明
 
 原 Excel 的 **4,018 条配置记录** 作为历史资料保留；新采集与历史字段分别标注来源。没有证据的参数留空。新品发现、详细参数与容量版本受目标源和实际访问结果限制，**不声称已收齐全市场手机**；本地 `data/reports/latest_sync.json` 才是本次覆盖与失败项的依据。
@@ -178,12 +267,18 @@ uv build
 | [AI 顾问](docs/AI_CHAT.md) | 五角色、真实流式聊天、来源与本地保存规则 |
 | [图片流程](docs/IMAGE_PIPELINE.md) · [界面恢复](docs/UI_RESTORE.md) | 主图修复、原版截图依据与当前交互验收 |
 | [产品介绍页](docs/PRODUCT_SITE.md) | 在线演示入口、快照与录制边界、GitHub Pages 发布维护 |
+| [README 版式](docs/README_DESIGN.md) | 封面、真实截图、链接与折叠内容的维护规则 |
 | [架构](docs/ARCHITECTURE.md) · [交付验证](docs/VALIDATION.md) | 模块职责、数据结果与测试证据 |
 
 ## 保留的历史资料与财报脚本
+
+<details>
+<summary>历史资料检索、财报工具与恢复记录</summary>
 
 旧 Markdown、Excel、数据文件与财报脚本仍保留。`uv run phone-assistant search "问题"` 和 `uv run phone-assistant ask "问题"` 用于历史技术资料检索，不能当作新版当前推荐结果。
 
 `get_data/simple_get_data.py`、`get_data/get_data.py` 是遗留财报工具，已迁移同一套 AIPing 配置。增强财报工具需要 `uv sync --extra crawler` 与 `uv run playwright install chromium`；它们不参与新版手机 HTTP 采集。
 
 原项目恢复过程见 [恢复记录](docs/RECOVERY.md)，旧爬虫缺陷和旧数据年份证据见 [此前审计](docs/CRAWLER_AUDIT.md)。历史文档不能替代新版流程说明。
+
+</details>

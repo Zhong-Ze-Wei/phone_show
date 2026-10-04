@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="360" viewBox="0 0 1280 360" role="img" aria-labelledby="title description">
+  <title id="title">挑一部 · 手机选购工作台</title>
+  <desc id="description">按预算筛选，看图查参数，拖拽比较。打开在线演示。右侧是抽象手机与比较轮廓，不代表真实型号。</desc>
+  <defs>
+    <linearGradient id="screen" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#284c7c"/>
+      <stop offset="1" stop-color="#192c49"/>
+    </linearGradient>
+    <linearGradient id="phone" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#2c394a"/>
+      <stop offset="1" stop-color="#1c2736"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="1278" height="358" rx="18" fill="#141b26" stroke="#334053" stroke-width="2"/>
+  <path d="M681 48v264" stroke="#2b394b"/>
+  <g font-family="Microsoft YaHei, PingFang SC, Noto Sans CJK SC, sans-serif">
+    <g fill="none" stroke-width="2.5">
+      <rect x="72" y="45" width="15" height="35" rx="3" stroke="#b3c5da"/>
+      <rect x="94" y="53" width="15" height="27" rx="3" stroke="#4c94ff"/>
+    </g>
+    <text x="123" y="69" font-size="15" fill="#8fa4bd" letter-spacing="1">从自己的预算开始</text>
+    <text x="70" y="157" font-family="Songti SC, STSong, SimSun, Georgia, serif" font-size="64" font-weight="600" fill="#f0f3f7" letter-spacing="2">挑一部</text>
+    <text x="72" y="207" font-size="25" fill="#c0d2e8" letter-spacing="2">手机选购工作台</text>
+    <text x="73" y="243" font-size="15" fill="#8ca3bd">按预算筛选 · 看图查参数 · 拖拽比较</text>
+    <rect x="72" y="270" width="219" height="47" rx="7" fill="#1769ff"/>
+    <text x="93" y="300" font-size="17" fill="#fff">打开在线演示</text>
+    <text x="257" y="300" font-size="21" fill="#fff">↗</text>
+    <text x="312" y="299" font-size="13" fill="#6f89a7">真实资料快照 · 浏览器内体验</text>
+  </g>
+  <g aria-hidden="true">
+    <ellipse cx="1011" cy="304" rx="188" ry="16" fill="#0a121e" opacity=".8"/>
+    <circle cx="1034" cy="145" r="111" fill="#1b283b"/>
+    <path d="M787 88h27m-13-13v26M1181 273h20m-10-10v20" stroke="#496a94" stroke-width="2" stroke-linecap="round"/>
+    <g transform="translate(862 45) rotate(-8 73 130)">
+      <rect x="5" y="9" width="148" height="261" rx="24" fill="#08101c" opacity=".6"/>
+      <rect width="148" height="261" rx="24" fill="url(#phone)" stroke="#5c7593" stroke-width="2"/>
+      <rect x="10" y="13" width="128" height="234" rx="17" fill="url(#screen)"/>
+      <rect x="54" y="19" width="40" height="7" rx="3.5" fill="#4d6e96"/>
+      <circle cx="77" cy="111" r="39" fill="#1769ff" opacity=".18"/>
+      <path d="M47 150c17-37 32-48 60-62" stroke="#68a6ff" stroke-width="8" stroke-linecap="round" fill="none"/>
+      <rect x="35" y="210" width="77" height="5" rx="2.5" fill="#628bbb" opacity=".6"/>
+      <rect x="52" y="225" width="43" height="4" rx="2" fill="#455e80"/>
+    </g>
+    <g transform="translate(1033 67) rotate(7 58 114)">
+      <rect x="5" y="8" width="117" height="229" rx="21" fill="#090f18" opacity=".5"/>
+      <rect width="117" height="229" rx="21" fill="#213142" stroke="#4d687f" stroke-width="2"/>
+      <rect x="9" y="12" width="99" height="204" rx="14" fill="#233e4c"/>
+      <circle cx="58" cy="20" r="3" fill="#496976"/>
+      <rect x="32" y="73" width="25" height="74" rx="12.5" fill="#5f969b" opacity=".75"/>
+      <rect x="64" y="91" width="23" height="56" rx="11.5" fill="#416978"/>
+      <rect x="24" y="180" width="70" height="4" rx="2" fill="#456b7d"/>
+      <rect x="40" y="193" width="38" height="4" rx="2" fill="#355766"/>
+    </g>
+    <g transform="translate(795 223)">
+      <rect x="4" y="5" width="178" height="65" rx="10" fill="#08101c" opacity=".4"/>
+      <rect width="178" height="65" rx="10" fill="#20344d" stroke="#415f83"/>
+      <rect x="15" y="18" width="15" height="29" rx="3" fill="none" stroke="#77b2ff" stroke-width="2"/>
+      <rect x="35" y="24" width="13" height="23" rx="3" fill="none" stroke="#4c81b5" stroke-width="2"/>
+      <path d="M66 26h89M66 39h58" stroke="#5f7f9f" stroke-width="4" stroke-linecap="round"/>
+    </g>
+  </g>
+</svg>
