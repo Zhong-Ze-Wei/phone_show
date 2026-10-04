@@ -1,8 +1,8 @@
 # 产品介绍页与静态演示
 
-发布地址：[挑一部 · 产品介绍与演示](https://zhong-ze-wei.github.io/phone_show-demo/)。公开演示源码位于 [Zhong-Ze-Wei/phone_show-demo](https://github.com/Zhong-Ze-Wei/phone_show-demo)。2026-10-04 已完成实际线上发布和浏览器验证，README 顶部提供快捷入口。
+正式地址：[挑一部 · 产品介绍与演示](https://zhong-ze-wei.github.io/phone_show/)。介绍页与主应用统一维护在公开仓库 [Zhong-Ze-Wei/phone_show](https://github.com/Zhong-Ze-Wei/phone_show)，README 顶部提供快捷入口。
 
-主应用仓库 `phone_show` 保持私有。主应用中的 [`site/`](../site/) 是介绍页的开发源；公开演示仓库保存这些静态文件的部署副本，具有独立 Git 历史。更新公开页时只复制 `site/` 内的文件，不复制父仓库的历史、应用代码、数据库、快照、日志或 `.env`。
+`site/` 是介绍页的唯一开发源。[`.github/workflows/pages.yml`](../.github/workflows/pages.yml) 自动发布该目录到主仓库的 GitHub Pages；无需复制到另一个仓库。Pages 产物只包含静态页，主应用源码与版本数据库仍可从同一 GitHub 仓库获取。`.env`、运行日志、虚拟环境和采集缓存保持 Git 忽略。
 
 ## 页面与数据边界
 
@@ -48,24 +48,25 @@ node --check site/demo.js
 
 还需用真实浏览器检查桌面与手机宽度：初始预算留空、12 组示例切换、对比增删与最多三台限制、截图切换与放大、来源链接、录制对话标识、键盘操作及减少动效设置。查看网络请求，确认没有 `/api/chat`、`/api/recommend` 或模型请求。
 
-CSS、JavaScript、JSON 和截图使用相对资源路径，例如 `./styles.css`、`./demo.js`、`./assets/gallery-desktop.png`。本地根路径可正常加载并不足以证明上线可用，必须再检查 `/phone_show-demo/` 子目录下的资源；不要将资源路径写成 `/assets/...`。
+CSS、JavaScript、JSON 和截图使用相对资源路径，例如 `./styles.css`、`./demo.js`、`./assets/gallery-desktop.png`。本地根路径可正常加载并不足以证明上线可用，必须再检查 `/phone_show/` 子目录下的资源；不要将资源路径写成 `/assets/...`。
 
-## 独立仓库发布
+## 主仓库自动发布
 
-当前 GitHub Free 账号不能从私有主仓库发布 Pages，因此采用独立公开演示仓库。GitHub 官方说明：Free 支持公开仓库的 Pages，私有仓库的 Pages 需要 Pro、Team 或 Enterprise 等套餐。参见 [创建 GitHub Pages 站点](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)。
+用户已授权将主仓库公开，介绍页迁回同一仓库。GitHub Pages 设置使用 **GitHub Actions** 发布；工作流上传 `site/`，因此不用将产品页塞进现有文档目录，也不上传整个项目。官方步骤见 [使用自定义工作流发布 Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages)。
 
 维护流程如下：
 
 1. 在主应用的功能分支编辑 `site/`，完成上述构建、测试、脚本语法检查与真实浏览器验证。
-2. 使用单独克隆的 `phone_show-demo` 工作副本，创建 `feat/update-product-site` 等功能分支。只将 `site/` 的内容复制到该仓库根目录，确保根目录有 `index.html`、样式、脚本、`assets/` 与空的 `.nojekyll` 文件。
-3. 检查变更清单，只包含准备公开的静态资源。不要复制主应用的 `.git`、数据库、数据库快照、原始采集缓存、日志或 `.env`，也不要让演示仓库继承私有主仓库的提交历史。
-4. 在功能分支提交本次页面更新，切回 `master`，使用 `git merge --no-ff feat/update-product-site` 合并，再执行 `git push origin master`。分支名按本次实际任务调整；功能分支中的每次提交应可独立验证与回滚。
-5. GitHub Pages 使用 `legacy` 发布模式，来源为 `master` 分支的 `/`。`.nojekyll` 跳过 Jekyll，静态文件无需额外构建。Pages 分支发布目录只允许 `/` 或 `/docs`，不能直接指定主应用的 `/site`。参数与权限见 [GitHub Pages REST API](https://docs.github.com/en/rest/pages/pages#create-a-github-pages-site)。
-6. 等待 Pages 构建完成，再检查公开主页及 CSS、JS、JSON、截图资源，确认相对路径、交互与录制标识正常；验证后更新主应用 README 的快捷入口及本文发布记录。
+2. 在功能分支提交本次页面更新，切回 `master`，使用 `git merge --no-ff feat/update-product-site` 合并，再执行 `git push origin master`。分支名按本次实际任务调整；每次提交应可独立验证与回滚。
+3. `master` 的推送涉及 `site/**` 或 Pages 工作流时，自动执行 **Publish product site**。工作流检查 JS 语法，配置 Pages、上传 `site/` 并部署；不安装应用依赖、不读取模型密钥、不运行采集。
+4. 仅修改其他应用模块或文档不会触发部署。需要重发时，可在仓库 Actions 中打开此工作流，点击 **Run workflow**，选择 `master`。
+5. 等待工作流成功，再检查正式主页及 CSS、JS、JSON、截图资源，确认相对路径、交互与录制标识正常。报告应记录部署提交与实际网页结果，不能仅根据推送成功判断上线。
 
-初次发布使用 `logs/pages-deploy` 作为临时部署工作副本。它不是生产路径，也不是以后维护所必需的目录；之后可在任意位置独立克隆公开演示仓库进行发布。公开页不运行服务端语言，完整筛选、采集与真实 AI 聊天仍由本地主应用提供。
+页面无需 Node 构建，工作流只有 `contents: read`、`pages: write` 与部署所需的 `id-token: write` 权限。同一时刻仅保留一个有效部署任务。公开页不运行 Python，完整筛选、采集与真实 AI 聊天仍由本地主应用提供。
 
-## 发布验证记录
+原 `phone_show-demo` 不再作为产品源码维护，只保留历史与旧网址跳转，避免已分享的链接失效。
+
+## 首次独立演示发布记录（迁移前）
 
 验证日期：**2026-10-04**。公开演示 `master` 提交为 [`8e67dc069551b4595586b3c1bcf546db6602b040`](https://github.com/Zhong-Ze-Wei/phone_show-demo/commit/8e67dc069551b4595586b3c1bcf546db6602b040)，GitHub Pages 的对应构建状态为 **built**，HTTPS 已启用，默认分支为 `master`。
 

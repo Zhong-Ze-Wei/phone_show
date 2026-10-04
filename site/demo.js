@@ -442,7 +442,7 @@ $("#copy-install").addEventListener("click", async () => {
     $("#copy-install").focus({ preventScroll: true });
   }
   $("#copy-status").textContent = copied
-    ? "命令已复制；克隆主应用需要仓库访问权限。"
+    ? "命令已复制，按顺序执行即可启动本地工作台。"
     : "浏览器未允许复制，请选中上方命令手动复制。";
   if (copied) $("#copy-install").textContent = "已复制 ✓";
 });
