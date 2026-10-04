@@ -1,6 +1,16 @@
 # 本次重构交付验证
 
-## 2026-10-04 在线产品介绍与静态演示
+## 2026-10-04 主仓库公开与 Pages 迁移
+
+用户授权主仓库公开后，产品页迁至 [phone_show GitHub Pages](https://zhong-ze-wei.github.io/phone_show/)。介绍页、应用与文档统一维护在 `phone_show`；主仓库 Pages 工作流只上传 `site/`，变更合并到 `master` 后自动发布。
+
+- 首次主仓库部署提交 `cd5a41eeebdfd572280098c3cead608419a4e0c6` 的 [Actions 任务](https://github.com/Zhong-Ze-Wei/phone_show/actions/runs/37186142640)成功，正式主页及 8 个资源 HTTP 200，与本地内容一致。
+- 新子路径本地与实际公开 URL 分别通过 46 项浏览器检查；预算、拖拽、对比、录制对话、手机适配与复制命令正常，没有 API／模型调用或 JS 异常。
+- 构建通过，304 项 Python、28 项前端测试通过。公开前覆盖全部可达历史、解压数据库与 Excel，未检出当前配置密钥或可识别旧密钥／token／私钥。
+- README 正式入口、canonical、OG、源码链接和公开克隆说明已同步。发布维护依据见 [产品介绍页](PRODUCT_SITE.md)。
+- 原 `phone_show-demo` 已归档；旧地址真实浏览器跳转到主项目，保留查询参数和锚点，跳转后候选交互正常。
+
+## 2026-10-04 在线产品介绍与静态演示（首次独立仓库阶段）
 
 [GitHub Pages 产品介绍页](https://zhong-ze-wei.github.io/phone_show-demo/)已实际上线，README 顶部新增快捷入口，主应用仍保持私有。展示源码与真实截图在 `site/`；公开演示仓库仅含这 10 个静态文件，没有主应用历史、数据库或密钥。发布与维护说明见 [产品介绍页](PRODUCT_SITE.md)。
 

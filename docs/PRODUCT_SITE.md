@@ -64,7 +64,19 @@ CSS、JavaScript、JSON 和截图使用相对资源路径，例如 `./styles.css
 
 页面无需 Node 构建，工作流只有 `contents: read`、`pages: write` 与部署所需的 `id-token: write` 权限。同一时刻仅保留一个有效部署任务。公开页不运行 Python，完整筛选、采集与真实 AI 聊天仍由本地主应用提供。
 
-原 `phone_show-demo` 不再作为产品源码维护，只保留历史与旧网址跳转，避免已分享的链接失效。
+原 `phone_show-demo` 已归档，不再作为产品源码维护，只保留历史与旧网址跳转，避免已分享的链接失效。
+
+## 主仓库发布验证（现行方式）
+
+2026-10-04 主仓库已改为公开。部署提交为 [`cd5a41eeebdfd572280098c3cead608419a4e0c6`](https://github.com/Zhong-Ze-Wei/phone_show/commit/cd5a41eeebdfd572280098c3cead608419a4e0c6)，[Publish product site 任务](https://github.com/Zhong-Ze-Wei/phone_show/actions/runs/37186142640)实际执行成功，Pages 发布模式为 `workflow`，HTTPS 地址为 `/phone_show/`。
+
+- 新地址的主页与 8 个关键资源均 HTTP 200，与当前 `site/` 内容一致；桌面和 390px 手机端共 46 项实际浏览器检查通过，无 JavaScript 异常、本站资源失败或 API／模型请求。
+- canonical、分享图片、演示源码链接和 README 均使用主项目地址；安装区说明可以直接克隆公开仓库，去除旧的私有访问权限提示。
+- 本轮 `npm run build`、`npm test` 和静态 JS 语法检查通过：304 项 Python、28 项前端测试。
+- 原演示仓库跳转版本为 `ffa26e53ca8c9e33955db2974fb7977d635f18ec`，对应旧 Pages 构建成功后归档；真实浏览器验证旧链接跳到新地址，并保留查询参数和 `#demo` 等锚点，到达后仍可正常选择预算与展示候选。
+- 公开前扫描全部可达历史的 9 个引用、5 个提交、198 个 blob，以及解压数据库和 Excel 的 108,391 个文本单元格；当前配置密钥、可识别旧密钥／token／私钥匹配为零，扫描覆盖错误为零。计数报告保存在本机 `logs/public-history-secret-audit.json`。
+
+维护入口统一为主仓库的 `site/` 和 Pages 工作流，后续无需维护演示副本。
 
 ## 首次独立演示发布记录（迁移前）
 
