@@ -141,8 +141,12 @@ export default function PriceOverview({ phone }: { phone: Phone }) {
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         aria-label={`${phone.family_name || phone.name}，${priceRange(rows)}，查看全部配置价格`}
-        onMouseEnter={show}
-        onMouseLeave={hide}
+        onPointerEnter={(event) => {
+          if (event.pointerType === "mouse") show();
+        }}
+        onPointerLeave={(event) => {
+          if (event.pointerType === "mouse") hide();
+        }}
         onFocus={show}
         onBlur={hide}
         onClick={show}
@@ -159,8 +163,12 @@ export default function PriceOverview({ phone }: { phone: Phone }) {
             role="region"
             aria-label="全部配置价格"
             style={position}
-            onMouseEnter={show}
-            onMouseLeave={hide}
+            onPointerEnter={(event) => {
+              if (event.pointerType === "mouse") show();
+            }}
+            onPointerLeave={(event) => {
+              if (event.pointerType === "mouse") hide();
+            }}
           >
             <header>
               <span>配置与参考价</span>
