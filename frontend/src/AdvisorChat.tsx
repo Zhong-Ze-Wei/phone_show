@@ -322,7 +322,6 @@ export default function AdvisorChat({
       <header className="chat-header">
         <div>
           <h2 id="advisor-chat-title">AI 选购顾问</h2>
-          <p>围绕真实资料比较，支持连续追问</p>
         </div>
         <button
           className="chat-close"
@@ -356,37 +355,45 @@ export default function AdvisorChat({
           <button onClick={loadSession}>加载</button>
         </div>
       </div>
-      <div className="chat-current-context">
-        <label>
-          本次预算 <span>¥</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            aria-label="聊天最高预算"
-            placeholder="留空表示不限"
-            aria-invalid={invalidPreferences}
-            value={budgetInput}
-            onChange={(event) => onBudget(event.target.value)}
-          />
-        </label>
-        <p>
-          {invalidPreferences
-            ? "请先修正预算；留空表示不限，填写时须大于 0。"
-            : selectedIds.length
-              ? `优先使用已明确选择的 ${selectedIds.length} 部手机。`
-              : preferences
-                ? candidatePhones.length
-                  ? catalogueContext
-                    ? "发送时读取当前目录，历史与未核价资料会明确说明。"
-                    : "发送时从当前筛选的真实候选中比较。"
-                  : "当前条件尚无候选；可先调整预算或筛选。"
-                : "预算不限，可直接描述需求并比较机型。"}
-        </p>
-      </div>
-      <AnalysisPriorities
-        value={analysisPriorities}
-        onChange={onAnalysisPriorities}
-      />
+      <details className="chat-options" open={invalidPreferences}>
+        <summary>
+          偏好与预算
+          {analysisPriorities.length > 0
+            ? ` · 已选 ${analysisPriorities.length} 项`
+            : ""}
+        </summary>
+        <div className="chat-current-context">
+          <label>
+            本次预算 <span>¥</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              aria-label="聊天最高预算"
+              placeholder="留空表示不限"
+              aria-invalid={invalidPreferences}
+              value={budgetInput}
+              onChange={(event) => onBudget(event.target.value)}
+            />
+          </label>
+          <p>
+            {invalidPreferences
+              ? "请先修正预算；留空表示不限，填写时须大于 0。"
+              : selectedIds.length
+                ? `优先使用已明确选择的 ${selectedIds.length} 部手机。`
+                : preferences
+                  ? candidatePhones.length
+                    ? catalogueContext
+                      ? "发送时读取当前目录，历史与未核价资料会明确说明。"
+                      : "发送时从当前筛选的真实候选中比较。"
+                    : "当前条件尚无候选；可先调整预算或筛选。"
+                  : "预算不限，可直接描述需求并比较机型。"}
+          </p>
+        </div>
+        <AnalysisPriorities
+          value={analysisPriorities}
+          onChange={onAnalysisPriorities}
+        />
+      </details>
       {notice && (
         <p className="chat-notice" role="status">
           {notice}
@@ -401,7 +408,7 @@ export default function AdvisorChat({
         <div className="chat-welcome">
           <strong>你好，我是你的手机选购顾问。</strong>
           <p>
-            可以从左侧选机或拖入右侧比较，也可以直接描述需求。角色切换、快捷问题和打开聊天不会调用模型；点击发送后才开始响应。
+            把左侧的手机拖进来，我们一起比较；也可以直接告诉我你想要什么样的手机。
           </p>
         </div>
         {messages.map((message) => (
