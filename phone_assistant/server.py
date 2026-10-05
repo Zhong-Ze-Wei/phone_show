@@ -12,6 +12,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 from openai import APIConnectionError, APIStatusError
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -23,6 +24,7 @@ from phone_assistant.recommendation import (
     PRIORITIES, Preferences, family_metadata, family_variants, filter_phones, variant_record,
 )
 from phone_assistant.storage import Storage
+from phone_assistant.response_cache import CatalogueResponseCache, CatalogueSnapshot
 
 logger = logging.getLogger(__name__)
 
@@ -140,6 +142,9 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
     app = FastAPI(title="挑一部 · 手机选购工作台", version="0.2.0")
     app.state.storage = storage
     app.state.sync_job = job
+    cache = CatalogueResponseCache(storage.revision)
+    catalogue = CatalogueSnapshot(storage)
+    app.add_middleware(GZipMiddleware, minimum_size=1000, compresslevel=4)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_request(_request, error: RequestValidationError):
@@ -149,16 +154,19 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
 
     @app.get("/api/meta")
     def meta():
-        phones = storage.list_phones()
+        return cache.response("meta", build_meta)
+
+    def build_meta():
+        phones = catalogue.read()
         common_brands = ["小米", "红米", "华为", "荣耀", "OPPO", "vivo", "iQOO", "一加", "realme", "苹果", "三星", "魅族", "摩托罗拉", "红魔"]
         brands = {phone["brand"] for phone in phones if phone.get("brand")}
         ordered = [brand for brand in common_brands if brand in brands] + sorted(brands.difference(common_brands))
-        return {"brands": ordered, "summary": storage.summary(), "priorities": PRIORITIES, "model": settings.model, "api_configured": bool(settings.api_key and settings.api_key != "your-api-key")}
+        return {"brands": ordered, "summary": storage.summary(phones), "priorities": PRIORITIES, "model": settings.model, "api_configured": bool(settings.api_key and settings.api_key != "your-api-key")}
 
     @app.post("/api/filter")
     @app.post("/api/recommend")
     def filtered_phones(request: FilterRequest):
-        return filter_phones(storage.list_phones(), request.preferences())
+        return cache.response(("filter", request.model_dump_json()), lambda: filter_phones(catalogue.read(), request.preferences()))
 
     @app.get("/api/phones/{phone_id}")
     def detail(phone_id: str):
@@ -173,7 +181,7 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
         if phone is None:
             raise HTTPException(status_code=404, detail="没有找到这款手机。")
         key = phone.get("family_key") or phone["id"]
-        members = [record for record in storage.list_phones() if (record.get("family_key") or record["id"]) == key]
+        members = [record for record in catalogue.read() if (record.get("family_key") or record["id"]) == key]
         preferences = filters.preferences()
         metadata = family_metadata(members, preferences)
         return {"phones": [{**variant_record(record, preferences), **metadata} for record in family_variants(members, preferences)],

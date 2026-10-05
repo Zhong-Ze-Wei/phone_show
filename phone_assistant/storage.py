@@ -313,8 +313,19 @@ class Storage:
                 "AND json_extract(record_json,'$.family_key')=? AND id<>?", (phone["family_key"], str(id))) ]
         return _with_official_family_specs(_with_official_release([phone, *official]))[0]
 
-    def summary(self) -> dict:
-        phones = self.list_phones()
+    def revision(self) -> tuple:
+        """Track both SQLite modes, including writes from external sync processes."""
+        stamps = []
+        for path in (self.path, Path(str(self.path) + "-wal")):
+            try:
+                stat = path.stat()
+                stamps.append((stat.st_ino, stat.st_size, stat.st_mtime_ns))
+            except FileNotFoundError:
+                stamps.append(None)
+        return tuple(stamps)
+
+    def summary(self, phones: list[dict] | None = None) -> dict:
+        phones = self.list_phones() if phones is None else phones
         recent = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
         codes = {}
         for phone in phones:
