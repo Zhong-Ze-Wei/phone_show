@@ -7,6 +7,7 @@ import {
   discoveryPriceLabel,
   sourceLabel,
   requestPreferences,
+  filterPreferences,
   safeSource,
   variantLabel,
 } from "./helpers";
@@ -62,7 +63,7 @@ export function VariantSelector({
                 ? " · 不符当前筛选"
                 : variant.recommendation_eligible === false &&
                     variant.price != null
-                  ? " · 仅资料"
+                  ? " · 报价待核实"
                   : ""}
             </option>
           ))}
@@ -209,17 +210,6 @@ export function DetailPanel({
           最新资料读取失败：{error}，下方显示已加载资料。
         </p>
       )}
-      {phone.score_applicable !== false && phone.score != null && (
-        <div className="detail-match">
-          <span>
-            {Math.round(phone.score)}
-            <small>% 需求匹配</small>
-          </span>
-          <p>
-            依据预算、用途与已核实参数计算。未知参数保持未知，匹配分不是实测排名。
-          </p>
-        </div>
-      )}
       <dl className="spec-grid">
         {COMPARE_FIELDS.map((field) => (
           <div key={field.label}>
@@ -228,27 +218,9 @@ export function DetailPanel({
           </div>
         ))}
       </dl>
-      <div className="detail-reasons">
-        {(phone.reasons || []).length > 0 && (
-          <section>
-            <h3>为什么适合</h3>
-            {phone.reasons?.map((value, i) => (
-              <p key={i}>✓ {value}</p>
-            ))}
-          </section>
-        )}
-        {(phone.tradeoffs || []).length > 0 && (
-          <section>
-            <h3>需要接受的取舍</h3>
-            {phone.tradeoffs?.map((value, i) => (
-              <p key={i}>{value}</p>
-            ))}
-          </section>
-        )}
-      </div>
       <p className="provenance-note">
         {phone.price == null
-          ? "具体配置价格待核实，来源起价不会直接用于预算推荐。"
+          ? "具体配置价格待核实，来源起价不代表所选容量的实际报价。"
           : isHistoricalPrice(phone)
             ? "这条价格来自历史资料，请重新核实购买渠道报价。"
             : "这里的价格是来源参考价，实际成交价请以购买渠道为准。"}{" "}
@@ -354,7 +326,7 @@ export function ComparePanel({
       method: "POST",
       body: JSON.stringify({
         ids: selectedPhones.map((phone) => phone.id),
-        preferences: requestPreferences(preferences),
+        preferences: filterPreferences(preferences),
       }),
       signal: controller.signal,
     })
@@ -379,13 +351,13 @@ export function ComparePanel({
       wide
     >
       <p className="dialog-description">
-        按当前需求、最新资料对比 {selectedPhones.length}{" "}
+        按当前筛选条件、最新资料对比 {selectedPhones.length}{" "}
         部手机。待核实的参数不会被写成 0 或“不支持”。
       </p>
       {loading && (
         <div className="advice-loading" role="status">
           <span className="spinner" />
-          <p>正在用相同需求重新比较每一部手机。</p>
+          <p>正在读取每部手机的参数与报价来源。</p>
         </div>
       )}
       {error && (
@@ -426,11 +398,6 @@ export function ComparePanel({
                   <th scope="col" key={phone.id}>
                     <span className="phone-brand">{phone.brand}</span>
                     <strong>{phone.name}</strong>
-                    {phone.score != null && (
-                      <span className="match-badge">
-                        {Math.round(phone.score)}% 需求匹配
-                      </span>
-                    )}
                     {phone.budget_warning && (
                       <p className="compare-budget-warning">
                         {phone.budget_warning}
@@ -458,30 +425,6 @@ export function ComparePanel({
                   ))}
                 </tr>
               ))}
-              <tr>
-                <th scope="row">适合你的地方</th>
-                {phones.map((phone) => (
-                  <td key={phone.id}>
-                    {(phone.reasons || []).map((value, i) => (
-                      <p className="compare-reason" key={i}>
-                        ✓ {value}
-                      </p>
-                    ))}
-                  </td>
-                ))}
-              </tr>
-              <tr>
-                <th scope="row">要接受的取舍</th>
-                {phones.map((phone) => (
-                  <td key={phone.id}>
-                    {(phone.tradeoffs || []).map((value, i) => (
-                      <p className="compare-tradeoff" key={i}>
-                        {value}
-                      </p>
-                    ))}
-                  </td>
-                ))}
-              </tr>
               <tr>
                 <th scope="row">来源</th>
                 {phones.map((phone) => (

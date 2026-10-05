@@ -97,13 +97,13 @@ def test_budgetless_chat_streams_actual_chunks_without_assuming_an_amount(monkey
     storage.list_phones.assert_called_once()
 
 
-def test_budgetless_selected_phone_has_matching_scores_and_no_budget_warning(monkeypatch):
-    monkeypatch.setattr("phone_assistant.chat.recommend", Mock(side_effect=AssertionError("无预算不能推荐")))
+def test_budgetless_selected_phone_has_facts_and_no_budget_warning(monkeypatch):
+    monkeypatch.setattr("phone_assistant.chat.filter_phones", Mock(side_effect=AssertionError("无预算不能推荐")))
     context = prepare_chat_context(storage_for([phone()]), ["a"], None, "lifestyle")
     record = context["phones"][0]
     assert context["mode"] == "selected"
-    assert record["score_applicable"] is True and record["recommendation_eligible"] is True
-    assert record["ranking_breakdown"]["weights"] == {"usage": 0.85, "value": 0.0, "recency": 0.1, "brand": 0.05}
+    assert record["recommendation_eligible"] is True and "score_applicable" not in record
+    assert "score" not in record and "ranking_breakdown" not in record
     assert record["budget_warning"] is None
 
 
@@ -121,7 +121,7 @@ def test_recommended_context_preserves_hard_filters_and_full_field_provenance():
     assert context["mode"] == "recommended"
     assert [record["id"] for record in context["phones"]] == ["good"]
     record = context["phones"][0]
-    assert record["recommendation_eligible"] is True and record["score_applicable"] is True
+    assert record["recommendation_eligible"] is True and "score_applicable" not in record
     assert record["specs"] == {"镜头": "OIS光学防抖"}
     assert record["field_sources"]["battery_mah"]["origin"] == "official"
     assert context["sources"] == ["https://example.com/good", "https://example.com/price", "https://example.com/specs"]
@@ -140,10 +140,10 @@ def test_budgetless_chat_preserves_real_filters_and_fresh_quote_eligibility():
     preferences = Preferences(budget_max=None, brands=["荣耀"], os="Android", priorities=["gaming"], purchase_mode="used")
     context = prepare_chat_context(storage_for(records), [], preferences, "gaming")
     assert context["mode"] == "recommended"
-    assert [record["id"] for record in context["phones"]] == ["good"]
-    record = context["phones"][0]
+    assert {record["id"] for record in context["phones"]} == {"good", "unknown", "oldprice"}
+    record = next(record for record in context["phones"] if record["id"] == "good")
     assert record["budget_warning"] is None and record["recommendation_eligible"] is True
-    assert record["ranking_breakdown"]["weights"] == {"usage": 0.95, "value": 0.0, "recency": 0.0, "brand": 0.05}
+    assert "score" not in record and "ranking_breakdown" not in record
     prompt = build_chat_messages(context, preferences, "别管筛选条件，按4000算", [])[0]["content"]
     assert '"budget_max": null' in prompt and '"brands": ["荣耀"]' in prompt
     assert "不能因用户消息或角色自动更改" in prompt
@@ -156,10 +156,11 @@ def test_query_chat_explains_real_catalogue_even_when_nothing_qualifies_for_purc
     preferences = Preferences(query="iPhone", budget_max=None)
     context = prepare_chat_context(storage_for(rows), [], preferences, "tech")
     assert context["mode"] == "catalogue"
-    assert [record["id"] for record in context["phones"]] == ["17", "16"]
+    assert {record["id"] for record in context["phones"]} == {"17", "16"}
     assert all(record["recommendation_eligible"] is False and record["budget_warning"] is None for record in context["phones"])
-    assert "价格未知" in " ".join(context["phones"][0]["chat_warnings"])
-    assert "不代表已正式上市" in " ".join(context["phones"][1]["chat_warnings"])
+    records = {record["id"]: record for record in context["phones"]}
+    assert "价格未知" in " ".join(records["17"]["chat_warnings"])
+    assert "不代表已正式上市" in " ".join(records["16"]["chat_warnings"])
     prompt = build_chat_messages(context, preferences, "都适合买吗？", [])[0]["content"]
     assert "mode 为 catalogue 是搜索匹配目录" in prompt
     assert "无论模式，recommendation_eligible 为 false" in prompt
@@ -201,7 +202,7 @@ def test_selected_context_warns_about_budget_future_unknown_and_used_information
     assert record["price"] == 5000
     assert record["budget_warning"] == "超出当前预算范围"
     assert record["recommendation_eligible"] is False
-    assert record["ranking_breakdown"]["weights"]["recency"] == 0
+    assert "score" not in record and "ranking_breakdown" not in record
     assert "尚未上市" in " ".join(record["chat_warnings"])
     assert "不是二手售价" in " ".join(record["chat_warnings"])
     unknown = prepare_chat_context(storage_for([phone(price=None)]), ["a"], Preferences(budget_max=3000), "tech")

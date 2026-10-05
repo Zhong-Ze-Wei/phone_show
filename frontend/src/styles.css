@@ -327,18 +327,6 @@ svg {
   margin-top: 13px;
   position: relative;
 }
-.control-caption {
-  font-size: 10px;
-  color: var(--muted);
-  padding: 6px 0;
-  white-space: nowrap;
-}
-.purpose-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.purpose,
 .preset,
 .brand {
   padding: 5px 10px;
@@ -348,12 +336,10 @@ svg {
   border-radius: 5px;
   background: #1a222e;
 }
-.purpose:hover,
 .preset:hover,
 .brand:hover {
   border-color: #5b7fa9;
 }
-.purpose.selected,
 .preset.selected,
 .brand.selected {
   border-color: #2f6cac;
@@ -458,21 +444,6 @@ svg {
   font-size: 10px;
   color: #95a4b9;
   white-space: nowrap;
-}
-.ranking-guide {
-  color: #9babc0;
-  font-size: 11px;
-  line-height: 1.9;
-  margin-bottom: 17px;
-}
-.ranking-guide summary {
-  cursor: pointer;
-  color: #91b6df;
-  width: fit-content;
-}
-.ranking-guide p {
-  padding-top: 8px;
-  max-width: 900px;
 }
 .purchase-mode-note {
   border-left: 2px solid #8b7b52;
@@ -655,37 +626,11 @@ svg {
   min-width: 0;
   white-space: nowrap;
 }
-.card-scores {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 5px;
+.card-filter-status {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #9fb2ca;
   margin-top: 8px;
-}
-.match-badge {
-  font-size: 11px;
-  line-height: 1.5;
-  padding: 3px 5px;
-  color: #a3ceff;
-  border: 1px solid #244869;
-  background: #12304a;
-  border-radius: 4px;
-  white-space: nowrap;
-}
-.usage-match-reference {
-  font-size: 11px;
-  line-height: 1.5;
-  color: #93a3ba;
-}
-.ranking-reasons {
-  margin: 9px 0;
-}
-.ranking-reasons p {
-  font-size: 12px;
-  color: #9cacc0;
-  line-height: 1.8;
-  margin: 5px 0;
 }
 .card-actions {
   display: flex;
@@ -835,26 +780,6 @@ svg {
   color: #9fb6d1;
   line-height: 1.8;
   margin-top: 12px;
-}
-.preview-reasons {
-  border-top: 1px solid #314966;
-  margin-top: 13px;
-  padding-top: 12px;
-}
-.preview-reasons > summary {
-  cursor: pointer;
-  font-size: 12px;
-  color: #a2c4ed;
-}
-.preview-reasons > summary span {
-  color: #7fa4d0;
-  margin-left: 11px;
-}
-.preview-reasons > p {
-  font-size: 12px;
-  line-height: 1.8;
-  color: #91a9c7;
-  margin-top: 9px;
 }
 .preview-actions {
   display: flex;
@@ -1202,7 +1127,7 @@ svg {
   margin-top: 29px;
   padding-top: 21px;
 }
-.rail-advisor > div {
+.rail-advisor-heading {
   display: flex;
   gap: 8px;
   align-items: center;
@@ -1222,7 +1147,7 @@ svg {
   line-height: 1.8;
   margin: 11px 0;
 }
-.rail-advisor button {
+.rail-advisor > button {
   border: 1px solid #3e5875;
   color: #9abde9;
   width: 100%;
@@ -1237,6 +1162,51 @@ svg {
   font-size: 9px;
   display: block;
   margin-top: 9px;
+}
+.analysis-preferences {
+  flex-shrink: 0;
+  min-width: 0;
+}
+.analysis-preferences-title {
+  color: #a4b6ce;
+  font-size: 12px;
+}
+.analysis-purpose-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+.analysis-purpose-buttons button {
+  color: #aabbd0;
+  font-size: 12px;
+  min-height: 30px;
+  padding: 5px 11px;
+  background: #1b2839;
+  border: 1px solid #364b65;
+  border-radius: 5px;
+}
+.analysis-purpose-buttons button:hover,
+.analysis-purpose-buttons button:focus-visible {
+  border-color: #78aeea;
+}
+.analysis-purpose-buttons button.selected {
+  color: #c2dfff;
+  background: #17395c;
+  border-color: #5c9ad8;
+}
+.analysis-preferences .analysis-preferences-note {
+  margin: 7px 0 12px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #8196b1;
+}
+.advisor-chat > .analysis-preferences {
+  border-bottom: 1px solid #2c3c50;
+  padding: 0 0 10px;
+}
+.advisor-chat > .analysis-preferences .analysis-preferences-note {
+  margin-bottom: 0;
 }
 .rail-note {
   font-size: 9px;
@@ -1542,30 +1512,6 @@ svg {
   font-size: 11px;
   line-height: 1.8;
 }
-.detail-match {
-  display: flex;
-  gap: 18px;
-  align-items: center;
-  border: 1px solid #344c6a;
-  background: #16293f;
-  padding: 14px;
-  border-radius: 6px;
-  margin-top: 18px;
-}
-.detail-match > span {
-  color: #a3ceff;
-  font-size: 28px;
-  white-space: nowrap;
-}
-.detail-match small {
-  font-size: 10px;
-  margin-left: 5px;
-}
-.detail-match p {
-  color: #8fa9ca;
-  font-size: 11px;
-  line-height: 1.8;
-}
 .spec-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1588,22 +1534,6 @@ svg {
   margin: 0;
   text-align: right;
   overflow-wrap: anywhere;
-}
-.detail-reasons {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
-}
-.detail-reasons h3 {
-  font-size: 12px;
-  font-weight: 500;
-  margin-bottom: 9px;
-  color: #c3d6ed;
-}
-.detail-reasons p {
-  color: #9fb2cc;
-  font-size: 11px;
-  line-height: 1.9;
 }
 .detail-discovery-reasons {
   border-left: 2px solid #847752;
@@ -1740,12 +1670,6 @@ svg {
   color: #dcc08b;
   font-size: 10px;
   margin-top: 9px;
-}
-.compare-reason {
-  color: #9fbcdf;
-}
-.compare-tradeoff {
-  color: #b9a98c;
 }
 .advisor-drawer {
   position: fixed;
@@ -2225,17 +2149,6 @@ svg {
     flex-wrap: wrap;
     gap: 8px;
   }
-  .control-caption {
-    padding-top: 6px;
-  }
-  .purpose-grid {
-    gap: 5px;
-    flex: 1;
-  }
-  .purpose {
-    font-size: 10px;
-    padding: 5px 8px;
-  }
   .more-filters {
     margin-left: 0;
     width: 100%;
@@ -2325,13 +2238,6 @@ svg {
   .spec-grid {
     grid-template-columns: 1fr;
   }
-  .detail-match {
-    flex-wrap: wrap;
-    gap: 9px;
-  }
-  .detail-reasons {
-    grid-template-columns: 1fr;
-  }
   .raw-specs > div {
     grid-template-columns: 90px 1fr;
     gap: 10px;
@@ -2385,10 +2291,6 @@ svg {
   .compare-button,
   .card-detail {
     font-size: 11px;
-  }
-  .match-badge,
-  .usage-match-reference {
-    font-size: 10px;
   }
 }
 @media (max-width: 600px) {
@@ -2465,8 +2367,7 @@ svg {
   .phone-brand,
   .phone-brand small,
   .quick-specs > span,
-  .match-badge,
-  .usage-match-reference,
+  .card-filter-status,
   .card-detail,
   .compare-button {
     font-size: 12px;
@@ -3003,9 +2904,6 @@ svg {
       flex-wrap: wrap;
       gap: 4px 8px;
     }
-    .usage-match-reference {
-      font-size: 10px;
-    }
   }
   @container phone-catalog (min-width: 620px) and (max-width: 1030px) {
     .phone-grid {
@@ -3082,8 +2980,7 @@ svg {
       width: 26px;
       height: 26px;
     }
-    .chat-open .phone-brand small,
-    .chat-open .usage-match-reference {
+    .chat-open .phone-brand small {
       display: none;
     }
     .chat-open .card-actions {

@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
-from phone_assistant.recommendation import Preferences, family_variants, match_phone, recommend
+from phone_assistant.recommendation import Preferences, family_variants, phone_record, recommend
 
 
 def phone(id="1", **fields):
@@ -15,12 +15,11 @@ def test_budget_is_hard_constraint_and_unknown_price_is_not_zero():
     assert result["coverage"]["unknown_price"] == 1
 
 
-def test_battery_priority_changes_order():
+def test_battery_priority_is_only_an_ai_preference():
     balanced = phone("balanced", battery_mah=4000, charging_w=30, ram_gb=16, refresh_hz=144)
     enduring = phone("enduring", battery_mah=7500, charging_w=100, ram_gb=8, refresh_hz=90, soc="高通骁龙7 Gen3")
     result = recommend([balanced, enduring], Preferences(priorities=["battery"]))
-    assert result["phones"][0]["id"] == "enduring"
-    assert any("实测" in text for text in result["phones"][0]["tradeoffs"])
+    assert result["phones"] == recommend([balanced, enduring], Preferences())["phones"]
 
 
 def test_default_excludes_old_records_but_user_can_include_them():
@@ -33,7 +32,6 @@ def test_old_model_with_recent_quote_can_be_recommended_without_recency_bonus():
     old_model = phone(release_date="2021-07-01")
     result = recommend([old_model], Preferences())
     assert result["total"] == 1
-    assert result["phones"][0]["ranking_breakdown"]["recency"] == 0
     assert recommend([old_model], Preferences(include_history=True))["total"] == 1
 
 
@@ -41,7 +39,6 @@ def test_old_release_year_does_not_exclude_a_freshly_priced_listed_model():
     old_model = phone(release_date=None, release_year=2020)
     result = recommend([old_model], Preferences())
     assert result["total"] == 1
-    assert result["phones"][0]["ranking_breakdown"]["recency"] == 0
     assert recommend([old_model], Preferences(include_history=True))["total"] == 1
 
 
@@ -56,31 +53,26 @@ def test_storage_constraint_excludes_unknown_and_small_variants():
     assert [record["id"] for record in result["phones"]] == ["c"]
 
 
-def test_more_megapixels_are_not_automatically_better_camera():
+def test_camera_specs_do_not_generate_an_automatic_quality_judgment():
     plain = phone("plain", camera_mp=200, specs={"主摄": "2亿像素"})
     optical = phone("optical", camera_mp=50, specs={"主摄": "5000万，OIS光学防抖", "镜头": "潜望式长焦"})
     result = recommend([plain, optical], Preferences(priorities=["camera"]))
-    assert result["phones"][0]["id"] == "optical"
+    assert result["phones"] == recommend([plain, optical], Preferences())["phones"]
+    assert all("score" not in record and "metrics" not in record for record in result["phones"])
 
 
 def test_old_price_source_remains_visible_after_fresh_spec_update():
-    result = match_phone(phone(field_sources={"price": {"origin": "legacy"}}), Preferences())
+    result = phone_record(phone(field_sources={"price": {"origin": "legacy"}}))
     assert any("历史" in reason for reason in result["tradeoffs"])
 
 
 def test_old_price_does_not_enter_current_budget_results_by_borrowing_fresh_spec_time():
     old_price = phone(field_sources={"price": {"origin": "zol", "fetched_at": "2020-01-01T00:00:00+00:00"}})
     unknown_time = phone("unknown", field_sources={"price": {"origin": "zol", "fetched_at": None}})
-    result = recommend([old_price, unknown_time], Preferences())
+    result = recommend([old_price, unknown_time], Preferences(budget_max=5000))
     assert result["total"] == 0
     assert result["coverage"]["unknown_price"] == 2
     assert recommend([old_price], Preferences(include_history=True))["total"] == 1
-
-
-def test_negated_ois_does_not_earn_camera_bonus():
-    unsupported = phone(specs={"防抖": "不支持OIS光学防抖"})
-    supported = phone(specs={"防抖": "支持OIS光学防抖"})
-    assert match_phone(unsupported, Preferences())["metrics"]["camera"] < match_phone(supported, Preferences())["metrics"]["camera"]
 
 
 def test_explicit_newest_does_not_use_fetched_date_or_product_id():
@@ -89,7 +81,7 @@ def test_explicit_newest_does_not_use_fetched_date_or_product_id():
     new = phone("1", release_date=f"{year}-01-01", ram_gb=8, storage_gb=256, battery_mah=4000)
     unknown = phone("999999", release_date=None, ram_gb=16, storage_gb=512)
     assert [p["id"] for p in recommend([unknown, old_high_score, new], Preferences(sort="newest"))["phones"]] == ["1", "99999", "999999"]
-    assert recommend([old_high_score, new], Preferences(sort="match"))["phones"][0]["id"] == "99999"
+    assert recommend([old_high_score, new], Preferences(sort="match"))["phones"][0]["id"] == "1"
 
 
 def test_release_precision_preserves_unknown_day_and_month():
@@ -135,7 +127,8 @@ def test_explicit_newest_keeps_latest_release_in_front_of_result_limit():
     rows.append(phone("new", release_date=f"{year}-01-01", storage_gb=256))
     result = recommend(rows, Preferences(sort="newest"))
     assert result["total"] == 66
-    assert len(result["phones"]) == 60
+    assert len(result["phones"]) == 66
+    assert len(recommend(rows, Preferences(sort="newest"), limit=60)["phones"]) == 60
     assert result["phones"][0]["id"] == "new"
 
 
@@ -185,133 +178,28 @@ def test_discovery_when_all_over_budget_chooses_lowest_price_meeting_capacity():
     assert discovery['discovery_status'] == 'over_budget'
 
 
-@pytest.fixture
-def ranking_today(monkeypatch):
-    monkeypatch.setattr("phone_assistant.recommendation.market_today", lambda: date(2026, 10, 4))
-    return date(2026, 10, 4)
-
-
-@pytest.mark.parametrize("age,expected", [(0, 100), (365, 100), (366, 50), (730, 50), (731, 0)])
-def test_recency_uses_true_launch_age_at_one_and_two_year_boundaries(ranking_today, age, expected):
-    row = phone(release_date=(ranking_today - timedelta(days=age)).isoformat())
-    record = match_phone(row, Preferences())
-    assert record["ranking_breakdown"]["recency"] == expected
-
-
-def test_partial_release_dates_use_conservative_age_without_fabricating_date(ranking_today):
-    month = phone("month", release_year=2025, release_month=10, release_precision="month", release_date=None)
-    year = phone("year", release_year=2024, release_precision="year", release_date=None)
-    unknown = phone("unknown", release_date=None)
-    records = [match_phone(row, Preferences()) for row in (month, year, unknown)]
-    assert [record["ranking_breakdown"]["recency"] for record in records] == [50, 0, 0]
-    assert all(record["release_date"] is None for record in records)
-    assert "上市时间未知" in " ".join(records[-1]["ranking_reasons"])
-
-
-def test_recommended_is_default_and_strong_older_model_can_outweigh_weak_new_model(ranking_today):
-    strong = phone("strong", release_date="2023-01-01", brand="示例", storage_gb=512, ram_gb=16,
-        battery_mah=7500, charging_w=100, refresh_hz=144, specs={"主摄": "OIS光学防抖，潜望长焦"})
-    weak = phone("weak", release_date="2026-09-01", brand="苹果", soc="骁龙460", storage_gb=256, ram_gb=4,
-        battery_mah=3500, charging_w=15, refresh_hz=60, specs={"主摄": "普通主摄"})
-    result = recommend([weak, strong], Preferences())
-    assert result["preferences"]["sort"] == "recommended"
-    assert result["preferences"]["purchase_mode"] == "new"
-    assert result["phones"][0]["id"] == "strong"
-    assert strong["release_date"] == "2023-01-01"
-    assert recommend([weak, strong], Preferences(sort="newest"))["phones"][0]["id"] == "weak"
-
-
-def test_equal_usage_and_price_get_moderate_recency_and_brand_preference(ranking_today):
-    old = phone("old", release_date="2023-10-01")
-    recent = phone("recent", release_date="2026-09-01")
-    major = phone("major", release_date="2026-09-01", brand="vivo")
-    result = recommend([old, recent, major], Preferences())
-    assert [record["id"] for record in result["phones"]] == ["major", "recent", "old"]
-    records = {record["id"]: record for record in result["phones"]}
-    assert records["major"]["score"] == records["old"]["score"]
-    assert records["major"]["recommendation_score"] - records["recent"]["recommendation_score"] == 5
-    assert records["recent"]["recommendation_score"] - records["old"]["recommendation_score"] == 10
-    assert "不代表品质或售后" in " ".join(records["major"]["ranking_reasons"])
-
-
-def test_budget_surplus_does_not_override_large_usage_difference(ranking_today):
-    strong = phone("strong", price=3900, storage_gb=512, ram_gb=16, battery_mah=7500, charging_w=100,
-        refresh_hz=144, specs={"主摄": "OIS光学防抖，潜望长焦"})
-    cheap = phone("cheap", price=100, storage_gb=256, ram_gb=4, soc="骁龙460", battery_mah=3500,
-        charging_w=15, refresh_hz=60, specs={"主摄": "普通主摄"})
-    result = recommend([cheap, strong], Preferences(budget_max=4000))
-    assert result["phones"][0]["id"] == "strong"
-    assert "预算余量" in " ".join(result["phones"][1]["ranking_reasons"])
-    assert result["ranking_policy"]["value_basis"].endswith("不是实测性价比")
-
-
-def test_used_mode_removes_recency_advantage_and_keeps_current_quote_requirements(ranking_today):
+@pytest.mark.parametrize("mode", ["new", "used"])
+def test_used_and_new_browse_preserve_price_truth_and_never_enable_history(mode):
     old = phone("old", release_date="2023-01-01")
     new = phone("new", release_date="2026-09-01")
-    stale = phone("stale", price=100, release_date="2026-09-01",
-        field_sources={"price": {"origin": "legacy", "fetched_at": "2020-01-01T00:00:00+00:00"}})
-    preferences = Preferences(purchase_mode="used")
-    result = recommend([old, new, stale], preferences)
+    stale = phone("stale", price=100, field_sources={"price": {"origin": "legacy"}})
+    result = recommend([old, new, stale], Preferences(purchase_mode=mode))
     records = {record["id"]: record for record in result["phones"]}
-    assert set(records) == {"old", "new"}
-    assert records["old"]["recommendation_score"] == records["new"]["recommendation_score"]
-    assert records["new"]["ranking_breakdown"]["weights"]["recency"] == 0
-    assert result["coverage"]["excluded"]["stale_price"] == 1
+    assert set(records) == {"old", "new", "stale"}
     assert result["preferences"]["include_history"] is False
+    assert records["stale"]["matches_preferences"] is True
+    assert records["stale"]["recommendation_eligible"] is False
+    assert "stale_price" in records["stale"]["variant_codes"]
     assert records["old"]["price"] == 3000
-    assert "未接入二手价格、成色或库存" in " ".join(records["old"]["ranking_reasons"])
-    assert recommend([stale], Preferences(purchase_mode="used", include_history=True))["total"] == 1
+    assert recommend([stale], Preferences(purchase_mode=mode, budget_max=4000, include_history=True))["total"] == 0
 
 
-def test_unknown_or_stale_price_earns_no_budget_surplus_bonus(ranking_today):
-    unknown = match_phone(phone(price=None), Preferences())
-    stale = match_phone(phone(price=100, field_sources={"price": {"origin": "legacy"}}), Preferences())
-    assert unknown["ranking_breakdown"]["value"] == 0
-    assert stale["ranking_breakdown"]["value"] == 0
-
-
-def test_discovery_qualified_family_variant_follows_the_selected_sort(ranking_today):
-    base = phone("base", family_key="same", price=1000, storage_gb=256, new_from_source=True, release_date="2026-09-01")
-    larger = phone("large", family_key="same", price=3999, storage_gb=300, new_from_source=True, release_date="2026-09-01")
-    rows = [base, larger]
-    recommended = recommend(rows, Preferences(budget_max=4000))
-    usage = recommend(rows, Preferences(budget_max=4000, sort="match"))
-    assert recommended["phones"][0]["id"] == "base"
-    assert recommended["discovery"]["phones"][0]["id"] == "base"
-    assert usage["phones"][0]["id"] == "large"
-    assert usage["discovery"]["phones"][0]["id"] == "large"
-    descending = recommend(rows, Preferences(budget_max=4000, sort="price_desc"))
-    assert descending["phones"][0]["id"] == descending["discovery"]["phones"][0]["id"] == "large"
-
-
-def test_ranking_breakdown_explains_combined_score_without_replacing_usage(ranking_today):
-    result = recommend([phone(brand="iQOO", release_date="2026-09-01", price=3000)], Preferences(budget_max=4000))
-    record = result["phones"][0]
-    breakdown = record["ranking_breakdown"]
-    assert breakdown["usage"] == record["score"]
-    assert breakdown["value"] == 25
-    assert breakdown["recency"] == 100
-    assert breakdown["brand"] == 100
-    assert sum(breakdown["weights"].values()) == 1
-    assert record["recommendation_score"] == round(record["score"] * 0.75 + 2.5 + 10 + 5, 2)
-    assert result["ranking_policy"]["weights"] == breakdown["weights"]
-
-
-@pytest.mark.parametrize("mode,weights", [("new", {"usage": 0.85, "value": 0.0, "recency": 0.1, "brand": 0.05}),
-    ("used", {"usage": 0.95, "value": 0.0, "recency": 0.0, "brand": 0.05})])
-def test_unset_budget_has_no_hidden_amount_or_price_surplus_bonus(ranking_today, mode, weights):
-    rows = [phone("costly", price=19999, release_date="2026-09-01", brand="苹果"),
-        phone("cheap", price=500, release_date="2026-09-01", brand="苹果"),
-        phone("unknown", price=None), phone("stale", price=100, field_sources={"price": {"origin": "legacy"}})]
-    result = recommend(rows, Preferences(purchase_mode=mode))
-    records = {record["id"]: record for record in result["phones"]}
-    assert set(records) == {"costly", "cheap"}
-    assert result["preferences"]["budget_max"] is None
-    assert result["ranking_policy"]["weights"] == weights
-    assert records["costly"]["recommendation_score"] == records["cheap"]["recommendation_score"]
-    assert all(record["ranking_breakdown"]["value"] == 0 for record in records.values())
-    assert result["coverage"]["excluded"]["over_budget"] == 0
-    assert result["catalogue"] == {"phones": [], "total": 0, "returned": 0}
+@pytest.mark.parametrize("sort", ["newest", "price_desc", "price_asc", "recommended", "match"])
+def test_discovery_qualified_family_always_uses_lowest_matching_quote(sort):
+    base = phone("base", family_key="same", price=1000, storage_gb=256, new_from_source=True)
+    larger = phone("large", family_key="same", price=3999, storage_gb=512, new_from_source=True)
+    result = recommend([base, larger], Preferences(budget_max=4000, sort=sort))
+    assert result["phones"][0]["id"] == result["discovery"]["phones"][0]["id"] == "base"
 
 
 def test_default_storage_is_unrestricted_and_only_explicit_capacity_filters():
@@ -394,7 +282,7 @@ def test_catalogue_family_prefers_eligible_variant_and_current_official_facts_ov
     assert result["total"] == 2
     assert [record["id"] for record in result["phones"]] == ["base", "official"]
     counts = {record["family_key"]: record["catalogue_variant_count"] for record in result["phones"]}
-    assert counts == {"current": 2, "17": 1}  # 同 RAM/容量的历史预测与官网资料只算一种配置。
+    assert counts == {"current": 2, "17": 2}  # 未核验的历史配置不替代近期官网的待核验目录身份。
     rows[:2] = [phone("base", name="iPhone Current(256GB)", family_key="current", storage_gb=256, price=5000),
         phone("large", name="iPhone Current(512GB)", family_key="current", storage_gb=512, price=6000)]
     records = recommend(rows, Preferences(query="iPhone", budget_max=4000))["catalogue"]["phones"]

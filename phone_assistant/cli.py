@@ -30,7 +30,7 @@ def main() -> None:
     sync.add_argument("--limit", type=int, help="限制详情条数，用于小批验证；不声称全覆盖")
     sync.add_argument("--delay", type=float, default=0.9, help="每次来源请求最小间隔，默认0.9秒")
     sync.add_argument("--latest", action="store_true", help="仅核对官网和品牌新品入口并补采详情，不刷新历史目录")
-    choose = commands.add_parser("recommend", help="按参考价预算与需求推荐，不请求模型")
+    choose = commands.add_parser("recommend", help="按明确条件筛选手机，不评分或请求模型")
     choose.add_argument("--budget", type=float, help="可选最高预算，省略时不限金额")
     choose.add_argument("--min-budget", type=float, default=0)
     choose.add_argument("--brand", action="append", default=[])
@@ -39,8 +39,8 @@ def main() -> None:
     choose.add_argument("--compact", action="store_true")
     choose.add_argument("--history", action="store_true")
     choose.add_argument("--query", default="")
-    choose.add_argument("--sort", choices=["recommended", "newest", "match", "price_asc", "price_desc"], default="recommended", help="默认综合需求、预算余量、上市时效与品牌偏好")
-    choose.add_argument("--purchase-mode", choices=["new", "used"], default="new", help="used 仅放宽机型年龄偏好，不提供二手行情")
+    choose.add_argument("--sort", choices=["newest", "price_asc", "price_desc", "recommended", "match"], default="newest", help="按上市时间或参考价格排列；旧 recommended/match 均兼容为 newest，不评分")
+    choose.add_argument("--purchase-mode", choices=["new", "used"], default="new", help="used 表示分析二手机型，不提供二手报价或库存")
     search = commands.add_parser("search", help="仅检索本地资料，不请求 API")
     search.add_argument("question")
     ask = commands.add_parser("ask", help="检索旧 Markdown 和 Excel 的历史问答；新版选机用 recommend 或网页")
@@ -79,14 +79,14 @@ def main() -> None:
                     raise ValueError("存储容量必须在 0 至 4096GB 之间。")
                 result = recommend(storage.list_phones(), Preferences(
                     budget_min=arguments.min_budget, budget_max=arguments.budget,
-                    brands=arguments.brand, priorities=arguments.priority or ["daily"],
+                    brands=arguments.brand, priorities=arguments.priority,
                     min_storage=arguments.storage, compact=arguments.compact,
                     include_history=arguments.history, query=arguments.query, sort=arguments.sort,
                     purchase_mode=arguments.purchase_mode,
-                ), limit=10)
-                display_fields = ("id", "name", "brand", "price", "price_from", "score", "recommendation_score", "ranking_breakdown", "ranking_reasons", "soc", "battery_mah", "storage_gb", "release_date", "release_year", "release_month", "reasons", "tradeoffs", "discovery_reasons", "discovery_status", "catalogue_reasons", "catalogue_codes", "catalogue_status", "catalogue_variant_count", "recommendation_eligible", "source_url", "fetched_at")
+                ))
+                display_fields = ("id", "name", "brand", "price", "price_from", "soc", "battery_mah", "storage_gb", "release_date", "release_year", "release_month", "reasons", "tradeoffs", "discovery_reasons", "discovery_status", "catalogue_reasons", "catalogue_codes", "catalogue_status", "catalogue_variant_count", "family_name", "variant_count", "variant_summary", "matches_preferences", "variant_codes", "variant_reasons", "budget_warning", "recommendation_eligible", "source_url", "fetched_at")
                 result["phones"] = [{key: phone.get(key) for key in display_fields} for phone in result["phones"]]
-                result["discovery"]["phones"] = [{key: phone.get(key) for key in display_fields} for phone in result["discovery"]["phones"][:10]]
+                result["discovery"]["phones"] = [{key: phone.get(key) for key in display_fields} for phone in result["discovery"]["phones"]]
                 result["discovery"]["returned"] = len(result["discovery"]["phones"])
                 result["catalogue"]["phones"] = [{key: phone.get(key) for key in display_fields} for phone in result["catalogue"]["phones"]]
             print(json.dumps(result, ensure_ascii=False, indent=2))

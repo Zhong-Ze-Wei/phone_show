@@ -16,15 +16,15 @@ const shots = {
     alt: "真实手机端选机界面：单列大图卡片与底部操作条",
   },
 };
-const purposeLabels = {
-  daily: "日常",
-  gaming: "游戏",
-  camera: "拍照",
-  battery: "续航",
+const sortLabels = {
+  newest: "上市时间",
+  price_asc: "价格由低到高",
+  price_desc: "价格由高到低",
 };
 let snapshot = null;
 let budget = null;
-let purpose = "daily";
+let sortOrder = "newest";
+const selectedVariants = new Map();
 let compared = [];
 let draggedId = null;
 const DRAG_TYPE = "application/x-pick-phone-demo";
@@ -54,7 +54,43 @@ function announce(text) {
   $("#demo-status").textContent = text;
 }
 function candidates() {
-  return !snapshot ? [] : snapshot.cases[`${budget ?? "all"}:${purpose}`] || [];
+  if (!snapshot) return [];
+  const families = new Map();
+  snapshot.phones.forEach((phone) => {
+    if (!families.has(phone.family_key)) families.set(phone.family_key, []);
+    families.get(phone.family_key).push(phone);
+  });
+  const phones = [];
+  families.forEach((variants, familyKey) => {
+    const matching = variants.filter(matchesBudget).sort(comparePrice);
+    if (!matching.length) return;
+    const selected = variants.find(
+      (phone) => phone.id === selectedVariants.get(familyKey),
+    );
+    phones.push(selected || matching[0]);
+  });
+  return phones.sort((left, right) => {
+    if (sortOrder === "newest") {
+      return (right.release_date || "").localeCompare(left.release_date || "") ||
+        left.id.localeCompare(right.id);
+    }
+    return comparePrice(left, right, sortOrder === "price_desc");
+  });
+}
+function matchesBudget(phone) {
+  return budget === null || (phone.price != null && phone.price <= budget);
+}
+function comparePrice(left, right, descending = false) {
+  if (left.price == null && right.price == null) return left.id.localeCompare(right.id);
+  if (left.price == null) return 1;
+  if (right.price == null) return -1;
+  return (descending ? right.price - left.price : left.price - right.price) ||
+    left.id.localeCompare(right.id);
+}
+function variantsFor(phone) {
+  return snapshot.phones.filter((item) => item.family_key === phone.family_key)
+    .sort((left, right) => (left.storage_gb || 0) - (right.storage_gb || 0) ||
+      (left.ram_gb || 0) - (right.ram_gb || 0) || left.id.localeCompare(right.id));
 }
 function photo(phone) {
   const src = sourceUrl(phone.image_url);
@@ -90,8 +126,8 @@ function updateChoices() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
-  document.querySelectorAll("[data-purpose]").forEach((button) => {
-    const active = button.dataset.purpose === purpose;
+  document.querySelectorAll("[data-sort]").forEach((button) => {
+    const active = button.dataset.sort === sortOrder;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
@@ -100,13 +136,13 @@ function renderPhones() {
   const list = $("#demo-phones");
   list.replaceChildren();
   $("#demo-results-title").textContent =
-    `${budget === null ? "预算不限" : `¥${budget.toLocaleString("zh-CN")}`} · ${purposeLabels[purpose]}候选`;
+    `${budget === null ? "预算不限" : `最高 ¥${budget.toLocaleString("zh-CN")}`} · ${sortLabels[sortOrder]}`;
   const phones = candidates();
   if (!phones.length) {
     const empty = node("div", "demo-empty");
     empty.append(
-      node("h4", "", snapshot ? "本组快照没有候选" : "正在读取真实快照"),
-      node("p", "", "稍后重试或查看上方真实界面。"),
+      node("h4", "", snapshot ? "演示样本内没有符合条件的手机" : "正在读取真实快照"),
+      node("p", "", "调整示例预算，或运行完整工作台查看更多资料。"),
     );
     list.append(empty);
   }
@@ -129,6 +165,24 @@ function renderPhones() {
       node("span", "", number(phone.storage_gb, "GB")),
       node("span", "", number(phone.battery_mah, "mAh")),
     );
+    const versions = variantsFor(phone);
+    const configuration = node("label", "demo-phone-configuration");
+    const select = node("select", "demo-variant-select");
+    select.setAttribute("aria-label", `选择 ${phone.family_name} 的演示配置`);
+    versions.forEach((version) => {
+      const label = `${version.ram_gb == null ? "" : `${number(version.ram_gb, "GB")} / `}${number(version.storage_gb, "GB")} · ${price(version)}${matchesBudget(version) ? "" : " · 超出预算"}`;
+      const option = node("option", "", label);
+      option.value = version.id;
+      option.selected = version.id === phone.id;
+      select.append(option);
+    });
+    select.addEventListener("change", () => {
+      selectedVariants.set(phone.family_key, select.value);
+      renderPhones();
+      renderCompare();
+      announce("已切换真实配置；对比中的旧版本继续保留。");
+    });
+    configuration.append(node("span", "", `样本内 ${versions.length} 个配置`), select);
     const actions = node("div", "demo-phone-actions");
     const compare = node("button", "", included ? "移出对比" : "+ 加入对比");
     compare.type = "button";
@@ -140,7 +194,10 @@ function renderPhones() {
       included ? removeCompare(phone.id) : addCompare(phone),
     );
     actions.append(sourceLink(phone), compare);
-    body.append(prices, node("h4", "", phone.name), specs, actions);
+    body.append(prices, node("h4", "", phone.family_name), specs, configuration);
+    if (!matchesBudget(phone))
+      body.append(node("p", "demo-configuration-note", "所选配置超出示例预算，仅供资料比较。"));
+    body.append(actions);
     card.append(picture, body);
     card.addEventListener("dragstart", (event) => {
       draggedId = phone.id;
@@ -202,25 +259,27 @@ function changeCase() {
   renderPhones();
   renderCompare();
   announce(
-    `已切换到 ${budget === null ? "预算不限" : `¥${budget.toLocaleString("zh-CN")}`} / ${purposeLabels[purpose]}的真实快照，保留已选对比机型。`,
+    `已按${budget === null ? "预算不限" : `最高 ¥${budget.toLocaleString("zh-CN")}`}和${sortLabels[sortOrder]}展示演示样本，保留已选对比机型。`,
   );
 }
 document.querySelectorAll("[data-budget]").forEach((button) =>
   button.addEventListener("click", () => {
     budget =
       button.dataset.budget === "all" ? null : Number(button.dataset.budget);
+    selectedVariants.clear();
     changeCase();
   }),
 );
-document.querySelectorAll("[data-purpose]").forEach((button) =>
+document.querySelectorAll("[data-sort]").forEach((button) =>
   button.addEventListener("click", () => {
-    purpose = button.dataset.purpose;
+    sortOrder = button.dataset.sort;
     changeCase();
   }),
 );
 $("#reset-demo").addEventListener("click", () => {
   budget = null;
-  purpose = "daily";
+  sortOrder = "newest";
+  selectedVariants.clear();
   changeCase();
 });
 $("#clear-comparison").addEventListener("click", () => {
@@ -470,7 +529,7 @@ fetch("./assets/demo-data.json")
   .then((data) => {
     snapshot = data;
     $("#snapshot-label").textContent =
-      `快照 ${data.snapshot_date} · 按真实推荐顺序`;
+      `资料 ${data.snapshot_date} · ${data.phones.length} 个配置样本`;
     renderPhones();
   })
   .catch(() => {

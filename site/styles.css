@@ -436,10 +436,6 @@ legend > span {
   border-color: #4b9dff;
   background: #1b3c61;
 }
-.purpose-row button {
-  padding-left: 11px;
-  padding-right: 11px;
-}
 .demo-results-heading {
   display: flex;
   align-items: center;
@@ -566,6 +562,30 @@ legend > span {
   font-size: 10px;
   line-height: 1.8;
   margin-top: 11px;
+}
+.demo-phone-configuration {
+  display: grid;
+  gap: 7px;
+  margin-top: 14px;
+  color: #92a9c5;
+  font-size: 10px;
+}
+.demo-variant-select {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #3b4a60;
+  border-radius: 5px;
+  background: #1c2736;
+  color: #c6d7ee;
+  padding: 8px;
+  font: inherit;
+  font-size: 11px;
+}
+.demo-configuration-note {
+  margin-top: 10px;
+  color: #e0bb89;
+  font-size: 11px;
+  line-height: 1.6;
 }
 .demo-phone-actions {
   margin-top: 13px;
@@ -872,73 +892,39 @@ legend > span {
   margin-top: 10px;
   max-width: 460px;
 }
-.ranking-panel {
+.filter-facts-panel {
   border-left: 1px solid var(--line);
   padding-left: 36px;
 }
-.ranking-panel > p {
+.filter-facts-panel > p {
   font-size: 11px;
   color: #899387;
 }
-.weight-bar {
-  display: flex;
-  gap: 3px;
-  height: 12px;
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 20px;
-}
-.weight-bar > span {
-  flex: var(--weight);
-}
-.weight-usage {
-  background: #1769ff;
-}
-.weight-budget {
-  background: #618dce;
-}
-.weight-date {
-  background: #9eacc8;
-}
-.weight-brand {
-  background: #c9d2df;
-}
-.ranking-panel dl {
+.filter-facts-panel dl {
   margin: 24px 0;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 23px 30px;
 }
-.ranking-panel dl > div {
+.filter-facts-panel dl > div {
   display: flex;
   align-items: flex-start;
   flex-direction: column;
   gap: 8px;
 }
-.ranking-panel dt {
+.filter-facts-panel dt {
   font-size: 11px;
   color: #7b877d;
   display: flex;
   align-items: center;
   gap: 7px;
 }
-.ranking-panel dt i {
-  width: 5px;
-  height: 5px;
-  display: block;
-}
-.ranking-panel dd {
+.filter-facts-panel dd {
   margin: 0;
-  font-size: 30px;
-  font-family: Georgia, serif;
+  font-size: 16px;
   color: #334338;
 }
-.ranking-panel dd span {
-  font-size: 13px;
-  margin-left: 2px;
-  color: #9aa396;
-}
-.ranking-panel .ranking-note {
+.filter-facts-panel .filter-facts-note {
   font-size: 10px;
   line-height: 2;
   max-width: 380px;
@@ -1546,16 +1532,16 @@ dialog::backdrop {
   .method-steps p {
     font-size: 12px;
   }
-  .ranking-panel {
+  .filter-facts-panel {
     border-left: 0;
     padding-left: 0;
   }
-  .ranking-panel .ranking-note {
+  .filter-facts-panel .filter-facts-note {
     font-size: 12px;
     max-width: none;
   }
-  .ranking-panel > p,
-  .ranking-panel dt {
+  .filter-facts-panel > p,
+  .filter-facts-panel dt {
     font-size: 12px;
   }
   .run-section {

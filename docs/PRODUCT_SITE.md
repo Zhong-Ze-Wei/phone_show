@@ -4,15 +4,17 @@
 
 `site/` 是介绍页的开发源。[`.github/workflows/pages.yml`](../.github/workflows/pages.yml) 自动发布该目录，并从 `docs/readme-assets/` 加入两张 README 封面到主仓库的 GitHub Pages；无需复制到另一个仓库。Pages 产物只包含静态展示资源，主应用源码与版本数据库仍可从同一 GitHub 仓库获取。`.env`、运行日志、虚拟环境和采集缓存保持 Git 忽略。
 
-## 页面与数据边界
+## 页面与数据边界（2026-10-06）
 
-介绍页使用纯 HTML、CSS、JavaScript，展示真实界面截图，并提供浏览器内的示例预算、用途切换、手机对比和顾问录制演示。不运行 Python 服务，不调用主应用接口或 AI 模型，不接收模型密钥。页面只读取静态 JSON、样式、脚本和图片资源；手机图片仍可能通过资料来源站加载。
+介绍页使用纯 HTML、CSS、JavaScript，展示真实运行截图，并提供可选预算、显式排序、同型号配置选择、多机比较和顾问录制演示。不运行 Python 服务，不调用主应用接口或 AI 模型，不接收模型密钥；只读取静态 JSON、样式、脚本和图片。手机图片仍可能通过资料来源站加载。
 
-[`site/assets/demo-data.json`](../site/assets/demo-data.json) 是 **2026-10-04 生成的真实推荐结果快照**，保留各机型原有采集时间与来源，生成快照不会刷新报价时间。`cases` 包含 16 组固定示例：预算不限、最高预算 ¥3,000、¥4,000、¥8,000，分别搭配日常、游戏、拍照、续航四种用途；每组保留实际推荐顺序前五台，方便多机比较。
+[`site/assets/demo-data.json`](../site/assets/demo-data.json) 保留 **2026-10-04 的真实资料和原核验时间**，展示逻辑于 2026-10-06 更新。原 16 组用途加权推荐快照已去重成单一 `phones` 样本池，包含 26 个配置、17 个型号；旧 `score / recommendation_score / metrics / ranking_*` 字段已删除，原来源、规格与独立报价事实不变。样本有限，不代表完整目录，更不代表收齐市场手机。
 
-示例预算首次不限，直接展示对应分组，用户可以主动选择金额或切回不限。改变预算与用途保留手动比较项，比较不限制三台并支持横向查看所有参数列。脚本中的用途标签、分类与候选价格都用于读取这份固定快照，不执行实时采集，不计算当前行情，也不代表库存、成交价或二手售价。资料缺失时保持未知，不能补成零或用其他机型规格替代。更新快照时需继续标明生成日期、原始来源与参考报价边界。
+示例预算默认不限。选择最高 ¥3,000、¥4,000 或 ¥8,000 后，在同一资料池筛选价格，不按用途偷换候选。排序只有上市时间、价格升序和价格降序；默认上市时间，未知字段不猜值，不按品牌或规格计算推荐分。改变预算保留手动比较，并重置卡片的临时配置选择；改变排列只重排当前样本。
 
-芯片的展示字段 `chipset` 是规范 API 字段 `soc` 的原值别名；没有从机型名称或介绍文字推测参数。快照保留独立的 `price_fetched_at`、`price_source_url` 和规格来源时间，生成展示文件不会刷新这些时间。当前快照按相同后端规则生成 16 组，每组前五台，共 26 个不同配置；不调用模型。
+每个型号一张卡，默认选择满足示例预算且已知参考价较低的配置。选择器提供样本中实际容量和内存组合；主动选中超预算版本时标明状态。资料、加入对比、来源链接使用具体真实 ID，已比较的旧版本保留，比较不限制三台。快照里的价格不证明实时渠道价、成交价、库存或二手行情；缺失参数保持待核实。
+
+展示字段 `chipset` 是原规范字段 `soc` 的别名，没有从名称推断参数。`price_fetched_at / price_source_url / specs_fetched_at / specs_source_url` 继续保留原值，文件的展示逻辑更新日期不替代事实核验时间。用途只在本地工作台右侧顾问明确发送时用于取舍分析，静态页不执行用途评分。
 
 `recorded_chat` 保存两次真实模型回复及对应的两条用户问题。页面必须明确标注“录制示例 · 非实时 AI”：打开、播放或切换演示不会发起新模型请求，固定对话不会随当前示例预算、用途或对比机型变化。播放动效只展示已录制文本，不能称为正在生成的实时回答。真实连续聊天需启动主应用，并由用户明确发送消息后才调用模型。
 
@@ -22,9 +24,9 @@
 
 | 展示页资源 | 主应用原图 | 内容 |
 | --- | --- | --- |
-| `site/assets/gallery-desktop.png` | [`docs/ui-reference/image-gallery-desktop.png`](ui-reference/image-gallery-desktop.png) | 桌面大图手机图库与预览、对比栏 |
-| `site/assets/advisor-desktop.png` | [`docs/ui-reference/advisor-workspace-desktop.png`](ui-reference/advisor-workspace-desktop.png) | 展开的顾问聊天工作区 |
-| `site/assets/gallery-mobile.png` | [`docs/ui-reference/image-gallery-mobile.png`](ui-reference/image-gallery-mobile.png) | 手机端图库 |
+| `site/assets/gallery-desktop.png` | [`docs/ui-reference/filter-workbench-desktop.png`](ui-reference/filter-workbench-desktop.png) | 2026-10-06 手机筛选图库与预览、对比栏 |
+| `site/assets/advisor-desktop.png` | [`docs/ui-reference/filter-workbench-advisor.png`](ui-reference/filter-workbench-advisor.png) | 2026-10-06 展开的手动 AI 顾问工作区 |
+| `site/assets/gallery-mobile.png` | [真实手机端截图](../site/assets/gallery-mobile.png) | 2026-10-06 手机端筛选图库 |
 
 主应用界面更新后，应重新运行并截图，再同步展示页资源；不要让旧截图暗示已经实现的新行为。
 
@@ -46,7 +48,7 @@ npm test
 node --check site/demo.js
 ```
 
-还需用真实浏览器检查桌面与手机宽度：初始预算不限、16 组示例切换、五台以上对比增删与全部参数列、截图切换与放大、来源链接、录制对话标识、键盘操作及减少动效设置。查看网络请求，确认没有 `/api/chat`、`/api/recommend` 或模型请求。
+还需用真实浏览器检查桌面与手机宽度：初始预算不限、四档预算与三种排序、配置真实 ID、同型号多配置、五台以上对比增删与全部参数列、截图切换与放大、来源链接、录制对话标识、键盘操作及减少动效设置。查看网络请求，确认没有 `/api/chat`、`/api/filter`、`/api/recommend` 或模型请求。
 
 CSS、JavaScript、JSON 和截图使用相对资源路径，例如 `./styles.css`、`./demo.js`、`./assets/gallery-desktop.png`。本地根路径可正常加载并不足以证明上线可用，必须再检查 `/phone_show/` 子目录下的资源；不要将资源路径写成 `/assets/...`。
 

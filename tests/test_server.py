@@ -14,7 +14,7 @@ def client_for(phones=None):
     return TestClient(create_app(storage=storage, settings=Settings("private-test-secret")))
 
 
-def test_family_variants_api_returns_four_real_capacity_versions_with_current_filter_scores():
+def test_family_variants_api_returns_four_real_capacity_versions_with_independent_current_filter_status():
     from datetime import datetime, timezone
 
     stamp = datetime.now(timezone.utc).isoformat()
@@ -35,13 +35,13 @@ def test_family_variants_api_returns_four_real_capacity_versions_with_current_fi
     assert "insufficient_storage" in body["phones"][0]["variant_codes"]
     assert "unknown_price" in body["phones"][1]["variant_codes"]
     assert body["phones"][3]["budget_warning"] == "超出当前预算范围"
-    assert all(phone["ranking_breakdown"]["weights"]["usage"] == 0.75 for phone in body["phones"])
+    assert all("score" not in phone and "ranking_breakdown" not in phone for phone in body["phones"])
     assert client.get("/api/phones/2048/variants").json()["phones"][3]["recommendation_eligible"] is True
     assert client.get("/api/phones/missing/variants").status_code == 404
     assert client.get("/api/phones/2048/variants", params={"budget_max": 0}).status_code == 422
 
 
-def test_variants_query_model_keeps_array_filters_and_no_budget_weights():
+def test_variants_query_model_keeps_array_filters_without_scoring():
     from datetime import datetime, timezone
     phones = [{"id": "sku", "name": "机型(12GB+256GB)", "brand": "荣耀", "family_key": "荣耀:机型",
         "price": 9999, "ram_gb": 12, "storage_gb": 256, "os_family": "Android", "availability": "listed", "origin": "zol",
@@ -52,7 +52,7 @@ def test_variants_query_model_keeps_array_filters_and_no_budget_weights():
     assert response.status_code == 200
     record = response.json()["phones"][0]
     assert record["budget_warning"] is None and record["recommendation_eligible"] is True
-    assert record["ranking_breakdown"]["weights"] == {"usage": 0.95, "value": 0.0, "recency": 0.0, "brand": 0.05}
+    assert "score" not in record and "ranking_breakdown" not in record
     assert client.get("/api/phones/sku/variants", params={"brands": "苹果"}).json()["phones"][0]["matches_preferences"] is False
     assert client.get("/api/phones/sku/variants", params={"budget_min": 5000, "budget_max": 3000}).status_code == 422
 
@@ -99,7 +99,7 @@ def test_filter_preserves_unknowns_and_budget_boundary():
     assert response.status_code == 200
     record = response.json()["phones"][0]
     assert record["price"] == 3000
-    assert record["metrics"]["camera"] is None
+    assert record.get("camera_mp") is None and "metrics" not in record
     assert "待补充" in " ".join(record["tradeoffs"])
 
 
@@ -113,7 +113,7 @@ def test_partial_coverage_without_request_errors_is_not_announced_as_complete(mo
     assert "覆盖仍有缺口" in job.snapshot()["message"]
 
 
-def test_comparison_recalculates_same_preferences_and_marks_out_of_budget():
+def test_comparison_keeps_current_facts_and_marks_out_of_budget():
     from datetime import datetime, timezone
 
     phones = [{"id": "a", "name": "手机A", "price": 3999, "ram_gb": 12, "storage_gb": 512,
@@ -123,13 +123,13 @@ def test_comparison_recalculates_same_preferences_and_marks_out_of_budget():
     result = client.post("/api/compare", json={"ids": ["a"], "preferences": {"budget_max": 3000, "priorities": ["battery"]}})
     assert result.status_code == 200
     phone = result.json()["phones"][0]
-    assert phone["metrics"]["battery"] is not None
+    assert phone["battery_mah"] == 7000 and "metrics" not in phone
     assert phone["budget_warning"] == "超出当前预算范围"
     assert phone["price"] == 3999
 
 
 def test_sort_is_explicit_and_validated():
-    assert client_for().post("/api/recommend", json={"budget_max": 3000}).json()["preferences"]["sort"] == "recommended"
+    assert client_for().post("/api/recommend", json={"budget_max": 3000}).json()["preferences"]["sort"] == "newest"
     assert client_for().post("/api/recommend", json={"budget_max": 3000, "sort": "recommended"}).status_code == 200
     assert client_for().post("/api/recommend", json={"budget_max": 3000, "sort": "newest"}).json()["preferences"]["sort"] == "newest"
     assert client_for().post("/api/recommend", json={"budget_max": 3000, "sort": "imaginary"}).status_code == 422
@@ -141,11 +141,11 @@ def test_purchase_mode_is_validated_and_does_not_enable_history():
     payload = result.json()
     assert payload["preferences"]["purchase_mode"] == "used"
     assert payload["preferences"]["include_history"] is False
-    assert payload["ranking_policy"]["weights"]["recency"] == 0
+    assert "ranking_policy" not in payload
     assert client_for().post("/api/recommend", json={"budget_max": 3000, "purchase_mode": "refurbished"}).status_code == 422
 
 
-def test_compare_and_recommend_share_explainable_ranking():
+def test_compare_and_filter_share_facts_without_ranking():
     from datetime import datetime, timezone
 
     phones = [{"id": "a", "name": "手机A", "brand": "荣耀", "price": 2500, "storage_gb": 256,
@@ -156,7 +156,8 @@ def test_compare_and_recommend_share_explainable_ranking():
     recommended = client.post("/api/recommend", json=preferences).json()["phones"][0]
     compared = client.post("/api/compare", json={"ids": ["a"], "preferences": preferences}).json()["phones"][0]
     for field in ("score", "recommendation_score", "ranking_breakdown", "ranking_reasons"):
-        assert recommended[field] == compared[field]
+        assert field not in recommended and field not in compared
+    assert recommended["price"] == compared["price"] == 2500
 
 
 def test_new_source_search_is_not_silently_hidden_by_budget():
@@ -175,7 +176,7 @@ def test_recommend_accepts_missing_budget_without_assuming_4000():
     assert response.status_code == 200
     assert response.json()["preferences"]["budget_max"] is None
     assert response.json()["preferences"]["min_storage"] == 0
-    assert response.json()["ranking_policy"]["weights"] == {"usage": 0.85, "value": 0.0, "recency": 0.1, "brand": 0.05}
+    assert "ranking_policy" not in response.json()
 
 
 def test_compare_and_explain_accept_omitted_preferences_without_hidden_budget(monkeypatch):
@@ -231,10 +232,10 @@ def test_phone_search_catalogue_includes_unpriced_official_and_historical_record
 
 def test_explicit_zero_or_nonfinite_budget_is_invalid_in_every_filter_endpoint():
     client = client_for()
-    for path, base in (("/api/recommend", {}), ("/api/compare", {"ids": ["a"]}),
+    for path, base in (("/api/filter", {}), ("/api/recommend", {}), ("/api/compare", {"ids": ["a"]}),
             ("/api/explain", {"ids": ["a"]}), ("/api/chat", {"message": "你好"})):
         for value in (0, -1):
-            payload = {**base, "budget_max": value} if path == "/api/recommend" else {**base, "preferences": {"budget_max": value}}
+            payload = {**base, "budget_max": value} if path in ("/api/filter", "/api/recommend") else {**base, "preferences": {"budget_max": value}}
             assert client.post(path, json=payload).status_code == 422
     for value in ("NaN", "Infinity"):
         response = client.post("/api/recommend", content='{"budget_max":' + value + '}', headers={"Content-Type": "application/json"})

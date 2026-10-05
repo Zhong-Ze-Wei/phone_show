@@ -1,11 +1,6 @@
 export type Priority = "daily" | "gaming" | "camera" | "battery";
 export type OS = "all" | "Android" | "iOS" | "HarmonyOS";
-export type SortOrder =
-  | "recommended"
-  | "newest"
-  | "match"
-  | "price_asc"
-  | "price_desc";
+export type SortOrder = "newest" | "price_asc" | "price_desc";
 export type PurchaseMode = "new" | "used";
 
 export interface Preferences {
@@ -41,6 +36,7 @@ export interface VariantSummary {
   ram_gb: number | null;
   storage_gb: number | null;
   price: number | null;
+  five_g?: boolean | null;
   field_sources?: Record<string, FieldSource>;
   budget_warning?: string | null;
   source_url?: string | null;
@@ -103,22 +99,8 @@ export interface Phone {
   specs_sources?: Record<string, FieldSource>;
   os_family?: string | null;
   cleaning_version?: string;
-  score?: number;
-  recommendation_score?: number;
-  ranking_breakdown?: {
-    usage: number;
-    value: number;
-    recency: number;
-    brand: number;
-    weights: Record<string, number>;
-  };
-  ranking_reasons?: string[];
-  reasons?: string[];
-  tradeoffs?: string[];
-  metrics?: Record<string, unknown>;
   budget_warning?: string | null;
   chat_warnings?: string[];
-  score_applicable?: boolean;
   recommendation_eligible?: boolean;
   matches_preferences?: boolean;
   variant_codes?: string[];
