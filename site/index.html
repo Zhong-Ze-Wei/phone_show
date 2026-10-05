@@ -13,7 +13,7 @@
     <meta property="og:title" content="挑一部 — 手机选购工作台" />
     <meta
       property="og:description"
-      content="预算可留空，按用途看真实资料，放到一起比较。体验静态演示，或在本地运行选购工作台。"
+      content="预算可留空，按明确条件查真实资料，放到一起比较。体验静态演示，或在本地运行选购工作台。"
     />
     <meta
       property="og:url"
@@ -36,7 +36,7 @@
         >挑一部<span class="brand-caption">手机选购工作台</span></a
       >
       <nav aria-label="页面导航">
-        <a href="#demo">试着挑一部</a><a href="#method">推荐依据</a
+        <a href="#demo">试着挑一部</a><a href="#method">资料与筛选</a
         ><a class="nav-run" href="#run"
           >本地运行 <span aria-hidden="true">↗</span></a
         >
@@ -105,7 +105,7 @@
         <div class="section-heading">
           <div>
             <p class="section-number">01 / 动手选</p>
-            <h2>预算可选，用途先选。</h2>
+            <h2>先筛选，再放到一起比较。</h2>
           </div>
           <p>
             不填预算也能看候选，按需再限定价格。<br />演示在浏览器本地运行，不连接模型。
@@ -144,32 +144,22 @@
                   </div>
                 </fieldset>
                 <fieldset>
-                  <legend>主要用途</legend>
-                  <div class="choice-row purpose-row" id="purpose-options">
-                    <button
-                      data-purpose="daily"
-                      aria-pressed="true"
-                      class="active"
-                    >
-                      日常</button
-                    ><button data-purpose="gaming" aria-pressed="false">
-                      游戏</button
-                    ><button data-purpose="camera" aria-pressed="false">
-                      拍照</button
-                    ><button data-purpose="battery" aria-pressed="false">
-                      续航
-                    </button>
+                  <legend>排列方式 <span>只按明确字段</span></legend>
+                  <div class="choice-row" id="sort-options">
+                    <button data-sort="newest" class="active" aria-pressed="true">上市时间</button>
+                    <button data-sort="price_asc" aria-pressed="false">价格升序</button>
+                    <button data-sort="price_desc" aria-pressed="false">价格降序</button>
                   </div>
                 </fieldset>
               </div>
               <div class="demo-results-heading">
-                <h3 id="demo-results-title">预算不限 · 日常候选</h3>
+                <h3 id="demo-results-title">预算不限 · 上市时间</h3>
                 <span id="snapshot-label">真实参数与参考报价快照</span>
               </div>
               <div id="demo-phones" class="demo-phone-grid" aria-live="polite">
                 <div class="demo-empty">
                   <h4>正在读取真实快照</h4>
-                  <p>预算可以留空，候选按主要用途展示。</p>
+                  <p>预算可以留空，按上市时间或参考价格查看资料。</p>
                 </div>
               </div>
               <p class="demo-price-note">
@@ -234,13 +224,13 @@
             </aside>
           </div>
           <div id="demo-status" class="demo-status" role="status">
-            当前预算不限。切换用途查看真实候选，已选对比机型会保留。
+            当前预算不限。按上市时间展示演示样本，已选对比机型会保留。
           </div>
         </div>
         <div class="demo-under-note">
           <span>有操作，有边界。</span>
           <p>
-            这是一份静态演示。候选来自运行中的推荐接口快照；不采集你的输入，不调用后端或
+            这是一份静态演示。资料来自既有真实快照的 26 个配置样本，覆盖有限；不采集你的输入，不调用后端或
             AI，也不会假装生成实时建议。
           </p>
         </div>
@@ -304,7 +294,7 @@
             <h2>好选择，需要看得见的依据。</h2>
           </div>
           <p>
-            先确认资料，再筛选与排序。<br />新款适度加分，好用的旧款仍有机会。
+            按明确条件筛选，按价格或上市时间排列。<br />需要取舍分析时，再打开右侧顾问。
           </p>
         </div>
         <div class="method-layout">
@@ -332,44 +322,21 @@
               <div>
                 <h3>按需求筛选，再解释取舍</h3>
                 <p>
-                  用途优先，预算可留空；填写后就是筛选边界。顾问依据当前条件与明确选机回答，每条回答保留来源。
+                  预算、品牌、系统和容量由你明确设置；排序只按参考价或上市时间。用途留给顾问分析，不会暗改图库。
                 </p>
               </div>
             </article>
           </div>
-          <div class="ranking-panel">
-            <p>填写最高预算时的综合推荐 / 买新机</p>
-            <div
-              class="weight-bar"
-              aria-label="用途匹配75%，预算余量10%，上市时效10%，主流品牌5%"
-            >
-              <span style="--weight: 75" class="weight-usage"></span
-              ><span style="--weight: 10" class="weight-budget"></span
-              ><span style="--weight: 10" class="weight-date"></span
-              ><span style="--weight: 5" class="weight-brand"></span>
-            </div>
+          <div class="filter-facts-panel">
+            <p>左侧找资料，右侧谈取舍</p>
             <dl>
-              <div>
-                <dt><i class="weight-usage"></i>用途匹配</dt>
-                <dd>75<span>%</span></dd>
-              </div>
-              <div>
-                <dt><i class="weight-budget"></i>预算余量</dt>
-                <dd>10<span>%</span></dd>
-              </div>
-              <div>
-                <dt><i class="weight-date"></i>上市时效</dt>
-                <dd>10<span>%</span></dd>
-              </div>
-              <div>
-                <dt><i class="weight-brand"></i>主流品牌</dt>
-                <dd>5<span>%</span></dd>
-              </div>
+              <div><dt>预算</dt><dd>可以留空</dd></div>
+              <div><dt>排列</dt><dd>价格／上市时间</dd></div>
+              <div><dt>配置</dt><dd>真实版本与来源</dd></div>
+              <div><dt>顾问</dt><dd>明确发送才分析</dd></div>
             </dl>
-            <p class="ranking-note">
-              未填最高预算时，用途匹配为 85%、预算余量为 0%，上市时效仍为
-              10%、品牌仍为
-              5%。一年内机型时效加分。分数是公开参数上的选购规则，不是实测榜单；品牌权重不证明品质。考虑二手时取消时效加分，页面没有二手行情。
+            <p class="filter-facts-note">
+              图库不计算推荐分、匹配分或品牌加分。演示只在本地筛选 26 个配置样本；完整工作台可查询全部已存资料。参考报价不代表成交价或库存，未知规格继续显示待核实。
             </p>
           </div>
         </div>
@@ -417,7 +384,7 @@ uv run python scripts/restore_snapshot.py
     </main>
     <footer class="site-footer wrap">
       <a class="brand" href="#top">挑一部</a>
-      <p>资料有来源，推荐有依据。</p>
+      <p>资料有来源，选择由你定。</p>
       <a
         href="https://github.com/Zhong-Ze-Wei/phone_show/tree/master/site"
         target="_blank"

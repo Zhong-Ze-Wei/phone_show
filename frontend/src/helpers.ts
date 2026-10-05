@@ -1,9 +1,7 @@
 import type { Phone, Preferences, Recommendations, SortOrder } from "./types";
 
 export const SORT_LABELS: Record<SortOrder, string> = {
-  recommended: "综合推荐",
-  newest: "新机优先",
-  match: "需求匹配",
+  newest: "上市时间",
   price_asc: "价格由低到高",
   price_desc: "价格由高到低",
 };
@@ -13,12 +11,12 @@ export const DEFAULT_PREFERENCES: Preferences = {
   budget_max: null,
   brands: [],
   os: "all",
-  priorities: ["daily"],
+  priorities: [],
   compact: false,
   min_storage: 0,
   include_history: false,
   query: "",
-  sort: "recommended",
+  sort: "newest",
   purchase_mode: "new",
 };
 
@@ -31,19 +29,6 @@ export function enteredBudget(value: string): number | null {
 export function validBudgetInput(value: string): boolean {
   const budget = enteredBudget(value);
   return budget === null || Number.isFinite(budget);
-}
-
-export function rankingExplanation(
-  mode: Preferences["purchase_mode"],
-  budget: number | null = null,
-): string {
-  if (budget === null)
-    return mode === "used"
-      ? "预算不限的二手机型参考按需求匹配 95%、主流品牌 5% 综合排序，没有预算余量或上市时效加分。当前价格仍为来源的新机参考价，没有二手行情或库存，请自行核对二手报价、成色与保修。"
-      : "预算不限时，综合推荐按需求匹配 85%、上市时效 10%、主流品牌 5% 排序，不计算预算余量。一年内上市的机型获得更多时效加分，日期未知时不假定为新机。品牌加分是选购策略，不代表质量测评。";
-  return mode === "used"
-    ? "二手机型参考按需求匹配 85%、预算余量 10%、主流品牌 5% 综合排序，不因机型较老扣分。当前价格仍为来源的新机参考价，没有二手行情或库存，请自行核对二手报价、成色与保修。"
-    : "综合推荐按需求匹配 75%、预算余量 10%、上市时效 10%、主流品牌 5% 排序。一年内上市的机型获得更多时效加分，日期未知时不假定为新机。品牌加分是选购策略，不代表质量测评。";
 }
 
 export function resultPhones(
@@ -65,17 +50,12 @@ export function catalogueStatusLabel(phone: Phone): string {
   };
   return (
     labels[phone.catalogue_status || ""] ||
-    (phone.recommendation_eligible ? "符合当前推荐条件" : "目录资料")
+    (phone.matches_preferences === false
+      ? "不符合当前筛选"
+      : phone.matches_preferences === true || phone.recommendation_eligible
+        ? "符合当前筛选"
+        : "目录资料")
   );
-}
-
-export function rankingHighlights(phone: Phone): string[] {
-  return (phone.ranking_reasons || [])
-    .filter(
-      (reason) =>
-        !reason.startsWith("需求匹配 ") && !reason.startsWith("预算余量 "),
-    )
-    .slice(0, 2);
 }
 
 export function phoneForPreview(
@@ -115,12 +95,16 @@ export function requestPreferences(value: Preferences): Preferences {
   };
 }
 
+export function filterPreferences(value: Preferences): Preferences {
+  return { ...requestPreferences(value), priorities: [], compact: false };
+}
+
 export function variantRequestUrl(
   id: string,
   preferences: Preferences,
 ): string {
   const query = new URLSearchParams();
-  for (const [key, value] of Object.entries(requestPreferences(preferences))) {
+  for (const [key, value] of Object.entries(filterPreferences(preferences))) {
     if (value === null) continue;
     if (Array.isArray(value)) {
       for (const item of value) query.append(key, String(item));
@@ -132,7 +116,8 @@ export function variantRequestUrl(
 }
 
 export function variantLabel(
-  phone: Pick<Phone, "ram_gb" | "storage_gb" | "price">,
+  phone: Pick<Phone, "ram_gb" | "storage_gb" | "price"> &
+    Partial<Pick<Phone, "five_g" | "name">>,
 ): string {
   const storage =
     phone.storage_gb === 1024
@@ -150,7 +135,17 @@ export function variantLabel(
     phone.price === null
       ? "价格待核实"
       : `¥${phone.price.toLocaleString("zh-CN", { maximumFractionDigits: 0 })}`;
-  return `${capacity} · ${price}`;
+  const explicitNetwork = phone.name?.match(/([45])\s*G\s*版/i)?.[1];
+  const network = explicitNetwork
+    ? `${explicitNetwork}G`
+    : phone.five_g === true
+      ? "5G"
+      : phone.five_g === false
+        ? /\b4G\b/i.test(phone.name || "")
+          ? "4G"
+          : "非5G"
+        : "";
+  return `${capacity}${network ? ` · ${network}` : ""} · ${price}`;
 }
 
 export interface VariantSelection {
@@ -170,6 +165,47 @@ export function phoneWithVariant(
     variant_count: choice.phone.variant_count ?? base.variant_count,
     variant_summary: choice.phone.variant_summary ?? base.variant_summary,
   };
+}
+
+function releaseSortValue(phone: Phone): number {
+  const release = phone.release_date;
+  if (
+    release &&
+    (!phone.release_precision || phone.release_precision === "day")
+  ) {
+    const stamp = Date.parse(`${release}T00:00:00Z`);
+    if (
+      Number.isFinite(stamp) &&
+      new Date(stamp).toISOString().slice(0, 10) === release
+    )
+      return Number(release.replaceAll("-", ""));
+  }
+  return (phone.release_year || 0) * 10000 + (phone.release_month || 0) * 100;
+}
+
+export function sortPhoneCards(
+  cards: { key: string; phone: Phone }[],
+  sort: SortOrder,
+): { key: string; phone: Phone }[] {
+  return [...cards].sort((left, right) => {
+    const a = left.phone;
+    const b = right.phone;
+    if (sort === "newest") {
+      const released = releaseSortValue(b) - releaseSortValue(a);
+      if (released) return released;
+    }
+    const price =
+      a.price == null
+        ? b.price == null
+          ? 0
+          : 1
+        : b.price == null
+          ? -1
+          : (a.price - b.price) * (sort === "price_desc" ? -1 : 1);
+    return (
+      price || a.name.localeCompare(b.name, "zh-CN") || a.id.localeCompare(b.id)
+    );
+  });
 }
 
 export function toggleSaved(phones: Phone[], phone: Phone): Phone[] {

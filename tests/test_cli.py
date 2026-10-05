@@ -37,10 +37,11 @@ def test_recommend_accepts_empty_budget_and_defaults_to_unrestricted_storage(mon
     result = json.loads(capsys.readouterr().out)
     assert result["preferences"]["budget_max"] is None
     assert result["preferences"]["min_storage"] == 0
-    assert result["ranking_policy"]["weights"]["value"] == 0
+    assert "ranking_policy" not in result
+    assert result["preferences"]["sort"] == "newest"
 
 
-def test_recommend_uses_comprehensive_sort_and_explicit_used_mode(monkeypatch, capsys):
+def test_recommend_uses_explicit_browsing_sort_and_used_mode(monkeypatch, capsys):
     storage = Mock()
     storage.list_phones.return_value = []
     run = Mock(return_value={"phones": [], "discovery": {"phones": []}, "catalogue": {"phones": []}})
@@ -50,7 +51,7 @@ def test_recommend_uses_comprehensive_sort_and_explicit_used_mode(monkeypatch, c
     cli.main()
     preferences = run.call_args.args[1]
     assert preferences.budget_max == 5000
-    assert preferences.sort == "recommended"
+    assert preferences.sort == "newest"
     assert preferences.purchase_mode == "used"
     assert preferences.include_history is False
 

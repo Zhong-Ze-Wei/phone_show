@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from phone_assistant.config import Settings, create_client
-from phone_assistant.recommendation import Preferences, budget_warning, is_purchase_candidate, match_phone
+from phone_assistant.recommendation import Preferences, variant_record
 
 
 PHONE_EVIDENCE_RULES = """数据来自品牌官网、ZOL 标称规格及参考报价，不是成交价；不要编造评测跑分、真实续航、成片排名、渠道价格或不存在的型号。
@@ -13,18 +13,17 @@ release_date/release_year/release_month 表示有证据的上市时间，fetched
 source_conflicts 表示来源互相矛盾，上市时间采用规范字段的官网证据；specs 与 reported_release 原文只用于说明冲突，不覆盖规范时间。
 availability 为 announced 或 unknown 时，只能解释已发布资料，不能宣称已在售或已有库存。
 字段为 null 表示未知；field_sources 指明每个字段的来源与时间，legacy 表示历史导出，历史价格须明确待核价。
-score 是用途规格匹配，recommendation_score 是需求、预算余量、上市时效和品牌策略的综合分；ranking_breakdown 给出实际权重与分项。品牌策略加分不能证明质量、售后或实测优劣；近期抓取不能等同近期上市。
-budget_max 为 null 表示未设置最高预算，不假定任何金额；此时预算余量权重转给用途匹配，不能宣称某台符合未填写的预算。用户指定机型可以比较，recommendation_eligible 为 false 时不能称为符合当前条件的购买推荐。
+候选来自条件筛选，展示顺序不是质量或用途结论。根据明确需求与可引用规格说明取舍，不生成规则评分或据品牌、上市较新推断品质、售后或实测优劣；近期抓取不能等同近期上市。
+budget_max 为 null 表示未设置最高预算，不假定任何金额，不能宣称某台符合未填写的预算。matches_preferences 仅表示满足当前浏览条件，无预算时可以包含待核价资料，不证明可购买或价格有效。用户指定机型可以比较，recommendation_eligible 为 false 时不能称为具备近期核价证据的购买推荐。
 storage_gb 是有明确版本证据的规范容量，型号名称中的 SKU 容量优先于系列共享 specs 的旧 ROM 原文；引用容量应依据 field_sources.storage_gb。名称与规格容量不一致或存在 sku_storage_conflict 时须说明来源冲突、待核验，不能拿共享规格覆盖规范容量。
 purchase_mode 为 used 只表示考虑二手机型，现有 price 仍是来源参考价，不是二手售价。没有二手渠道、成色、电池健康、保修及当前报价证据时须明确待核实，不能按新机价格推断二手预算或宣称有货。
-不要把匹配分或综合分解释为性能跑分。无证据时明确资料不足。"""
+用途和 compact 是本轮分析偏好，不改变已执行的硬筛选条件。无证据时明确资料不足。"""
 
 
 def build_advice_messages(phones: list[dict], preferences: Preferences, question: str) -> list[dict]:
     evidence = []
     for phone in phones:
-        record = {**match_phone(phone, preferences), "budget_warning": budget_warning(phone, preferences),
-            "recommendation_eligible": is_purchase_candidate(phone, preferences)}
+        record = variant_record(phone, preferences)
         record["storage_warnings"] = [issue["message"] for issue in phone.get("issues", []) if issue.get("code") == "sku_storage_conflict"]
         evidence.append({key: value for key, value in record.items() if key not in {"issues", "image_url"}})
     return [

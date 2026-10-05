@@ -20,8 +20,7 @@ from phone_assistant.assistant import api_error_message
 from phone_assistant.chat import ChatStreamingResponse, Persona, prepare_chat_context, stream_chat
 from phone_assistant.config import PROJECT_ROOT, Settings
 from phone_assistant.recommendation import (
-    PRIORITIES, Preferences, budget_warning, family_metadata, family_variants,
-    is_purchase_candidate, match_phone, recommend, variant_record,
+    PRIORITIES, Preferences, family_metadata, family_variants, filter_phones, variant_record,
 )
 from phone_assistant.storage import Storage
 
@@ -33,12 +32,12 @@ class FilterRequest(BaseModel):
     budget_max: float | None = Field(default=None, gt=0, le=10_000_000, allow_inf_nan=False)
     brands: list[str] = Field(default_factory=list, max_length=100)
     os: Literal["all", "Android", "iOS", "HarmonyOS"] = "all"
-    priorities: list[Literal["daily", "gaming", "camera", "battery"]] = Field(default_factory=lambda: ["daily"], max_length=4)
+    priorities: list[Literal["daily", "gaming", "camera", "battery"]] = Field(default_factory=list, max_length=4)
     compact: bool = False
     min_storage: float = Field(default=0, ge=0, le=4096, allow_inf_nan=False)
     include_history: bool = False
     query: str = Field(default="", max_length=160)
-    sort: Literal["recommended", "newest", "match", "price_asc", "price_desc"] = "recommended"
+    sort: Literal["recommended", "newest", "match", "price_asc", "price_desc"] = "newest"
     purchase_mode: Literal["new", "used"] = "new"
 
     @model_validator(mode="after")
@@ -156,9 +155,10 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
         ordered = [brand for brand in common_brands if brand in brands] + sorted(brands.difference(common_brands))
         return {"brands": ordered, "summary": storage.summary(), "priorities": PRIORITIES, "model": settings.model, "api_configured": bool(settings.api_key and settings.api_key != "your-api-key")}
 
+    @app.post("/api/filter")
     @app.post("/api/recommend")
-    def recommendations(request: FilterRequest):
-        return recommend(storage.list_phones(), request.preferences())
+    def filtered_phones(request: FilterRequest):
+        return filter_phones(storage.list_phones(), request.preferences())
 
     @app.get("/api/phones/{phone_id}")
     def detail(phone_id: str):
@@ -187,10 +187,7 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
             phone = storage.get_phone(phone_id)
             if phone is None:
                 raise HTTPException(status_code=404, detail="对比机型不存在，请重新选择。")
-            record = match_phone(phone, preferences)
-            record["budget_warning"] = budget_warning(phone, preferences)
-            record["recommendation_eligible"] = is_purchase_candidate(phone, preferences)
-            phones.append(record)
+            phones.append(variant_record(phone, preferences))
         return {"phones": phones}
 
     @app.post("/api/explain")

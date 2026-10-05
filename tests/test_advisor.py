@@ -29,12 +29,11 @@ def test_used_mode_keeps_quote_evidence_distinct_from_second_hand_market():
     phones = [{"id": "1", "name": "机型参考", "brand": "苹果", "price": 3000}]
     context = build_advice_messages(phones, Preferences(purchase_mode="used"), "二手能买吗？")[0]["content"]
     assert '"purchase_mode": "used"' in context
-    assert '"recommendation_score":' in context
-    assert '"ranking_breakdown":' in context
-    assert '"recency": 0' in context
+    assert '"recommendation_score":' not in context
+    assert '"ranking_breakdown":' not in context
     assert "不是二手售价" in context
     assert "成色、电池健康、保修" in context
-    assert "不能证明质量、售后或实测优劣" in context
+    assert "推断品质、售后或实测优劣" in context
 
 
 def test_optional_budget_explanation_keeps_all_selected_records_and_no_amount_assumption():
@@ -45,7 +44,7 @@ def test_optional_budget_explanation_keeps_all_selected_records_and_no_amount_as
     evidence = json.loads(context.split("候选记录：", 1)[1])
     assert [record["id"] for record in evidence] == [record["id"] for record in phones]
     assert all(record["budget_warning"] is None for record in evidence)
-    assert all(record["ranking_breakdown"]["weights"]["value"] == 0 for record in evidence)
+    assert all("score" not in record and "ranking_breakdown" not in record for record in evidence)
     assert '"budget_max": null' in context
     assert "不假定任何金额" in context
 

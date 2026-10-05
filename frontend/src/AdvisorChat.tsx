@@ -10,7 +10,53 @@ import {
   type ChatMessage,
   type Persona,
 } from "./chat";
-import type { Phone, Preferences } from "./types";
+import type { Phone, Preferences, Priority } from "./types";
+
+const ANALYSIS_PURPOSES: { id: Priority; label: string }[] = [
+  { id: "daily", label: "日常" },
+  { id: "camera", label: "拍照" },
+  { id: "gaming", label: "游戏" },
+  { id: "battery", label: "续航" },
+];
+
+export function AnalysisPriorities({
+  value,
+  onChange,
+}: {
+  value: Priority[];
+  onChange: (value: Priority[]) => void;
+}) {
+  return (
+    <div className="analysis-preferences">
+      <span className="analysis-preferences-title">分析偏好</span>
+      <div
+        className="analysis-purpose-buttons"
+        role="group"
+        aria-label="AI 分析偏好"
+      >
+        {ANALYSIS_PURPOSES.map((purpose) => (
+          <button
+            key={purpose.id}
+            aria-pressed={value.includes(purpose.id)}
+            className={value.includes(purpose.id) ? "selected" : ""}
+            onClick={() =>
+              onChange(
+                value.includes(purpose.id)
+                  ? value.filter((item) => item !== purpose.id)
+                  : [...value, purpose.id],
+              )
+            }
+          >
+            {purpose.label}
+          </button>
+        ))}
+      </div>
+      <p className="analysis-preferences-note">
+        只用于顾问分析，不改变左侧筛选。
+      </p>
+    </div>
+  );
+}
 
 const QUICK_QUESTIONS = [
   "比较这些手机的优势和取舍",
@@ -37,6 +83,8 @@ export default function AdvisorChat({
   contextKey,
   budgetInput,
   onBudget,
+  analysisPriorities,
+  onAnalysisPriorities,
   preset,
 }: {
   open: boolean;
@@ -50,6 +98,8 @@ export default function AdvisorChat({
   contextKey: string;
   budgetInput: string;
   onBudget: (value: string) => void;
+  analysisPriorities: Priority[];
+  onAnalysisPriorities: (value: Priority[]) => void;
   preset: { serial: number; prompt: string } | null;
 }) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -327,12 +377,16 @@ export default function AdvisorChat({
               : preferences
                 ? candidatePhones.length
                   ? catalogueContext
-                    ? "发送时读取当前匹配目录，历史与未核价资料会明确说明，不等于购买推荐。"
-                    : "发送时从当前条件的真实候选中比较。"
+                    ? "发送时读取当前目录，历史与未核价资料会明确说明。"
+                    : "发送时从当前筛选的真实候选中比较。"
                   : "当前条件尚无候选；可先调整预算或筛选。"
                 : "预算不限，可直接描述需求并比较机型。"}
         </p>
       </div>
+      <AnalysisPriorities
+        value={analysisPriorities}
+        onChange={onAnalysisPriorities}
+      />
       {notice && (
         <p className="chat-notice" role="status">
           {notice}
@@ -467,7 +521,7 @@ function MessageSources({ message }: { message: ChatMessage }) {
         {context.phones.length
           ? `${context.mode === "catalogue" ? "本次目录资料" : "本次依据"} · ${context.phones.map((phone) => phone.name).join(" / ")}`
           : context.mode === "needs_budget"
-            ? "本次未指定预算，未选取推荐机型"
+            ? "本条旧对话未指定候选机型"
             : "当前条件无候选机型"}
       </summary>
       {context.phones.map((phone) => (

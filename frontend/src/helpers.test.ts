@@ -16,17 +16,18 @@ import {
   discoveryPriceLabel,
   discoveryOverview,
   requestPreferences,
+  filterPreferences,
+  SORT_LABELS,
   variantRequestUrl,
   variantLabel,
   phoneWithVariant,
-  rankingExplanation,
-  rankingHighlights,
+  sortPhoneCards,
   phoneForPreview,
   chatPhoneIds,
   safeSource,
   toggleSaved,
 } from "./helpers";
-import type { Phone, Recommendations } from "./types";
+import type { Phone, Preferences, Recommendations } from "./types";
 
 const phone = {
   id: "100",
@@ -71,9 +72,17 @@ describe("需求提交", () => {
       query: "Ultra",
     });
   });
-  it("默认综合推荐与买新机，并保留用户明确选择的价格排序", () => {
-    expect(DEFAULT_PREFERENCES.sort).toBe("recommended");
+  it("默认按上市时间排序与买新机，只提供上市时间和价格排序", () => {
+    expect(DEFAULT_PREFERENCES.sort).toBe("newest");
+    expect(DEFAULT_PREFERENCES.priorities).toEqual([]);
+    expect(DEFAULT_PREFERENCES.compact).toBe(false);
     expect(DEFAULT_PREFERENCES.purchase_mode).toBe("new");
+    expect(SORT_LABELS.newest).toBe("上市时间");
+    expect(Object.keys(SORT_LABELS)).toEqual([
+      "newest",
+      "price_asc",
+      "price_desc",
+    ]);
     expect(
       requestPreferences({ ...DEFAULT_PREFERENCES, sort: "price_asc" }).sort,
     ).toBe("price_asc");
@@ -85,9 +94,6 @@ describe("需求提交", () => {
     });
     expect(submitted.purchase_mode).toBe("used");
     expect(submitted.include_history).toBe(false);
-    expect(rankingExplanation("used")).toContain("没有二手行情或库存");
-    expect(rankingExplanation("used", 4000)).toContain("85%");
-    expect(rankingExplanation("new")).toContain("一年内");
   });
   it("空的最高预算保留 null 与用户设定的最低预算，不引入隐藏金额或容量", () => {
     const submitted = requestPreferences({
@@ -101,9 +107,6 @@ describe("需求提交", () => {
     expect(
       requestPreferences({ ...submitted, budget_max: 8000 }).budget_max,
     ).toBe(8000);
-    expect(rankingExplanation("new", null)).toContain("85%");
-    expect(rankingExplanation("used", null)).toContain("95%");
-    expect(rankingExplanation("new", 4000)).toContain("75%");
   });
   it("型号搜索显示完整目录而不是合格购买名单，保留历史和缺价项超过60项", () => {
     const all = Array.from({ length: 67 }, (_, index) => ({
@@ -122,25 +125,55 @@ describe("需求提交", () => {
     expect(resultPhones(null, "iPhone")).toEqual([]);
     expect(catalogueStatusLabel(all[0])).toBe("报价待核实");
     expect(catalogueStatusLabel(all[1])).toBe("历史资料");
-  });
-  it("卡片突出时效与品牌依据，不重复已有的需求分与预算信息", () => {
-    const ranked = {
-      ...phone,
-      ranking_reasons: [
-        "需求匹配 85 分，是推荐的主要依据",
-        "预算余量 20 分，依据来源参考报价",
-        "一年内上市，获得时效加分",
-        "主流品牌采购偏好适度加分，不代表品质或售后结论",
-        "其他说明",
-      ],
-    };
-    expect(rankingHighlights(ranked)).toEqual(
-      ranked.ranking_reasons.slice(2, 4),
-    );
-    expect(ranked.ranking_reasons).toHaveLength(5);
     expect(
-      rankingHighlights({ ...phone, ranking_reasons: ["需求匹配 60 分"] }),
-    ).toEqual([]);
+      catalogueStatusLabel({ ...phone, recommendation_eligible: true }),
+    ).toBe("符合当前筛选");
+  });
+  it("筛选状态独立于报价购买资格，未核价也可符合无预算筛选", () => {
+    expect(
+      catalogueStatusLabel({
+        ...phone,
+        price: null,
+        matches_preferences: true,
+        recommendation_eligible: false,
+      }),
+    ).toBe("符合当前筛选");
+    expect(
+      catalogueStatusLabel({
+        ...phone,
+        matches_preferences: false,
+        recommendation_eligible: true,
+      }),
+    ).toBe("不符合当前筛选");
+  });
+  it("AI 用途变化不改变客观筛选请求，同时 AI 请求保留多选用途", () => {
+    const preferences = {
+      ...DEFAULT_PREFERENCES,
+      budget_min: 3000,
+      brands: ["苹果", "苹果"],
+      query: "  iPhone  ",
+    };
+    const aiPreferences = {
+      ...preferences,
+      priorities: ["camera", "gaming", "camera"] as Preferences["priorities"],
+      compact: true,
+    };
+    expect(filterPreferences(aiPreferences)).toEqual(
+      filterPreferences(preferences),
+    );
+    expect(filterPreferences(aiPreferences)).toMatchObject({
+      budget_min: 3000,
+      budget_max: null,
+      brands: ["苹果"],
+      query: "iPhone",
+      priorities: [],
+      compact: false,
+    });
+    expect(requestPreferences(aiPreferences).priorities).toEqual([
+      "camera",
+      "gaming",
+    ]);
+    expect(aiPreferences.priorities).toEqual(["camera", "gaming", "camera"]);
   });
 });
 
@@ -161,7 +194,7 @@ describe("容量版本", () => {
     expect(url.searchParams.get("include_history")).toBe("false");
   });
 
-  it("版本请求保留多品牌、多用途和中文检索，规范重复项和首尾空白", () => {
+  it("版本请求保留多品牌和中文检索，不受 AI 用途或小屏偏好影响", () => {
     const url = new URL(
       variantRequestUrl("100", {
         ...DEFAULT_PREFERENCES,
@@ -180,15 +213,12 @@ describe("容量版本", () => {
       "http://localhost",
     );
     expect(url.searchParams.getAll("brands")).toEqual(["华为", "苹果"]);
-    expect(url.searchParams.getAll("priorities")).toEqual([
-      "camera",
-      "battery",
-    ]);
+    expect(url.searchParams.getAll("priorities")).toEqual([]);
     expect(url.searchParams.get("query")).toBe("华为 Mate + 80");
     expect(url.searchParams.get("budget_min")).toBe("1000");
     expect(url.searchParams.get("budget_max")).toBe("8000");
     expect(url.searchParams.get("os")).toBe("HarmonyOS");
-    expect(url.searchParams.get("compact")).toBe("true");
+    expect(url.searchParams.get("compact")).toBe("false");
     expect(url.searchParams.get("min_storage")).toBe("512");
     expect(url.searchParams.get("include_history")).toBe("true");
     expect(url.searchParams.get("sort")).toBe("price_asc");
@@ -213,14 +243,38 @@ describe("容量版本", () => {
     );
   });
 
-  it("切换容量完整使用新版本，不沿用旧版本的价格、评分或购买资格", () => {
+  it("同容量网络版本用已核实网络区分，未知网络不推断为4G", () => {
+    const variant = { ram_gb: 8, storage_gb: 128, price: 2999 };
+    expect(
+      variantLabel({ ...variant, name: "测试手机（4G版）", five_g: false }),
+    ).toBe("8GB + 128GB · 4G · ¥2,999");
+    expect(variantLabel({ ...variant, name: "测试手机", five_g: true })).toBe(
+      "8GB + 128GB · 5G · ¥2,999",
+    );
+    expect(variantLabel({ ...variant, name: "旧手机", five_g: false })).toBe(
+      "8GB + 128GB · 非5G · ¥2,999",
+    );
+    expect(
+      variantLabel({ ...variant, name: "网络信息待核实", five_g: null }),
+    ).toBe(variantLabel(variant));
+  });
+
+  it("保留来源名称明确的网络版本，即使规范5G字段未知", () => {
+    const variant = { ram_gb: 8, storage_gb: 128, price: 3699, five_g: null };
+    expect(variantLabel({ ...variant, name: "华为 nova 8 Pro（4G版）" })).toBe(
+      "8GB + 128GB · 4G · ¥3,699",
+    );
+    expect(variantLabel({ ...variant, name: "测试手机（5 G版）" })).toBe(
+      "8GB + 128GB · 5G · ¥3,699",
+    );
+  });
+
+  it("切换容量完整使用新版本，不沿用旧版本的价格、来源或购买资格", () => {
     const base = {
       ...phone,
       id: "2tb",
       storage_gb: 2048,
       price: 20499,
-      score: 90,
-      recommendation_score: 90,
       recommendation_eligible: true,
       matches_preferences: true,
       catalogue_status: "eligible",
@@ -253,13 +307,13 @@ describe("容量版本", () => {
       variant_count: selected.variant_count,
       variant_summary: base.variant_summary,
     });
-    expect(result.score).toBeUndefined();
-    expect(result.recommendation_score).toBeUndefined();
     expect(result.price).toBeNull();
     expect(result.recommendation_eligible).toBe(false);
+    expect(result.matches_preferences).toBe(false);
+    expect(result.catalogue_status).toBe("unknown_price");
     expect(result.field_sources?.price).toBeUndefined();
     expect(base.price).toBe(20499);
-    expect(base.score).toBe(90);
+    expect(base.field_sources?.price.origin).toBe("legacy");
   });
 
   it("预算等条件变化后沿用当前默认版本，不恢复旧条件下的容量选择", () => {
@@ -324,6 +378,109 @@ describe("容量版本", () => {
     expect(result.variant_count).toBe(2);
     expect(result.variant_summary).toBe(latestSummary);
     expect(result.variant_summary?.[0].price).toBe(9999);
+  });
+  it("价格排序采用当前所选配置的实际报价，保留原卡 key 和数据且未知价最后", () => {
+    const original = [
+      { key: "16e-128", phone: { ...phone, id: "16e-128", price: 4499 } },
+      { key: "other", phone: { ...phone, id: "other", price: 4999 } },
+      { key: "unknown", phone: { ...phone, id: "unknown", price: null } },
+    ];
+    const selected = {
+      ...original[0].phone,
+      id: "16e-512",
+      storage_gb: 512,
+      price: 7499,
+    };
+    const cards = original.map((card) => ({
+      ...card,
+      phone:
+        card.key === "16e-128"
+          ? phoneWithVariant(
+              card.phone,
+              { context: "current", phone: selected },
+              "current",
+            )
+          : card.phone,
+    }));
+    const ascending = sortPhoneCards(cards, "price_asc");
+    expect(ascending.map((card) => card.phone.id)).toEqual([
+      "other",
+      "16e-512",
+      "unknown",
+    ]);
+    expect(ascending[1].key).toBe("16e-128");
+    expect(ascending[1]).toBe(cards[0]);
+    expect(
+      sortPhoneCards(cards, "price_desc").map((card) => card.phone.id),
+    ).toEqual(["16e-512", "other", "unknown"]);
+    expect(cards.map((card) => card.key)).toEqual([
+      "16e-128",
+      "other",
+      "unknown",
+    ]);
+    expect(original[0].phone.price).toBe(4499);
+  });
+  it("相同报价用名称和真实配置 id 确定顺序，不把未知价当零元", () => {
+    const cards = [
+      { key: "null", phone: { ...phone, id: "null", name: "A", price: null } },
+      { key: "b", phone: { ...phone, id: "b", name: "B", price: 4999 } },
+      { key: "a2", phone: { ...phone, id: "a2", name: "A", price: 4999 } },
+      { key: "a1", phone: { ...phone, id: "a1", name: "A", price: 4999 } },
+    ];
+    for (const sort of ["price_asc", "price_desc"] as const)
+      expect(sortPhoneCards(cards, sort).map((card) => card.key)).toEqual([
+        "a1",
+        "a2",
+        "b",
+        "null",
+      ]);
+  });
+  it("上市排序仅使用真实上市日期精度，年和月缺失不借用采集日或占位日期", () => {
+    const cards = [
+      {
+        key: "unknown",
+        phone: { ...phone, release_date: null, fetched_at: "2099-01-01" },
+      },
+      {
+        key: "year",
+        phone: {
+          ...phone,
+          release_date: "2026-12-31",
+          release_precision: "year" as const,
+          release_year: 2026,
+        },
+      },
+      {
+        key: "month",
+        phone: {
+          ...phone,
+          release_date: "2026-12-31",
+          release_precision: "month" as const,
+          release_year: 2026,
+          release_month: 10,
+        },
+      },
+      {
+        key: "day",
+        phone: {
+          ...phone,
+          release_date: "2026-10-15",
+          release_precision: "day" as const,
+          price: null,
+        },
+      },
+      {
+        key: "old",
+        phone: { ...phone, release_date: "2025-12-31", price: 999 },
+      },
+    ];
+    expect(sortPhoneCards(cards, "newest").map((card) => card.key)).toEqual([
+      "day",
+      "month",
+      "year",
+      "old",
+      "unknown",
+    ]);
   });
 });
 
