@@ -88,6 +88,19 @@ uv run phone-finder
 
 AI 顾问需另外配置自己的密钥，见 [DeepSeek 配置](#deepseek-配置)。不配置密钥也能采集、筛选、收藏与对比。
 
+<details>
+<summary>并行打开历史恢复版与 2025 原界面截图</summary>
+
+当前版继续运行在 8501，另一个终端执行：
+
+```powershell
+uv run --no-sync python scripts/run_historical_preview.py
+```
+
+[可运行恢复版](http://127.0.0.1:8502/)是 **2026-10-04** 提交 `958741d`，保留当时的界面与必填预算逻辑；它读取当前数据库的独立副本，不覆盖当前版。[2025 原版截图对照](http://127.0.0.1:8502/history/)来自真实历史提交，原 Flask 子仓库源码尚未找回，不能把恢复版称作原版。数据兼容范围、依赖及停止方式见 [历史对照说明](docs/HISTORICAL_PREVIEW.md)。
+
+</details>
+
 ## 如何快速选
 
 1. 直接搜索型号；最高预算可以不填。按需限制品牌、系统、容量，按上市时间或参考价格排序。
