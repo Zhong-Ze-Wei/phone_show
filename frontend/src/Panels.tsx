@@ -8,6 +8,7 @@ import {
   sourceLabel,
   requestPreferences,
   safeSource,
+  variantLabel,
 } from "./helpers";
 import type {
   Meta,
@@ -16,6 +17,71 @@ import type {
   QualityReport,
   SyncStatus,
 } from "./types";
+
+export function VariantSelector({
+  phone,
+  onChange,
+  loading = false,
+  error = "",
+  disabled = false,
+}: {
+  phone: Phone;
+  onChange: (id: string) => void;
+  loading?: boolean;
+  error?: string;
+  disabled?: boolean;
+}) {
+  const variants = phone.variant_summary || [];
+  if (variants.length < 2) return null;
+  const warning =
+    phone.budget_warning ||
+    (phone.matches_preferences === false ||
+    phone.recommendation_eligible === false
+      ? phone.variant_reasons?.[0]
+      : undefined);
+  return (
+    <div className="variant-picker">
+      <label>
+        <span>{phone.variant_count || variants.length} 个配置</span>
+        <select
+          className="variant-select"
+          aria-label={`选择 ${phone.family_name || phone.name} 的配置`}
+          value={phone.id}
+          disabled={disabled || loading}
+          onChange={(event) => onChange(event.target.value)}
+        >
+          {!variants.some((variant) => variant.id === phone.id) && (
+            <option value={phone.id} disabled>
+              选择容量配置
+            </option>
+          )}
+          {variants.map((variant) => (
+            <option value={variant.id} key={variant.id}>
+              {variantLabel(variant)}
+              {variant.matches_preferences === false
+                ? " · 不符当前筛选"
+                : variant.recommendation_eligible === false &&
+                    variant.price != null
+                  ? " · 仅资料"
+                  : ""}
+            </option>
+          ))}
+        </select>
+      </label>
+      {loading ? (
+        <p className="variant-status" role="status">
+          正在切换配置…
+        </p>
+      ) : error ? (
+        <p className="variant-status variant-error" role="alert">
+          {error}
+        </p>
+      ) : warning ? (
+        <p className="variant-status">{warning}</p>
+      ) : null}
+    </div>
+  );
+}
 
 export function Dialog({
   title,
@@ -76,20 +142,34 @@ export function DetailPanel({
   initialPhone,
   onClose,
   onExplain,
+  onVariant,
+  variantLoading,
+  variantError,
+  invalidPreferences,
 }: {
   initialPhone: Phone;
   onClose: () => void;
   onExplain: (phones: Phone[]) => void;
+  onVariant: (id: string) => void;
+  variantLoading: boolean;
+  variantError: string;
+  invalidPreferences: boolean;
 }) {
-  const [phone, setPhone] = useState(initialPhone);
+  const [loadedPhone, setLoadedPhone] = useState(initialPhone);
+  const phone = loadedPhone.id === initialPhone.id ? loadedPhone : initialPhone;
   const [error, setError] = useState("");
   useEffect(() => {
     const controller = new AbortController();
+    setLoadedPhone(initialPhone);
+    setError("");
     api<{ phone: Phone }>(
       `/api/phones/${encodeURIComponent(initialPhone.id)}`,
       { signal: controller.signal },
     )
-      .then((result) => setPhone({ ...initialPhone, ...result.phone }))
+      .then((result) => {
+        if (!controller.signal.aborted)
+          setLoadedPhone({ ...initialPhone, ...result.phone });
+      })
       .catch((e: Error) => {
         if (e.name !== "AbortError") setError(e.message);
       });
@@ -104,6 +184,13 @@ export function DetailPanel({
           {phone.availability === "historical" ? "历史资料" : "公开目录机型"}
         </span>
       </div>
+      <VariantSelector
+        phone={phone}
+        loading={variantLoading}
+        error={variantError}
+        disabled={invalidPreferences}
+        onChange={onVariant}
+      />
       {phone.origin === "official" && (
         <p className="provenance-note">
           当前资料来自{sourceLabel(phone)}
@@ -122,7 +209,7 @@ export function DetailPanel({
           最新资料读取失败：{error}，下方显示已加载资料。
         </p>
       )}
-      {phone.score != null && (
+      {phone.score_applicable !== false && phone.score != null && (
         <div className="detail-match">
           <span>
             {Math.round(phone.score)}
@@ -231,7 +318,11 @@ export function DetailPanel({
             查看来源网页 ↗
           </a>
         )}
-        <button className="primary-button" onClick={() => onExplain([phone])}>
+        <button
+          className="primary-button"
+          disabled={variantLoading}
+          onClick={() => onExplain([phone])}
+        >
           向顾问询问这部手机
         </button>
       </div>

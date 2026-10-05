@@ -6,7 +6,7 @@ import re
 import unicodedata
 
 
-CLEANING_VERSION = "3"
+CLEANING_VERSION = "4"
 _BRANDS = {
     "xiaomi": "小米", "小米": "小米", "redmi": "红米", "红米": "红米",
     "huawei": "华为", "华为": "华为", "honor": "荣耀", "荣耀": "荣耀",
@@ -63,6 +63,13 @@ def _spec(specs: dict, *keys: str) -> tuple[object, str]:
     for key in keys:
         if key in specs and _text(specs[key]) is not None:
             return specs[key], key
+    normalized = {}
+    for actual in specs:
+        normalized.setdefault(re.sub(r"\s+", "", unicodedata.normalize("NFKC", actual)).casefold(), actual)
+    for key in keys:
+        actual = normalized.get(re.sub(r"\s+", "", unicodedata.normalize("NFKC", key)).casefold())
+        if actual is not None and _text(specs[actual]) is not None:
+            return specs[actual], actual
     return None, ""
 
 
@@ -158,7 +165,7 @@ def _release_month(value: object) -> int | None:
 
 
 def _camera(specs: dict, issues: list) -> float | None:
-    value, key = _spec(specs, "主摄像素", "后置主摄像素", "摄像头系统详情", "像素", "摄像头像素")
+    value, key = _spec(specs, "主摄像素", "后置主摄像素", "后置摄像头1后置摄像头", "摄像头系统详情", "像素", "摄像头像素")
     text = _text(value)
     if text is None:
         return None
@@ -252,10 +259,10 @@ def clean_phone(raw: dict) -> dict:
         "storage_gb": (("机身存储ROM容量(GB)", "ROM容量", "存储容量"), {"tb": 1024, "gb": 1, "mb": 1 / 1024, "kb": 1 / 1048576}, "gb", (0.000001, 8192)),
         "battery_mah": (("电池容量(mAh)", "电池容量"), {"mah": 1, "ah": 1000}, "mah", (100, 50000)),
         "charging_w": (("有线充电功率(W)", "有线充电"), {"w": 1, "瓦": 1}, "w", (0.1, 500)),
-        "display_inches": (("主屏幕尺寸(英寸)", "屏幕尺寸"), {"英寸": 1, "inch": 1, "inches": 1, '"': 1}, "英寸", (0.5, 15)),
-        "refresh_hz": (("主屏幕刷新率(Hz)", "屏幕刷新率", "刷新率"), {"hz": 1, "赫兹": 1}, "hz", (1, 360)),
+        "display_inches": (("主屏幕尺寸(英寸)", "主屏幕尺寸", "屏幕尺寸"), {"英寸": 1, "inch": 1, "inches": 1, '"': 1}, "英寸", (0.5, 15)),
+        "refresh_hz": (("主屏幕刷新率(Hz)", "主屏幕刷新率", "屏幕刷新率", "刷新率"), {"hz": 1, "赫兹": 1}, "hz", (1, 360)),
         "weight_g": (("机身重量(克)", "重量"), {"kg": 1000, "g": 1, "克": 1}, "g", (10, 1500)),
-        "thickness_mm": (("机身厚度(毫米)", "厚度"), {"mm": 1, "毫米": 1, "cm": 10, "厘米": 10}, "mm", (1, 50)),
+        "thickness_mm": (("机身厚度(毫米)", "厚度", "产品尺寸厚度"), {"mm": 1, "毫米": 1, "cm": 10, "厘米": 10}, "mm", (1, 50)),
     }
     for field, (keys, units, default, bounds) in fields.items():
         value, key = _spec(specs, *keys)
@@ -271,7 +278,7 @@ def clean_phone(raw: dict) -> dict:
                 value = maximum.group(1)
             elif adaptive:
                 value = adaptive.group(1) + "Hz"
-        output[field] = _quantity(value, field, units, default if "(" in key else None, bounds, issues)
+        output[field] = _quantity(value, field, units, default if "(" in unicodedata.normalize("NFKC", key) else None, bounds, issues)
     if brand == "苹果" and origin == "zol":
         storage = _apple_sku_storage(name, output["storage_gb"], issues)
         if storage != output["storage_gb"]:
@@ -281,7 +288,7 @@ def clean_phone(raw: dict) -> dict:
     output["camera_mp"] = _camera(specs, issues)
     soc, _ = _spec(specs, "CPU型号", "处理器", "芯片型号")
     output["soc"] = re.split(r"更多|手机性能排行|查看", _text(soc))[0].strip() if _text(soc) else None
-    operating_system, _ = _spec(specs, "操作系统名称", "操作系统")
+    operating_system, _ = _spec(specs, "操作系统名称", "操作系统", "出厂系统内核")
     output["os"] = _text(operating_system)
     os_text = output["os"] or ""
     output["os_family"] = (

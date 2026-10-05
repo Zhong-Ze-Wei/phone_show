@@ -279,24 +279,59 @@ def _parse_apple(soup) -> tuple[str, list[dict]]:
         name = re.split(r" - |技术规格", _text(soup.title))[0].strip()
         names = [name]
     variants = [{"name": name, "specs": {}} for name in names]
+    models = {_model_identity(variant["name"], "apple"): variant for variant in variants}
+    key, continuation_rows = "", 0
     for row in soup.select(".techspecs-row"):
-        header = row.select_one(".techspecs-rowheader")
-        if not header:
+        header = row.select_one(":scope > .techspecs-rowheader")
+        if header:
+            # Apple puts common parameters in a following headerless row and
+            # explicitly spans the previous label across those rows.
+            for note in header.select("sup"):
+                note.decompose()
+            key = _text(header)
+            continuation_rows = int(header.get("aria-rowspan", "1")) - 1
+        elif continuation_rows:
+            continuation_rows -= 1
+        else:
             continue
-        # Footnote numbers are presentation, not part of the parameter label.
-        for note in header.select("sup"):
-            note.decompose()
-        key = _text(header)
         columns = row.select(":scope > .techspecs-column")
         for index, column in enumerate(columns):
+            named_models = {_model_identity(_text(heading), "apple") for heading in column.select(".techspecs-small-heading")
+                            if "iPhone" in _text(heading)}
+            if named_models:
+                if not named_models.issubset(models):
+                    raise ValueError("Apple规格列包含未确认的机型名称")
+                targets = [models[name] for name in named_models]
+            elif len(columns) == 1 or int(column.get("aria-colspan", "1")) >= len(variants):
+                targets = variants
+            else:
+                targets = variants[index:index + 1]
             for heading in column.select(".techspecs-small-heading"):
                 heading.decompose()
-            if len(columns) == 1:
-                for variant in variants:
-                    _put(variant["specs"], key, _text(column))
-            elif index < len(variants):
-                _put(variants[index]["specs"], key, _text(column))
+            for variant in targets:
+                _put(variant["specs"], key, _text(column))
+    for variant in variants:
+        _apple_canonical_specs(variant["specs"])
     return names[0], variants
+
+
+def _apple_canonical_specs(specs: dict) -> None:
+    """Expose only measurements and features explicitly labelled by Apple."""
+    network = next((value for key, value in specs.items() if re.sub(r"\s+", "", key) == "蜂窝网络和无线连接"), "")
+    if network:
+        specs.setdefault("网络类型", network)
+        nfc = re.search(r"(?:不支持|支持)[^。；;\n]{0,30}NFC(?![a-z0-9])", network, re.I)
+        if nfc:
+            specs.setdefault("NFC", nfc.group(0))
+    refresh = re.search(r"刷新率[^\d。；;]{0,24}(\d+(?:\.\d+)?\s*Hz)", specs.get("显示屏", ""), re.I)
+    if refresh:
+        specs.setdefault("屏幕刷新率", refresh.group(1))
+    camera = re.search(r"(\d+(?:\.\d+)?\s*(?:万像素|百万像素|MP))[^\d。；;，,]{0,16}主摄", specs.get("摄像头", ""), re.I)
+    if camera:
+        specs.setdefault("主摄像素", camera.group(1))
+    chip = re.match(r"(A\d+(?:\s+(?:Pro|Bionic))?)\s*芯片(?:\s|$)", specs.get("芯片", ""), re.I)
+    if chip:
+        specs.setdefault("芯片型号", chip.group(1))
 
 
 _PARSERS = {"vivo": _parse_vivo, "oppo": _parse_oppo, "honor": _parse_honor,

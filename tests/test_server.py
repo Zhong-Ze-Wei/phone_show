@@ -14,6 +14,59 @@ def client_for(phones=None):
     return TestClient(create_app(storage=storage, settings=Settings("private-test-secret")))
 
 
+def test_family_variants_api_returns_four_real_capacity_versions_with_current_filter_scores():
+    from datetime import datetime, timezone
+
+    stamp = datetime.now(timezone.utc).isoformat()
+    phones = [{"id": str(capacity), "name": f"苹果iPhone 18 Pro({capacity}GB)", "brand": "苹果", "family_key": "苹果:18pro",
+        "ram_gb": None, "storage_gb": capacity, "price": 20499 if capacity == 2048 else None,
+        "soc": "A20 Pro", "specs": {"屏幕尺寸": "6.3英寸"}, "availability": "listed", "origin": "zol", "fetched_at": stamp}
+        for capacity in (256, 512, 1024, 2048)]
+    phones += [{"id": "official", "name": "iPhone 18 Pro", "brand": "苹果", "family_key": "苹果:18pro", "ram_gb": None,
+        "storage_gb": None, "price": None, "soc": "A20 Pro", "origin": "official", "availability": "unknown", "fetched_at": stamp}]
+    client = client_for(phones)
+    response = client.get("/api/phones/2048/variants", params={"budget_max": 15000, "min_storage": 512, "query": "iPhone18"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["family_key"] == "苹果:18pro" and body["family_name"] == "iPhone 18 Pro"
+    assert [phone["storage_gb"] for phone in body["phones"]] == [256, 512, 1024, 2048]
+    assert all("specs" in phone for phone in body["phones"])
+    assert body["phones"][0]["matches_preferences"] is False
+    assert "insufficient_storage" in body["phones"][0]["variant_codes"]
+    assert "unknown_price" in body["phones"][1]["variant_codes"]
+    assert body["phones"][3]["budget_warning"] == "超出当前预算范围"
+    assert all(phone["ranking_breakdown"]["weights"]["usage"] == 0.75 for phone in body["phones"])
+    assert client.get("/api/phones/2048/variants").json()["phones"][3]["recommendation_eligible"] is True
+    assert client.get("/api/phones/missing/variants").status_code == 404
+    assert client.get("/api/phones/2048/variants", params={"budget_max": 0}).status_code == 422
+
+
+def test_variants_query_model_keeps_array_filters_and_no_budget_weights():
+    from datetime import datetime, timezone
+    phones = [{"id": "sku", "name": "机型(12GB+256GB)", "brand": "荣耀", "family_key": "荣耀:机型",
+        "price": 9999, "ram_gb": 12, "storage_gb": 256, "os_family": "Android", "availability": "listed", "origin": "zol",
+        "fetched_at": datetime.now(timezone.utc).isoformat()}]
+    client = client_for(phones)
+    response = client.get("/api/phones/sku/variants", params=[("brands", "荣耀"), ("priorities", "battery"),
+        ("priorities", "gaming"), ("purchase_mode", "used")])
+    assert response.status_code == 200
+    record = response.json()["phones"][0]
+    assert record["budget_warning"] is None and record["recommendation_eligible"] is True
+    assert record["ranking_breakdown"]["weights"] == {"usage": 0.95, "value": 0.0, "recency": 0.0, "brand": 0.05}
+    assert client.get("/api/phones/sku/variants", params={"brands": "苹果"}).json()["phones"][0]["matches_preferences"] is False
+    assert client.get("/api/phones/sku/variants", params={"budget_min": 5000, "budget_max": 3000}).status_code == 422
+
+
+def test_variants_with_no_specific_capacity_keep_one_unknown_generic():
+    rows = [{"id": "official", "name": "iPhone Example", "brand": "苹果", "family_key": "苹果:example", "price": None,
+        "storage_gb": None, "ram_gb": None, "origin": "official", "availability": "unknown"}]
+    response = client_for(rows).get("/api/phones/official/variants")
+    assert response.status_code == 200
+    phone = response.json()["phones"][0]
+    assert phone["variant_count"] == 1 and phone["storage_gb"] is None and phone["price"] is None
+    assert phone["recommendation_eligible"] is False
+
+
 def test_metadata_never_returns_api_key():
     response = client_for().get("/api/meta")
     assert response.status_code == 200

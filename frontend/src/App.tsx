@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState, type DragEvent } from "react";
 import { api } from "./api";
 import AdvisorChat from "./AdvisorChat";
-import { ComparePanel, DetailPanel, QualityPanel, SyncPanel } from "./Panels";
+import {
+  ComparePanel,
+  DetailPanel,
+  QualityPanel,
+  SyncPanel,
+  VariantSelector,
+} from "./Panels";
 import {
   dateLabel,
   DEFAULT_PREFERENCES,
@@ -21,8 +27,11 @@ import {
   rankingExplanation,
   rankingHighlights,
   phoneForPreview,
+  phoneWithVariant,
+  variantRequestUrl,
   chatPhoneIds,
   type ChatChoice,
+  type VariantSelection,
   safeSource,
   toggleSaved,
 } from "./helpers";
@@ -33,6 +42,7 @@ import type {
   Recommendations,
   SyncStatus,
   SortOrder,
+  VariantResponse,
 } from "./types";
 
 const PURPOSES = [
@@ -85,6 +95,16 @@ export default function App() {
     id: string;
     context: string;
   } | null>(null);
+  const [variantSelections, setVariantSelections] = useState<
+    Record<string, VariantSelection>
+  >({});
+  const [variantLoading, setVariantLoading] = useState<Record<string, string>>(
+    {},
+  );
+  const [variantErrors, setVariantErrors] = useState<
+    Record<string, { context: string; message: string }>
+  >({});
+  const variantRequests = useRef(new Map<string, AbortController>());
   const [isCompact, setIsCompact] = useState(
     () => window.matchMedia("(max-width: 600px)").matches,
   );
@@ -96,6 +116,20 @@ export default function App() {
     budgetValid,
   ]);
   const currentData = !invalidBudget && resultKey === requestKey ? data : null;
+  const selectionContext = `${requestKey}:${showSaved ? "saved" : "recommendations"}`;
+  const selectionContextRef = useRef(selectionContext);
+  selectionContextRef.current = selectionContext;
+
+  useEffect(() => {
+    setVariantSelections({});
+    setVariantLoading({});
+    setVariantErrors({});
+    return () => {
+      for (const controller of variantRequests.current.values())
+        controller.abort();
+      variantRequests.current.clear();
+    };
+  }, [selectionContext]);
 
   useEffect(() => {
     const viewport = window.matchMedia("(max-width: 600px)");
@@ -206,7 +240,7 @@ export default function App() {
         : [...preferences.brands, brand],
     });
   const searchMode = !showSaved && preferences.query.trim().length > 0;
-  const phones = showSaved
+  const basePhones = showSaved
     ? saved.map(
         (phone) =>
           currentData?.phones.find((item) => item.id === phone.id) || {
@@ -219,6 +253,19 @@ export default function App() {
           },
       )
     : resultPhones(currentData, preferences.query);
+  const phoneCards = basePhones.map((phone) => ({
+    key: phone.id,
+    phone: phoneWithVariant(
+      phone,
+      variantSelections[phone.id],
+      selectionContext,
+    ),
+  }));
+  const phones = phoneCards.map((card) => card.phone);
+  const configurationCount = phones.reduce(
+    (total, phone) => total + (phone.variant_count || 1),
+    0,
+  );
   const resultTotal = searchMode
     ? currentData?.catalogue?.total || 0
     : currentData?.total || 0;
@@ -278,12 +325,108 @@ export default function App() {
 
   const pages = Math.max(1, Math.ceil(phones.length / pageSize));
   const currentPage = Math.min(page, pages);
-  const visiblePhones = phones.slice(
+  const visibleCards = phoneCards.slice(
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
-  const selectionContext = `${requestKey}:${showSaved ? "saved" : "recommendations"}`;
-  const selectedPhone = phoneForPreview(phones, selection, selectionContext);
+  const selectedVariant =
+    selection?.context === selectionContext
+      ? Object.values(variantSelections).find(
+          (choice) =>
+            choice.context === selectionContext &&
+            choice.phone.id === selection.id,
+        )
+      : undefined;
+  const selectedPhone =
+    selectedVariant?.phone ||
+    phoneForPreview(phones, selection, selectionContext);
+  function cardKeyForPhone(phone: Phone): string {
+    return (
+      phoneCards.find((card) => card.phone.id === phone.id)?.key ||
+      phoneCards.find((card) => card.phone.family_key === phone.family_key)
+        ?.key ||
+      `discovery:${phone.family_key}`
+    );
+  }
+  function isVariantLoading(phone: Phone): boolean {
+    return variantLoading[cardKeyForPhone(phone)] === selectionContext;
+  }
+  function variantError(phone: Phone): string {
+    const error = variantErrors[cardKeyForPhone(phone)];
+    return error?.context === selectionContext ? error.message : "";
+  }
+  const discoveryData = currentData?.discovery
+    ? {
+        ...currentData.discovery,
+        phones: currentData.discovery.phones.map((phone) =>
+          phoneWithVariant(
+            phone,
+            variantSelections[cardKeyForPhone(phone)],
+            selectionContext,
+          ),
+        ),
+      }
+    : null;
+  async function chooseVariant(phone: Phone, id: string, sourceKey?: string) {
+    if (id === phone.id || invalidBudget) return;
+    const key = sourceKey || cardKeyForPhone(phone);
+    const context = selectionContext;
+    variantRequests.current.get(key)?.abort();
+    const controller = new AbortController();
+    variantRequests.current.set(key, controller);
+    setVariantLoading((previous) => ({ ...previous, [key]: context }));
+    setVariantErrors((previous) => ({
+      ...previous,
+      [key]: { context, message: "" },
+    }));
+    try {
+      const result = await api<VariantResponse>(
+        variantRequestUrl(phone.id, preferences),
+        {
+          signal: controller.signal,
+        },
+      );
+      if (controller.signal.aborted || selectionContextRef.current !== context)
+        return;
+      const selected = result.phones.find((item) => item.id === id);
+      if (!selected) throw new Error("该配置资料已更新，请重新打开手机资料。");
+      const chosen: Phone = {
+        ...selected,
+        family_name: result.family_name,
+        variant_count: result.phones.length,
+        variant_summary: selected.variant_summary || phone.variant_summary,
+      };
+      setVariantSelections((previous) => ({
+        ...previous,
+        [key]: { context, phone: chosen },
+      }));
+      setSelection({ id: chosen.id, context });
+      setChatChoice({ ids: [chosen.id], context, origin: "preview" });
+      setDetails((previous) =>
+        previous?.family_key === chosen.family_key ? chosen : previous,
+      );
+    } catch (error) {
+      if (controller.signal.aborted || selectionContextRef.current !== context)
+        return;
+      setVariantErrors((previous) => ({
+        ...previous,
+        [key]: {
+          context,
+          message:
+            error instanceof Error ? error.message : "配置读取失败，请重试。",
+        },
+      }));
+    } finally {
+      if (variantRequests.current.get(key) === controller) {
+        variantRequests.current.delete(key);
+        setVariantLoading((previous) => {
+          const next = { ...previous };
+          delete next[key];
+          return next;
+        });
+      }
+    }
+  }
   function selectPhone(phone: Phone) {
     setSelection({ id: phone.id, context: selectionContext });
     setChatChoice({
@@ -382,6 +525,10 @@ export default function App() {
       expanded={previewExpanded}
       onExpanded={setPreviewExpanded}
       onDetail={openDetail}
+      onVariant={(id) => selectedPhone && chooseVariant(selectedPhone, id)}
+      variantLoading={selectedPhone != null && isVariantLoading(selectedPhone)}
+      variantError={selectedPhone ? variantError(selectedPhone) : ""}
+      invalidPreferences={invalidBudget}
       compared={
         selectedPhone != null &&
         compare.some((phone) => phone.id === selectedPhone.id)
@@ -742,8 +889,8 @@ export default function App() {
                     : invalidBudget
                       ? "请修正预算后继续查看"
                       : searchMode
-                        ? `匹配目录 ${resultTotal} 款 · 已加载 ${phones.length} 款 · 当前可推荐 ${currentData?.total || 0} 款`
-                        : `符合条件 ${resultTotal} 款 · 已加载 ${phones.length} 款${preferences.budget_max === null ? " · 预算不限" : ""}`}
+                        ? `匹配 ${resultTotal} 个机型 · ${configurationCount} 个配置 · 当前可推荐 ${currentData?.total || 0} 个机型`
+                        : `符合条件 ${resultTotal} 个机型 · 已加载 ${phones.length} 个${preferences.budget_max === null ? " · 预算不限" : ""}`}
                 </p>
               </div>
               <span className="loading-label" role="status">
@@ -777,7 +924,7 @@ export default function App() {
             )}
             {searchMode && (
               <p className="catalogue-note" role="status">
-                搜索展示全部匹配目录，包含历史、待上市、报价待核实与超预算机型；目录资料不等于购买推荐。容量等显式条件仍生效，可点详细参数核对来源。
+                同一机型只显示一张卡，可在卡内选择容量配置。搜索也展示历史、待上市、报价待核实与超预算资料；目录资料不等于购买推荐，容量等显式条件仍生效。
               </p>
             )}
             {!showSaved && preferences.purchase_mode === "used" && (
@@ -847,16 +994,21 @@ export default function App() {
             ) : (
               <>
                 <div className="phone-grid">
-                  {visiblePhones.map((phone) => {
+                  {visibleCards.map(({ key, phone }) => {
                     const compared = compare.some(
                       (item) => item.id === phone.id,
                     );
                     const isSaved = saved.some((item) => item.id === phone.id);
+                    const switching = variantLoading[key] === selectionContext;
+                    const configurationOnly =
+                      phone.matches_preferences === false ||
+                      phone.recommendation_eligible === false;
                     return (
                       <article
                         className={`phone-card gallery-card ${selectedPhone?.id === phone.id ? "is-selected" : ""} ${draggedId === phone.id ? "is-dragging" : ""}`}
-                        key={phone.id}
-                        draggable
+                        key={key}
+                        aria-busy={switching}
+                        draggable={!switching}
                         onDragStart={(event) => {
                           event.dataTransfer.setData(PHONE_DRAG_TYPE, phone.id);
                           event.dataTransfer.setData("text/plain", phone.id);
@@ -873,6 +1025,7 @@ export default function App() {
                             className="card-image-button"
                             aria-label={`预览 ${phone.name}`}
                             aria-pressed={selectedPhone?.id === phone.id}
+                            disabled={switching}
                             onClick={() => selectPhone(phone)}
                           >
                             <PhonePicture phone={phone} />
@@ -888,6 +1041,7 @@ export default function App() {
                             }
                             aria-label={`${isSaved ? "取消收藏" : "收藏"} ${phone.name}`}
                             aria-pressed={isSaved}
+                            disabled={switching}
                             onClick={() =>
                               setSaved((previous) =>
                                 toggleSaved(previous, phone),
@@ -913,12 +1067,19 @@ export default function App() {
                                 : `¥${phone.price.toLocaleString()}`}
                             </span>
                           </div>
-                          <h2>{phone.name}</h2>
+                          <h2>{phone.family_name || phone.name}</h2>
                           <div className="quick-specs">
                             <span>{numberSpec(phone.display_inches, "″")}</span>
                             <span>{numberSpec(phone.storage_gb, "GB")}</span>
                             <span>{numberSpec(phone.battery_mah, "mAh")}</span>
                           </div>
+                          <VariantSelector
+                            phone={phone}
+                            loading={switching}
+                            error={variantError(phone)}
+                            disabled={invalidBudget}
+                            onChange={(id) => chooseVariant(phone, id, key)}
+                          />
                           {searchMode ? (
                             <div className="catalogue-card-status">
                               <span>{catalogueStatusLabel(phone)}</span>
@@ -931,13 +1092,18 @@ export default function App() {
                           ) : (
                             <div className="card-scores">
                               <span className="match-badge">
-                                {phone.recommendation_score != null
-                                  ? `${Math.round(phone.recommendation_score)} /100 综合推荐`
-                                  : phone.score != null
-                                    ? `${Math.round(phone.score)}% 需求匹配`
-                                    : "已收藏"}
+                                {configurationOnly
+                                  ? phone.price == null
+                                    ? "报价待核实"
+                                    : "配置资料"
+                                  : phone.recommendation_score != null
+                                    ? `${Math.round(phone.recommendation_score)} /100 综合推荐`
+                                    : phone.score != null
+                                      ? `${Math.round(phone.score)}% 需求匹配`
+                                      : "已收藏"}
                               </span>
-                              {phone.recommendation_score != null &&
+                              {!configurationOnly &&
+                                phone.recommendation_score != null &&
                                 phone.score != null && (
                                   <span className="usage-match-reference">
                                     匹配 {Math.round(phone.score)}%
@@ -948,6 +1114,7 @@ export default function App() {
                           <div className="card-actions">
                             <button
                               className="card-detail"
+                              disabled={switching}
                               onClick={() => openDetail(phone)}
                             >
                               详细参数
@@ -960,6 +1127,7 @@ export default function App() {
                               }
                               aria-label={`${compared ? "移出对比" : "加入对比"} ${phone.name}`}
                               aria-pressed={compared}
+                              disabled={switching}
                               onClick={() =>
                                 compared
                                   ? removeCompare(phone.id)
@@ -1044,27 +1212,24 @@ export default function App() {
                 onBudget={(value) => setBudget(String(Math.ceil(value)))}
               />
             )}
-            {!showSaved &&
-              currentData?.discovery &&
-              currentData.discovery.phones.length > 0 && (
-                <details
-                  className="discovery-section"
-                  open={phones.length === 0}
-                >
-                  <summary>
-                    新机资料补充{" "}
-                    <span>
-                      {currentData.discovery.total} 款 · 含超预算与待核验配置
-                    </span>
-                  </summary>
-                  <NewReleaseShelf
-                    discovery={currentData.discovery}
-                    preferences={preferences}
-                    onDetail={openDetail}
-                    onBudget={(value) => setBudget(String(Math.ceil(value)))}
-                  />
-                </details>
-              )}
+            {!showSaved && discoveryData && discoveryData.phones.length > 0 && (
+              <details className="discovery-section" open={phones.length === 0}>
+                <summary>
+                  新机资料补充{" "}
+                  <span>{discoveryData.total} 款 · 含超预算与待核验配置</span>
+                </summary>
+                <NewReleaseShelf
+                  discovery={discoveryData}
+                  preferences={preferences}
+                  onDetail={openDetail}
+                  onVariant={chooseVariant}
+                  variantLoading={isVariantLoading}
+                  variantError={variantError}
+                  invalidPreferences={invalidBudget}
+                  onBudget={(value) => setBudget(String(Math.ceil(value)))}
+                />
+              </details>
+            )}
             {phones.length > 0 && (
               <p className="results-footnote">
                 价格为来源参考报价，非成交价。未知规格不会填成零，推荐分不等同于实测品质。
@@ -1243,6 +1408,10 @@ export default function App() {
       {details && (
         <DetailPanel
           initialPhone={details}
+          onVariant={(id) => chooseVariant(details, id)}
+          variantLoading={isVariantLoading(details)}
+          variantError={variantError(details)}
+          invalidPreferences={invalidBudget}
           onClose={() => setDetails(null)}
           onExplain={openAdvice}
         />
@@ -1273,6 +1442,10 @@ function SelectedPhonePanel({
   expanded,
   onExpanded,
   onDetail,
+  onVariant,
+  variantLoading,
+  variantError,
+  invalidPreferences,
   compared,
   onCompare,
 }: {
@@ -1280,6 +1453,10 @@ function SelectedPhonePanel({
   expanded: boolean;
   onExpanded: (expanded: boolean) => void;
   onDetail: (phone: Phone) => void;
+  onVariant: (id: string) => void;
+  variantLoading: boolean;
+  variantError: string;
+  invalidPreferences: boolean;
   compared: boolean;
   onCompare: (phone: Phone) => void;
 }) {
@@ -1313,6 +1490,13 @@ function SelectedPhonePanel({
             {phone.price == null ? "具体配置报价未知" : priceStatusLabel(phone)}{" "}
             · {releaseLabel(phone)}
           </p>
+          <VariantSelector
+            phone={phone}
+            loading={variantLoading}
+            error={variantError}
+            disabled={invalidPreferences}
+            onChange={onVariant}
+          />
           <dl className="preview-specs">
             <div>
               <dt>屏幕</dt>
@@ -1334,22 +1518,17 @@ function SelectedPhonePanel({
               {phone.catalogue_reasons.map((reason, index) => (
                 <p key={index}>{reason}</p>
               ))}
-              {(phone.catalogue_variant_count || 0) > 1 && (
-                <p>
-                  匹配 {phone.catalogue_variant_count}{" "}
-                  个配置，此卡显示代表版本。
-                </p>
-              )}
             </div>
           ) : (
             <details className="preview-reasons">
               <summary>
                 推荐依据
-                {phone.recommendation_score != null && (
-                  <span>{Math.round(phone.recommendation_score)} /100</span>
-                )}
+                {phone.recommendation_eligible !== false &&
+                  phone.recommendation_score != null && (
+                    <span>{Math.round(phone.recommendation_score)} /100</span>
+                  )}
               </summary>
-              {phone.score != null && (
+              {phone.score_applicable !== false && phone.score != null && (
                 <p>需求匹配 {Math.round(phone.score)}%</p>
               )}
               <div className="ranking-reasons">
@@ -1361,7 +1540,11 @@ function SelectedPhonePanel({
             </details>
           )}
           <div className="preview-actions">
-            <button className="quiet-button" onClick={() => onDetail(phone)}>
+            <button
+              className="quiet-button"
+              disabled={variantLoading}
+              onClick={() => onDetail(phone)}
+            >
               详细资料 ↗
             </button>
             <button
@@ -1370,6 +1553,7 @@ function SelectedPhonePanel({
               }
               aria-label={`${compared ? "移出对比" : "加入对比"} ${phone.name}（当前查看）`}
               aria-pressed={compared}
+              disabled={variantLoading}
               onClick={() => onCompare(phone)}
             >
               {compared ? "已加入 ✓" : "+ 加入对比"}
@@ -1475,11 +1659,19 @@ function NewReleaseShelf({
   preferences,
   onDetail,
   onBudget,
+  onVariant,
+  variantLoading,
+  variantError,
+  invalidPreferences,
 }: {
   discovery: NonNullable<Recommendations["discovery"]>;
   preferences: Preferences;
   onDetail: (phone: Phone) => void;
   onBudget: (value: number) => void;
+  onVariant: (phone: Phone, id: string) => void;
+  variantLoading: (phone: Phone) => boolean;
+  variantError: (phone: Phone) => string;
+  invalidPreferences: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded
@@ -1501,7 +1693,7 @@ function NewReleaseShelf({
       </p>
       <div className="discovery-grid">
         {visible.map((phone) => (
-          <article className="discovery-card" key={phone.id}>
+          <article className="discovery-card" key={phone.family_key}>
             <p className="discovery-source">
               {phone.origin === "official" ? "官网当前目录" : "源站新品入口"}
               <span>
@@ -1512,7 +1704,7 @@ function NewReleaseShelf({
                     : "条件待核验"}
               </span>
             </p>
-            <h4>{phone.name}</h4>
+            <h4>{phone.family_name || phone.name}</h4>
             <p className="discovery-date">
               来源上市时间 · {releaseLabel(phone)}
             </p>
@@ -1521,18 +1713,36 @@ function NewReleaseShelf({
               存储 {numberSpec(phone.storage_gb, "GB")}
               <span>处理器 {phone.soc || "待核实"}</span>
             </p>
+            <VariantSelector
+              phone={phone}
+              onChange={(id) => onVariant(phone, id)}
+              loading={variantLoading(phone)}
+              error={variantError(phone)}
+              disabled={invalidPreferences}
+            />
             <div className="discovery-reasons">
-              {(phone.discovery_reasons || []).map((reason, index) => (
-                <p key={index}>{reason}</p>
-              ))}
+              {(phone.discovery_reasons || phone.variant_reasons || []).map(
+                (reason, index) => (
+                  <p key={index}>{reason}</p>
+                ),
+              )}
             </div>
             <div className="discovery-actions">
-              <button onClick={() => onDetail(phone)}>查看资料 ↗</button>
+              <button
+                disabled={variantLoading(phone)}
+                onClick={() => onDetail(phone)}
+              >
+                查看资料 ↗
+              </button>
               {phone.price != null &&
                 preferences.budget_max !== null &&
                 phone.price > preferences.budget_max &&
-                phone.discovery_codes?.includes("over_budget") &&
-                !phone.discovery_codes.includes("upcoming") && (
+                (phone.discovery_codes || phone.variant_codes)?.includes(
+                  "over_budget",
+                ) &&
+                !(phone.discovery_codes || phone.variant_codes)?.includes(
+                  "upcoming",
+                ) && (
                   <button onClick={() => onBudget(phone.price!)}>
                     预算放宽至 ¥{Math.ceil(phone.price).toLocaleString()}
                   </button>

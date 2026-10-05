@@ -639,3 +639,75 @@ def test_exact_catalog_quote_survives_unpriced_comparison(monkeypatch,tmp_path):
     assert storage.records['100']['price']=='￥4399'
     assert storage.records['100']['price_source_url']==LIST_URL
     assert storage.records['100']['price_fetched_at']=='2020-01-01T00:00:00+00:00'
+
+
+def test_unpriced_completed_variant_collects_own_quote_without_refreshing_specs(monkeypatch, tmp_path):
+    responses = pipeline_responses()
+    series = BASE_URL + '/series/57/123_1.html'
+    compare_url = BASE_URL + '/series/57/80/param_123_0_1.html'
+    variant_url = BASE_URL + '/cell_phone/index102.shtml'
+    responses[BASE_URL + '/cell_phone/index100.shtml'] = page(
+        '<div class="product-nav"><a href="/100/100/param.shtml">参数</a></div>'
+        f'<a id="product_series_link" href="{series}">系列</a>')
+    responses[series] = page(series_row('100') + f'<a class="total" href="{compare_url}">共有2款产品</a>')
+    responses[compare_url] = comparison('102').replace('￥3999', '即将上市')
+    responses[variant_url] = page(
+        '<div class="product-nav"><a href="/100/102/param.shtml">参数</a></div>'
+        '<span class="price-normal">￥4999</span>')
+    times = {compare_url: '2020-01-01T00:00:00+00:00', variant_url: '2026-10-05T00:00:00+00:00'}
+    requested = []
+    install_fake_crawler(monkeypatch, responses, times, requested)
+    storage = MemoryStorage()
+
+    pipeline.run_sync(storage=storage, data_dir=tmp_path)
+
+    assert storage.records['102']['price'] == '￥4999'
+    assert storage.records['102']['price_source_url'] == variant_url
+    assert storage.records['102']['price_fetched_at'] == times[variant_url]
+    assert storage.records['102']['specs_fetched_at'] == times[compare_url]
+    assert storage.records['102']['fetched_at'] == times[compare_url]
+    assert storage.records['102']['specs_source_url'] == compare_url
+    assert requested.count(variant_url) == 1
+
+
+def test_successful_completed_variant_quote_resolves_previous_index_failure(monkeypatch, tmp_path):
+    variant_url = BASE_URL + '/cell_phone/index100.shtml'
+
+    class FirstIndexFailure(dict):
+        failed = False
+
+        def __getitem__(self, url):
+            if url == variant_url and not self.failed:
+                self.failed = True
+                raise httpx.ConnectError('第一次产品首页读取失败')
+            return super().__getitem__(url)
+
+    responses = FirstIndexFailure(pipeline_responses())
+    responses[LIST_URL] = page(listed('100', price='即将上市') + listed('101') + '<div class="total">共 2 款</div>')
+    series_url = BASE_URL + '/series/57/123_1.html'
+    compare_url = BASE_URL + '/series/57/80/param_123_0_1.html'
+    responses[variant_url] = page(
+        '<div class="product-nav"><a href="/100/100/param.shtml">参数</a></div>'
+        '<span class="price-normal">￥4999</span>')
+    responses[BASE_URL + '/cell_phone/index101.shtml'] = page(
+        '<div class="product-nav"><a href="/100/101/param.shtml">参数</a></div>'
+        f'<a id="product_series_link" href="{series_url}">系列</a>')
+    responses[series_url] = page(series_row('101') + f'<a class="total" href="{compare_url}">共有2款产品</a>')
+    responses[compare_url] = comparison('100').replace('￥3999', '即将上市')
+    times = {compare_url: '2020-01-01T00:00:00+00:00', variant_url: '2026-10-05T00:00:00+00:00'}
+    requested = []
+    install_fake_crawler(monkeypatch, responses, times, requested)
+    storage = MemoryStorage()
+
+    report = pipeline.run_sync(storage=storage, data_dir=tmp_path)
+
+    assert report['status'] == 'complete'
+    assert report['failed'] == 0
+    assert report['failed_attempts'] == 1
+    assert any(error['stage'] == 'index' for error in report['warnings'])
+    assert storage.records['100']['price'] == '￥4999'
+    assert storage.records['100']['price_source_url'] == variant_url
+    assert storage.records['100']['price_fetched_at'] == times[variant_url]
+    assert storage.records['100']['specs_fetched_at'] == times[compare_url]
+    assert storage.records['100']['fetched_at'] == times[compare_url]
+    assert requested.count(variant_url) == 2

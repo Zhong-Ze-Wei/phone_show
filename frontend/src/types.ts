@@ -35,11 +35,31 @@ export interface FieldSource {
   fetched_at?: string | null;
 }
 
+export interface VariantSummary {
+  id: string;
+  name: string;
+  ram_gb: number | null;
+  storage_gb: number | null;
+  price: number | null;
+  field_sources?: Record<string, FieldSource>;
+  budget_warning?: string | null;
+  source_url?: string | null;
+  fetched_at?: string | null;
+  availability: Phone["availability"];
+  matches_preferences: boolean;
+  recommendation_eligible: boolean;
+  variant_codes: string[];
+  variant_reasons: string[];
+}
+
 export interface Phone {
   id: string;
   name: string;
   brand: string;
   family_key: string;
+  family_name?: string;
+  variant_count?: number;
+  variant_summary?: VariantSummary[];
   price: number | null;
   ram_gb: number | null;
   storage_gb: number | null;
@@ -100,6 +120,15 @@ export interface Phone {
   chat_warnings?: string[];
   score_applicable?: boolean;
   recommendation_eligible?: boolean;
+  matches_preferences?: boolean;
+  variant_codes?: string[];
+  variant_reasons?: string[];
+}
+
+export interface VariantResponse {
+  phones: Phone[];
+  family_key: string;
+  family_name: string;
 }
 
 export interface Meta {
