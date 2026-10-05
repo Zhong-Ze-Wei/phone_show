@@ -8,13 +8,9 @@ import {
 } from "react";
 import { api } from "./api";
 import AdvisorChat from "./AdvisorChat";
+import PriceOverview from "./PriceOverview";
 import AdvisorHandle, { advisorWidth } from "./AdvisorHandle";
-import {
-  ComparePanel,
-  DetailPanel,
-  SyncPanel,
-  VariantSelector,
-} from "./Panels";
+import { ComparePanel, DetailPanel, SyncPanel } from "./Panels";
 import {
   dateLabel,
   DEFAULT_PREFERENCES,
@@ -24,7 +20,6 @@ import {
   catalogueStatusLabel,
   priceStatusLabel,
   releaseLabel,
-  discoveryPriceLabel,
   discoveryOverview,
   sourceLabel,
   SORT_LABELS,
@@ -217,28 +212,31 @@ export default function App() {
     setLoading(true);
     setError("");
     const controller = new AbortController();
-    const timer = setTimeout(() => {
-      setLoading(true);
-      setError("");
-      api<Recommendations>("/api/filter", {
-        method: "POST",
-        body: JSON.stringify(filteringPreferences),
-        signal: controller.signal,
-      })
-        .then((result) => {
-          if (!controller.signal.aborted) {
-            setData(result);
-            setResultKey(requestKey);
-          }
+    const timer = setTimeout(
+      () => {
+        setLoading(true);
+        setError("");
+        api<Recommendations>("/api/filter", {
+          method: "POST",
+          body: JSON.stringify(filteringPreferences),
+          signal: controller.signal,
         })
-        .catch((e: Error) => {
-          if (!controller.signal.aborted && e.name !== "AbortError")
-            setError(e.message);
-        })
-        .finally(() => {
-          if (!controller.signal.aborted) setLoading(false);
-        });
-    }, 250);
+          .then((result) => {
+            if (!controller.signal.aborted) {
+              setData(result);
+              setResultKey(requestKey);
+            }
+          })
+          .catch((e: Error) => {
+            if (!controller.signal.aborted && e.name !== "AbortError")
+              setError(e.message);
+          })
+          .finally(() => {
+            if (!controller.signal.aborted) setLoading(false);
+          });
+      },
+      filteringPreferences.query ? 250 : 0,
+    );
     return () => {
       clearTimeout(timer);
       controller.abort();
@@ -1023,17 +1021,7 @@ export default function App() {
                                   : priceStatusLabel(phone)}
                               </small>
                             </span>
-                            <span className="phone-price">
-                              {phone.price == null
-                                ? "价格待核实"
-                                : `¥${phone.price.toLocaleString()}`}
-                              {phone.price != null &&
-                                priceStatusLabel(phone) !== "参考价" && (
-                                  <small className="price-evidence">
-                                    {priceStatusLabel(phone)}
-                                  </small>
-                                )}
-                            </span>
+                            <PriceOverview phone={phone} />
                           </div>
                           <h2>{phone.family_name || phone.name}</h2>
                           <div className="quick-specs">
@@ -1043,13 +1031,7 @@ export default function App() {
                               {phone.soc || "处理器待核实"}
                             </span>
                           </div>
-                          <VariantSelector
-                            phone={phone}
-                            loading={switching}
-                            error={variantError(phone)}
-                            disabled={invalidBudget}
-                            onChange={(id) => chooseVariant(phone, id, key)}
-                          />
+
                           {(phone.matches_preferences === false ||
                             phone.price == null ||
                             phone.availability === "historical") && (
@@ -1171,10 +1153,6 @@ export default function App() {
                   discovery={discoveryData}
                   preferences={filteringPreferences}
                   onDetail={openDetail}
-                  onVariant={chooseVariant}
-                  variantLoading={isVariantLoading}
-                  variantError={variantError}
-                  invalidPreferences={invalidBudget}
                   onBudget={(value) => setBudget(String(Math.ceil(value)))}
                 />
               </details>
@@ -1452,19 +1430,11 @@ function NewReleaseShelf({
   preferences,
   onDetail,
   onBudget,
-  onVariant,
-  variantLoading,
-  variantError,
-  invalidPreferences,
 }: {
   discovery: NonNullable<Recommendations["discovery"]>;
   preferences: Preferences;
   onDetail: (phone: Phone) => void;
   onBudget: (value: number) => void;
-  onVariant: (phone: Phone, id: string) => void;
-  variantLoading: (phone: Phone) => boolean;
-  variantError: (phone: Phone) => string;
-  invalidPreferences: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded
@@ -1501,18 +1471,11 @@ function NewReleaseShelf({
             <p className="discovery-date">
               来源上市时间 · {releaseLabel(phone)}
             </p>
-            <p className="discovery-price">{discoveryPriceLabel(phone)}</p>
+            <PriceOverview phone={phone} />
             <p className="discovery-capacity">
               存储 {numberSpec(phone.storage_gb, "GB")}
               <span>处理器 {phone.soc || "待核实"}</span>
             </p>
-            <VariantSelector
-              phone={phone}
-              onChange={(id) => onVariant(phone, id)}
-              loading={variantLoading(phone)}
-              error={variantError(phone)}
-              disabled={invalidPreferences}
-            />
             <div className="discovery-reasons">
               {(phone.discovery_reasons || phone.variant_reasons || []).map(
                 (reason, index) => (
@@ -1521,12 +1484,7 @@ function NewReleaseShelf({
               )}
             </div>
             <div className="discovery-actions">
-              <button
-                disabled={variantLoading(phone)}
-                onClick={() => onDetail(phone)}
-              >
-                查看资料 ↗
-              </button>
+              <button onClick={() => onDetail(phone)}>查看资料 ↗</button>
               {phone.price != null &&
                 preferences.budget_max !== null &&
                 phone.price > preferences.budget_max &&
