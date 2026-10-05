@@ -1,10 +1,17 @@
-import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type DragEvent,
+  type CSSProperties,
+} from "react";
 import { api } from "./api";
-import AdvisorChat, { AnalysisPriorities } from "./AdvisorChat";
+import AdvisorChat from "./AdvisorChat";
+import AdvisorHandle, { advisorWidth } from "./AdvisorHandle";
 import {
   ComparePanel,
   DetailPanel,
-  QualityPanel,
   SyncPanel,
   VariantSelector,
 } from "./Panels";
@@ -25,7 +32,6 @@ import {
   readSaved,
   requestPreferences,
   filterPreferences,
-  phoneForPreview,
   phoneWithVariant,
   sortPhoneCards,
   variantRequestUrl,
@@ -89,7 +95,6 @@ export default function App() {
     serial: number;
     prompt: string;
   } | null>(null);
-  const [qualityOpen, setQualityOpen] = useState(false);
   const [syncOpen, setSyncOpen] = useState(false);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({ state: "idle" });
   const [storageError, setStorageError] = useState("");
@@ -116,8 +121,25 @@ export default function App() {
   const [isCompact, setIsCompact] = useState(
     () => window.matchMedia("(max-width: 600px)").matches,
   );
-  const [previewExpanded, setPreviewExpanded] = useState(!isCompact);
-  const previewRef = useRef<HTMLDivElement>(null);
+  const [chatWidth, setChatWidth] = useState(() =>
+    advisorWidth(window.innerWidth * 0.64, window.innerWidth),
+  );
+  const [customPrice, setCustomPrice] = useState(false);
+  const [receipt, setReceipt] = useState<{
+    phone: Phone;
+    serial: number;
+  } | null>(null);
+  useEffect(() => {
+    const resize = () =>
+      setChatWidth((width) => advisorWidth(width, window.innerWidth));
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, []);
+  useEffect(() => {
+    if (!receipt) return;
+    const timer = window.setTimeout(() => setReceipt(null), 1600);
+    return () => window.clearTimeout(timer);
+  }, [receipt]);
   const requestKey = JSON.stringify([
     filteringPreferences,
     reload,
@@ -143,7 +165,6 @@ export default function App() {
     const viewport = window.matchMedia("(max-width: 600px)");
     const updateViewport = () => {
       setIsCompact(viewport.matches);
-      setPreviewExpanded(!viewport.matches);
     };
     viewport.addEventListener("change", updateViewport);
     return () => viewport.removeEventListener("change", updateViewport);
@@ -278,7 +299,6 @@ export default function App() {
       brand.toLowerCase().includes(brandSearch.toLowerCase()),
     ) || [];
   async function startSync() {
-    setQualityOpen(false);
     setSyncOpen(true);
     if (syncStatus.state === "running") return;
     setSyncStatus({
@@ -333,17 +353,6 @@ export default function App() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize,
   );
-  const selectedVariant =
-    selection?.context === selectionContext
-      ? Object.values(variantSelections).find(
-          (choice) =>
-            choice.context === selectionContext &&
-            choice.phone.id === selection.id,
-        )
-      : undefined;
-  const selectedPhone =
-    selectedVariant?.phone ||
-    phoneForPreview(phones, selection, selectionContext);
   function cardKeyForPhone(phone: Phone): string {
     return (
       phoneCards.find((card) => card.phone.id === phone.id)?.key ||
@@ -438,18 +447,7 @@ export default function App() {
       context: selectionContext,
       origin: "preview",
     });
-    setPreviewExpanded(true);
-    if (isCompact) {
-      requestAnimationFrame(() =>
-        previewRef.current?.scrollIntoView({
-          block: "nearest",
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
-            .matches
-            ? "auto"
-            : "smooth",
-        }),
-      );
-    }
+    openDetail(phone);
   }
   function addCompare(phone: Phone) {
     if (compare.some((item) => item.id === phone.id)) {
@@ -508,7 +506,10 @@ export default function App() {
       return;
     setDropActive(false);
   }
-  function handleComparisonDrop(event: DragEvent<HTMLElement>) {
+  function handleComparisonDrop(
+    event: DragEvent<HTMLElement>,
+    toAdvisor = false,
+  ) {
     event.preventDefault();
     event.stopPropagation();
     if (
@@ -516,6 +517,8 @@ export default function App() {
       event.dataTransfer.getData(PHONE_DRAG_TYPE) === draggedId
     ) {
       addCompare(draggedPhone!);
+      setReceipt({ phone: draggedPhone!, serial: Date.now() });
+      if (toAdvisor) openChat();
     }
     setDropActive(false);
     setDraggedId(null);
@@ -526,28 +529,6 @@ export default function App() {
     chatSelectedIds,
     analysisPriorities,
   ]);
-
-  const previewPanel = (
-    <SelectedPhonePanel
-      phone={selectedPhone}
-      expanded={previewExpanded}
-      onExpanded={setPreviewExpanded}
-      onDetail={openDetail}
-      onVariant={(id) => selectedPhone && chooseVariant(selectedPhone, id)}
-      variantLoading={selectedPhone != null && isVariantLoading(selectedPhone)}
-      variantError={selectedPhone ? variantError(selectedPhone) : ""}
-      invalidPreferences={invalidBudget}
-      compared={
-        selectedPhone != null &&
-        compare.some((phone) => phone.id === selectedPhone.id)
-      }
-      onCompare={(phone) =>
-        compare.some((item) => item.id === phone.id)
-          ? removeCompare(phone.id)
-          : addCompare(phone)
-      }
-    />
-  );
 
   return (
     <>
@@ -563,34 +544,17 @@ export default function App() {
           {meta ? "资料库在线" : "连接资料库"}
         </span>
         <nav aria-label="主导航">
-          <button
-            className={!showSaved ? "nav-item active" : "nav-item"}
-            onClick={() => {
-              setShowSaved(false);
-              setPage(1);
-            }}
-          >
-            手机筛选
-          </button>
-          <button
-            className={showSaved ? "nav-item active" : "nav-item"}
-            onClick={() => {
-              setShowSaved(true);
-              setPage(1);
-            }}
-          >
-            收藏 <span className="nav-count">{saved.length}</span>
-          </button>
-          <button className="nav-item" onClick={() => setQualityOpen(true)}>
-            数据质量
-          </button>
+          <span className="header-selection">已选 {compare.length} 部手机</span>
           <button className="quiet-button header-refresh" onClick={startSync}>
             {syncStatus.state === "running" ? "更新进度" : "更新资料"}{" "}
             <span aria-hidden="true">↻</span>
           </button>
         </nav>
       </header>
-      <div className={`workbench ${chatOpen && !isCompact ? "chat-open" : ""}`}>
+      <div
+        className={`workbench original-workspace ${chatOpen && !isCompact ? "chat-open" : ""}`}
+        style={{ "--advisor-width": `${chatWidth}px` } as CSSProperties}
+      >
         <main className="catalog-column">
           <section className="filters" aria-label="手机筛选条件">
             <div className="search-row">
@@ -619,6 +583,7 @@ export default function App() {
                 onClick={() => {
                   setPreferences({ ...DEFAULT_PREFERENCES });
                   setBudgetInput("");
+                  setCustomPrice(false);
                   setShowSaved(false);
                   setPage(1);
                 }}
@@ -627,24 +592,30 @@ export default function App() {
               </button>
             </div>
             <div className="filter-grid">
-              <label className="filter-field budget-field">
-                <span>最高预算</span>
-                <div className="budget-control">
-                  <span>¥</span>
-                  <input
-                    ref={budgetRef}
-                    type="text"
-                    inputMode="decimal"
-                    aria-label="最高预算"
-                    placeholder="留空表示预算不限"
-                    aria-invalid={invalidBudget}
-                    value={budgetInput}
-                    onChange={(event) => setBudget(event.target.value)}
-                  />
-                </div>
-                <small className="budget-input-note">
-                  可留空，最高预算不限
-                </small>
+              <label className="filter-field price-range-field">
+                <span className="sr-only">价格范围</span>
+                <select
+                  aria-label="价格范围"
+                  value={
+                    customPrice ||
+                    (budgetInput &&
+                      !["2000", "3000", "5000", "8000"].includes(budgetInput))
+                      ? "custom"
+                      : budgetInput
+                  }
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    setCustomPrice(value === "custom");
+                    if (value !== "custom") setBudget(value, 0);
+                  }}
+                >
+                  <option value="">价格不限</option>
+                  <option value="2000">¥2,000 以内</option>
+                  <option value="3000">¥3,000 以内</option>
+                  <option value="5000">¥5,000 以内</option>
+                  <option value="8000">¥8,000 以内</option>
+                  <option value="custom">自定义价格…</option>
+                </select>
               </label>
               <label className="filter-field">
                 <span>品牌</span>
@@ -688,23 +659,6 @@ export default function App() {
                   <option value="1024">1TB 及以上</option>
                 </select>
               </label>
-              <label className="filter-field">
-                <span>购买场景</span>
-                <select
-                  id="purchase-mode"
-                  aria-label="购买场景"
-                  value={preferences.purchase_mode}
-                  onChange={(event) =>
-                    update({
-                      purchase_mode: event.target
-                        .value as Preferences["purchase_mode"],
-                    })
-                  }
-                >
-                  <option value="new">买新机</option>
-                  <option value="used">考虑二手</option>
-                </select>
-              </label>
               <label className="filter-field sort-control">
                 <span>排序方式</span>
                 <select
@@ -723,9 +677,57 @@ export default function App() {
               </label>
             </div>
             <div className="quick-filters">
+              {(customPrice ||
+                (budgetInput &&
+                  !["2000", "3000", "5000", "8000"].includes(budgetInput)) ||
+                !budgetValid ||
+                invalidBudgetRange) && (
+                <div className="custom-price-row">
+                  <label>
+                    最高价格{" "}
+                    <input
+                      ref={budgetRef}
+                      type="text"
+                      inputMode="decimal"
+                      aria-label="最高预算"
+                      placeholder="不限"
+                      value={budgetInput}
+                      aria-invalid={invalidBudget}
+                      onChange={(event) => setBudget(event.target.value)}
+                    />
+                  </label>
+                  <button
+                    className="quiet-button"
+                    onClick={() => {
+                      setBudget("", 0);
+                      setCustomPrice(false);
+                    }}
+                  >
+                    清除价格限制
+                  </button>
+                </div>
+              )}
               <details className="more-filters">
                 <summary>更多条件</summary>
                 <div className="more-filter-content">
+                  <label className="filter-field">
+                    <span>购买场景</span>
+                    <select
+                      id="purchase-mode"
+                      aria-label="购买场景"
+                      value={preferences.purchase_mode}
+                      onChange={(event) =>
+                        update({
+                          purchase_mode: event.target
+                            .value as Preferences["purchase_mode"],
+                        })
+                      }
+                    >
+                      <option value="new">买新机</option>
+                      <option value="used">考虑二手</option>
+                    </select>
+                  </label>
+
                   <label className="filter-field">
                     <span>最低预算</span>
                     <input
@@ -836,11 +838,6 @@ export default function App() {
               </p>
             )}
           </section>
-          {isCompact && (
-            <div className="mobile-selection-panel" ref={previewRef}>
-              {previewPanel}
-            </div>
-          )}
           <section
             className="results"
             id="results"
@@ -849,7 +846,27 @@ export default function App() {
           >
             <div className="results-heading">
               <div>
-                <h1 id="results-title">
+                <div className="catalog-tabs" aria-label="手机列表范围">
+                  <button
+                    className={!showSaved ? "active" : ""}
+                    onClick={() => {
+                      setShowSaved(false);
+                      setPage(1);
+                    }}
+                  >
+                    全部手机
+                  </button>
+                  <button
+                    className={showSaved ? "active" : ""}
+                    onClick={() => {
+                      setShowSaved(true);
+                      setPage(1);
+                    }}
+                  >
+                    我的收藏 <span>{saved.length}</span>
+                  </button>
+                </div>
+                <h1 id="results-title" className="sr-only">
                   {showSaved ? "我的收藏" : "筛选结果"}
                 </h1>
                 <p>
@@ -877,11 +894,6 @@ export default function App() {
                 )}
               </span>
             </div>
-            {searchMode && (
-              <p className="catalogue-note" role="status">
-                同一机型只显示一张卡，可在卡内选择容量配置。搜索也展示历史、待上市、报价待核实与超预算资料，卡片会标明筛选状态；容量等显式条件仍生效。
-              </p>
-            )}
             {!showSaved && preferences.purchase_mode === "used" && (
               <p className="purchase-mode-note" role="status">
                 二手机型参考 ·
@@ -957,7 +969,7 @@ export default function App() {
                     const switching = variantLoading[key] === selectionContext;
                     return (
                       <article
-                        className={`phone-card gallery-card ${selectedPhone?.id === phone.id ? "is-selected" : ""} ${draggedId === phone.id ? "is-dragging" : ""}`}
+                        className={`phone-card gallery-card ${selection?.context === selectionContext && selection.id === phone.id ? "is-selected" : ""} ${draggedId === phone.id ? "is-dragging" : ""}`}
                         key={key}
                         aria-busy={switching}
                         draggable={!switching}
@@ -975,17 +987,15 @@ export default function App() {
                         <div className="card-image-wrap">
                           <button
                             className="card-image-button"
-                            aria-label={`预览 ${phone.name}`}
-                            aria-pressed={selectedPhone?.id === phone.id}
+                            aria-label={`查看 ${phone.name} 详细参数`}
+                            aria-pressed={
+                              selection?.context === selectionContext &&
+                              selection.id === phone.id
+                            }
                             disabled={switching}
                             onClick={() => selectPhone(phone)}
                           >
                             <PhonePicture phone={phone} />
-                            <span className="image-selection-label">
-                              {selectedPhone?.id === phone.id
-                                ? "正在查看"
-                                : "点击查看"}
-                            </span>
                           </button>
                           <button
                             className={
@@ -1017,13 +1027,21 @@ export default function App() {
                               {phone.price == null
                                 ? "价格待核实"
                                 : `¥${phone.price.toLocaleString()}`}
+                              {phone.price != null &&
+                                priceStatusLabel(phone) !== "参考价" && (
+                                  <small className="price-evidence">
+                                    {priceStatusLabel(phone)}
+                                  </small>
+                                )}
                             </span>
                           </div>
                           <h2>{phone.family_name || phone.name}</h2>
                           <div className="quick-specs">
                             <span>{numberSpec(phone.display_inches, "″")}</span>
-                            <span>{numberSpec(phone.storage_gb, "GB")}</span>
                             <span>{numberSpec(phone.battery_mah, "mAh")}</span>
+                            <span className="card-soc">
+                              {phone.soc || "处理器待核实"}
+                            </span>
                           </div>
                           <VariantSelector
                             phone={phone}
@@ -1032,23 +1050,15 @@ export default function App() {
                             disabled={invalidBudget}
                             onChange={(id) => chooseVariant(phone, id, key)}
                           />
-                          {searchMode ? (
-                            <div className="catalogue-card-status">
-                              <span>{catalogueStatusLabel(phone)}</span>
-                              {(phone.catalogue_reasons || [])
-                                .slice(0, 2)
-                                .map((reason, index) => (
-                                  <p key={index}>{reason}</p>
-                                ))}
-                            </div>
-                          ) : (
-                            <div className="card-filter-status">
-                              <span>
-                                {showSaved
-                                  ? "已收藏"
-                                  : catalogueStatusLabel(phone)}
-                              </span>
-                            </div>
+                          {(phone.matches_preferences === false ||
+                            phone.price == null ||
+                            phone.availability === "historical") && (
+                            <p
+                              className="card-filter-status"
+                              title={phone.catalogue_reasons?.join("；")}
+                            >
+                              {catalogueStatusLabel(phone)}
+                            </p>
                           )}
                           <div className="card-actions">
                             <button
@@ -1182,7 +1192,7 @@ export default function App() {
           onDragEnter={handleComparisonDragOver}
           onDragOver={handleComparisonDragOver}
           onDragLeave={handleComparisonDragLeave}
-          onDrop={handleComparisonDrop}
+          onDrop={(event) => handleComparisonDrop(event)}
         >
           {draggedPhone && (
             <p className="rail-drop-notice" role="status">
@@ -1190,15 +1200,23 @@ export default function App() {
               <span>已选 {compare.length} 部</span>
             </p>
           )}
-          {!isCompact && !chatOpen && (
-            <div ref={previewRef}>{previewPanel}</div>
+          {receipt && (
+            <div className="received-phone" key={receipt.serial} role="status">
+              <PhonePicture phone={receipt.phone} compact />
+              <span>
+                已放入工作区
+                <strong>
+                  {receipt.phone.family_name || receipt.phone.name}
+                </strong>
+              </span>
+            </div>
           )}
           <div className="rail-comparison">
             <div className="comparison-heading">
               <CompareIcon />
               <div>
-                <h2 id="compare-title">参数对比</h2>
-                <p>拖到右侧任意位置，或点击卡片「+ 对比」</p>
+                <h2 id="compare-title">{chatOpen ? "已选手机" : "手机对比"}</h2>
+                <p>把想比较的手机拖到这里</p>
               </div>
               <span>{compare.length} 部</span>
             </div>
@@ -1209,9 +1227,9 @@ export default function App() {
               {compare.length === 0 ? (
                 <div className="drop-placeholder">
                   <CompareIcon />
-                  <strong>拖到这里开始比较</strong>
-                  <span>数量不限 · 参数表横向滚动</span>
-                  <small>也可用卡片按钮加入，支持键盘操作</small>
+                  <strong>拖入手机，放在一起看</strong>
+                  <span>也可以拖给下方的机器人</span>
+                  <small>或点击卡片上的「+ 对比」</small>
                 </div>
               ) : (
                 compare.map((phone) => (
@@ -1258,32 +1276,13 @@ export default function App() {
             </p>
           </div>
           {!chatOpen && (
-            <div className="rail-advisor">
-              <div className="rail-advisor-heading">
-                <ChatIcon />
-                <h3>AI 选购顾问</h3>
-              </div>
-              <p>
-                {compare.length
-                  ? `围绕已选 ${compare.length} 部，解释优势和取舍。`
-                  : "聊聊你的需求，或比较当前真实候选。"}
-              </p>
-              <AnalysisPriorities
-                value={analysisPriorities}
-                onChange={setAnalysisPriorities}
-              />
-              <button className="quiet-button" onClick={openChat}>
-                打开选购顾问 <span aria-hidden="true">↗</span>
-              </button>
-              <small>只有发送问题后才调用 AI，预算可以留空</small>
-            </div>
-          )}
-          {!chatOpen && (
-            <p className="rail-note">
-              官网 / 中关村在线资料
-              <br />
-              实际价格、库存与售后请核对购买渠道。
-            </p>
+            <button className="advisor-invitation" onClick={openChat}>
+              <ChatIcon />
+              <span>
+                让顾问一起挑<strong>点击机器人，或把手机拖给它</strong>
+              </span>
+              <span aria-hidden="true">←</span>
+            </button>
           )}
           <AdvisorChat
             open={chatOpen}
@@ -1301,21 +1300,22 @@ export default function App() {
             onAnalysisPriorities={setAnalysisPriorities}
             preset={chatPreset}
           />
-          <button
-            className="ai-launcher"
-            aria-label={chatOpen ? "关闭 AI 选购顾问" : "打开 AI 选购顾问"}
-            aria-expanded={chatOpen}
-            style={draggedId ? { pointerEvents: "none" } : undefined}
-            onClick={() => (chatOpen ? setChatOpen(false) : openChat())}
-            title={chatOpen ? "关闭选购顾问" : "打开选购顾问"}
-          >
-            {chatOpen ? <span aria-hidden="true">×</span> : <ChatIcon />}
-          </button>
         </aside>
       </div>
+      <AdvisorHandle
+        open={chatOpen}
+        compact={isCompact}
+        width={chatWidth}
+        onWidth={setChatWidth}
+        onToggle={() => (chatOpen ? setChatOpen(false) : openChat())}
+        accepting={Boolean(draggedId)}
+        receiving={Boolean(receipt)}
+        onDragOver={handleComparisonDragOver}
+        onDragLeave={handleComparisonDragLeave}
+        onDrop={(event) => handleComparisonDrop(event, true)}
+      />
       <footer className="site-footer">
         <span>挑一部 · 手机选购工作台</span>
-        <button onClick={() => setQualityOpen(true)}>数据来源与质量 ↗</button>
         <span>规格与价格均保留来源。</span>
       </footer>
       <div className="mobile-compare-bar">
@@ -1367,141 +1367,10 @@ export default function App() {
           onExplain={openAdvice}
         />
       )}
-      {qualityOpen && (
-        <QualityPanel
-          onClose={() => setQualityOpen(false)}
-          onSync={startSync}
-        />
-      )}
       {syncOpen && (
         <SyncPanel status={syncStatus} onClose={() => setSyncOpen(false)} />
       )}
     </>
-  );
-}
-
-function SelectedPhonePanel({
-  phone,
-  expanded,
-  onExpanded,
-  onDetail,
-  onVariant,
-  variantLoading,
-  variantError,
-  invalidPreferences,
-  compared,
-  onCompare,
-}: {
-  phone: Phone | null;
-  expanded: boolean;
-  onExpanded: (expanded: boolean) => void;
-  onDetail: (phone: Phone) => void;
-  onVariant: (id: string) => void;
-  variantLoading: boolean;
-  variantError: string;
-  invalidPreferences: boolean;
-  compared: boolean;
-  onCompare: (phone: Phone) => void;
-}) {
-  return (
-    <details
-      className="selected-phone-panel"
-      open={expanded}
-      onToggle={(event) => onExpanded(event.currentTarget.open)}
-    >
-      <summary>
-        <span>
-          <small>当前查看</small>
-          <strong>{phone?.name || "选择一部手机"}</strong>
-        </span>
-        <span className="preview-collapse-label">
-          {expanded ? "收起" : "展开"} <span aria-hidden="true">⌄</span>
-        </span>
-      </summary>
-      {phone ? (
-        <div className="selected-phone-preview" key={phone.id}>
-          <PhonePicture phone={phone} preview />
-          <div className="preview-identity">
-            <span>{phone.brand}</span>
-            <strong>
-              {phone.price == null
-                ? "价格待核实"
-                : `¥${phone.price.toLocaleString()}`}
-            </strong>
-          </div>
-          <p className="preview-price-note">
-            {phone.price == null ? "具体配置报价未知" : priceStatusLabel(phone)}{" "}
-            · {releaseLabel(phone)}
-          </p>
-          <VariantSelector
-            phone={phone}
-            loading={variantLoading}
-            error={variantError}
-            disabled={invalidPreferences}
-            onChange={onVariant}
-          />
-          <dl className="preview-specs">
-            <div>
-              <dt>屏幕</dt>
-              <dd>{numberSpec(phone.display_inches, "″")}</dd>
-            </div>
-            <div>
-              <dt>存储</dt>
-              <dd>{numberSpec(phone.storage_gb, "GB")}</dd>
-            </div>
-            <div>
-              <dt>电池</dt>
-              <dd>{numberSpec(phone.battery_mah, "mAh")}</dd>
-            </div>
-          </dl>
-          <p className="preview-soc">{phone.soc || "处理器待核实"}</p>
-          {(phone.catalogue_reasons?.length || 0) > 0 && (
-            <div className="preview-catalogue-status">
-              <strong>{catalogueStatusLabel(phone)}</strong>
-              {phone.catalogue_reasons?.map((reason, index) => (
-                <p key={index}>{reason}</p>
-              ))}
-            </div>
-          )}
-          <div className="preview-actions">
-            <button
-              className="quiet-button"
-              disabled={variantLoading}
-              onClick={() => onDetail(phone)}
-            >
-              详细资料 ↗
-            </button>
-            <button
-              className={
-                compared ? "compare-button selected" : "compare-button"
-              }
-              aria-label={`${compared ? "移出对比" : "加入对比"} ${phone.name}（当前查看）`}
-              aria-pressed={compared}
-              disabled={variantLoading}
-              onClick={() => onCompare(phone)}
-            >
-              {compared ? "已加入 ✓" : "+ 加入对比"}
-            </button>
-          </div>
-          <p className="preview-source">
-            {sourceLabel(phone)} · {dateLabel(phone.fetched_at)}
-            {safeSource(phone.source_url) && (
-              <a
-                href={safeSource(phone.source_url)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                核对来源 ↗
-              </a>
-            )}
-          </p>
-        </div>
-      ) : (
-        <p className="preview-empty">
-          浏览或搜索手机，再点击图片查看资料。预算可以留空，选择手机与加入对比分开操作。
-        </p>
-      )}
-    </details>
   );
 }
 
