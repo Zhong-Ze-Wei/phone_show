@@ -16,6 +16,9 @@ import {
   discoveryPriceLabel,
   discoveryOverview,
   requestPreferences,
+  variantRequestUrl,
+  variantLabel,
+  phoneWithVariant,
   rankingExplanation,
   rankingHighlights,
   phoneForPreview,
@@ -138,6 +141,189 @@ describe("需求提交", () => {
     expect(
       rankingHighlights({ ...phone, ranking_reasons: ["需求匹配 60 分"] }),
     ).toEqual([]);
+  });
+});
+
+describe("容量版本", () => {
+  it("版本请求省略空的预算上限，保留预算下限和明确的零容量限制", () => {
+    const url = new URL(
+      variantRequestUrl("phone / 256", {
+        ...DEFAULT_PREFERENCES,
+        budget_min: 3000,
+      }),
+      "http://localhost",
+    );
+    expect(url.pathname).toBe("/api/phones/phone%20%2F%20256/variants");
+    expect(url.searchParams.has("budget_max")).toBe(false);
+    expect(url.searchParams.get("budget_min")).toBe("3000");
+    expect(url.searchParams.get("min_storage")).toBe("0");
+    expect(url.searchParams.get("compact")).toBe("false");
+    expect(url.searchParams.get("include_history")).toBe("false");
+  });
+
+  it("版本请求保留多品牌、多用途和中文检索，规范重复项和首尾空白", () => {
+    const url = new URL(
+      variantRequestUrl("100", {
+        ...DEFAULT_PREFERENCES,
+        budget_min: 1000,
+        budget_max: 8000,
+        brands: ["华为", "苹果", "华为"],
+        priorities: ["camera", "battery", "camera"],
+        os: "HarmonyOS",
+        compact: true,
+        min_storage: 512,
+        include_history: true,
+        query: "  华为 Mate + 80  ",
+        sort: "price_asc",
+        purchase_mode: "used",
+      }),
+      "http://localhost",
+    );
+    expect(url.searchParams.getAll("brands")).toEqual(["华为", "苹果"]);
+    expect(url.searchParams.getAll("priorities")).toEqual([
+      "camera",
+      "battery",
+    ]);
+    expect(url.searchParams.get("query")).toBe("华为 Mate + 80");
+    expect(url.searchParams.get("budget_min")).toBe("1000");
+    expect(url.searchParams.get("budget_max")).toBe("8000");
+    expect(url.searchParams.get("os")).toBe("HarmonyOS");
+    expect(url.searchParams.get("compact")).toBe("true");
+    expect(url.searchParams.get("min_storage")).toBe("512");
+    expect(url.searchParams.get("include_history")).toBe("true");
+    expect(url.searchParams.get("sort")).toBe("price_asc");
+    expect(url.searchParams.get("purchase_mode")).toBe("used");
+  });
+
+  it("版本标签对应真实容量与价格，苹果未知运行内存不显示虚假 RAM", () => {
+    expect(variantLabel({ ram_gb: 12, storage_gb: 256, price: 3999 })).toBe(
+      "12GB + 256GB · ¥3,999",
+    );
+    expect(variantLabel({ ram_gb: null, storage_gb: 256, price: 5999 })).toBe(
+      "256GB · ¥5,999",
+    );
+    expect(variantLabel({ ram_gb: 16, storage_gb: 1024, price: null })).toBe(
+      "16GB + 1TB · 价格待核实",
+    );
+    expect(variantLabel({ ram_gb: null, storage_gb: 2048, price: 13999 })).toBe(
+      "2TB · ¥13,999",
+    );
+    expect(variantLabel({ ram_gb: 12, storage_gb: null, price: null })).toBe(
+      "配置待核实 · 价格待核实",
+    );
+  });
+
+  it("切换容量完整使用新版本，不沿用旧版本的价格、评分或购买资格", () => {
+    const base = {
+      ...phone,
+      id: "2tb",
+      storage_gb: 2048,
+      price: 20499,
+      score: 90,
+      recommendation_score: 90,
+      recommendation_eligible: true,
+      matches_preferences: true,
+      catalogue_status: "eligible",
+      family_name: "测试手机家族",
+      variant_count: 2,
+      variant_summary: [],
+      field_sources: { price: { origin: "legacy" } },
+    };
+    const selected = {
+      ...phone,
+      id: "256gb",
+      storage_gb: 256,
+      price: null,
+      recommendation_eligible: false,
+      matches_preferences: false,
+      catalogue_status: "unknown_price",
+      variant_reasons: ["配置报价待核实"],
+      family_name: "版本侧的家族信息",
+      variant_count: 1,
+      field_sources: { storage_gb: { origin: "official" } },
+    };
+    const result = phoneWithVariant(
+      base,
+      { context: "budget-8000", phone: selected },
+      "budget-8000",
+    );
+    expect(result).toEqual({
+      ...selected,
+      family_name: base.family_name,
+      variant_count: selected.variant_count,
+      variant_summary: base.variant_summary,
+    });
+    expect(result.score).toBeUndefined();
+    expect(result.recommendation_score).toBeUndefined();
+    expect(result.price).toBeNull();
+    expect(result.recommendation_eligible).toBe(false);
+    expect(result.field_sources?.price).toBeUndefined();
+    expect(base.price).toBe(20499);
+    expect(base.score).toBe(90);
+  });
+
+  it("预算等条件变化后沿用当前默认版本，不恢复旧条件下的容量选择", () => {
+    const base = { ...phone, id: "512gb", storage_gb: 512 };
+    const choice = {
+      context: "budget-8000",
+      phone: { ...phone, id: "2tb", storage_gb: 2048 },
+    };
+    expect(phoneWithVariant(base, undefined, "budget-8000")).toBe(base);
+    expect(phoneWithVariant(base, choice, "budget-4000")).toBe(base);
+    expect(phoneWithVariant(base, choice, "budget-8000").id).toBe("2tb");
+  });
+
+  it("原卡缺少型号展示信息时保留所选版本的家族数据", () => {
+    const selected = {
+      ...phone,
+      id: "512gb",
+      family_name: "测试型号",
+      variant_count: 3,
+      variant_summary: [],
+    };
+    const result = phoneWithVariant(
+      phone,
+      { context: "current", phone: selected },
+      "current",
+    );
+    expect(result.family_name).toBe("测试型号");
+    expect(result.variant_count).toBe(3);
+    expect(result.variant_summary).toBe(selected.variant_summary);
+  });
+  it("配置切换后的最新报价与成员列表覆盖图库原有摘要", () => {
+    const oldSummary = [
+      {
+        ...phone,
+        id: "256gb",
+        storage_gb: 256,
+        price: 8999,
+        matches_preferences: true,
+        recommendation_eligible: true,
+        variant_codes: [],
+        variant_reasons: [],
+      },
+    ];
+    const latestSummary = [
+      { ...oldSummary[0], price: 9999 },
+      { ...oldSummary[0], id: "512gb", storage_gb: 512, price: 11999 },
+    ];
+    const base = { ...phone, variant_count: 1, variant_summary: oldSummary };
+    const selected = {
+      ...phone,
+      id: "512gb",
+      price: 11999,
+      variant_count: 2,
+      variant_summary: latestSummary,
+    };
+    const result = phoneWithVariant(
+      base,
+      { context: "current", phone: selected },
+      "current",
+    );
+    expect(result.price).toBe(11999);
+    expect(result.variant_count).toBe(2);
+    expect(result.variant_summary).toBe(latestSummary);
+    expect(result.variant_summary?.[0].price).toBe(9999);
   });
 });
 

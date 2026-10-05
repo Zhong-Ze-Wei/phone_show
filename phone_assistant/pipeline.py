@@ -629,6 +629,25 @@ def _run_sync(
             detail_ids = base_ids
         for identifier in detail_ids:
             if identifier in completed:
+                # 系列表只覆盖参数时，仍读取这个 SKU 自己的公开参考价。
+                # 补报价不改变已采参数、上市信息及它们的核验时间。
+                if not _has_price(completed[identifier]) and identifier not in checkpoint["index_done"]:
+                    raw = catalog[identifier]
+                    url = raw["source_url"]
+                    try:
+                        product = parse_product(fetch(url, "quote"), url)
+                    except (httpx.HTTPError, PageValidationError) as exc:
+                        fail("quote", url, exc, identifier)
+                        continue
+                    checkpoint["index_done"].append(identifier)
+                    clear_error("quote", url)
+                    clear_error("index", url)
+                    if product["price"] is not None:
+                        raw.update(price=product["price"], price_source_url=url,
+                                   price_fetched_at=response_time(url))
+                        if "停产" in str(product["price"]):
+                            raw["availability"] = "historical"
+                        emit("quote", f"已读取独立配置报价：{raw['name']}")
                 continue
             raw = catalog[identifier]
             url = raw.get("param_url")

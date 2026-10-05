@@ -28,6 +28,64 @@ def storage(tmp_path):
     return Storage(tmp_path / "phones.sqlite3")
 
 
+def test_official_family_common_specs_apply_to_list_and_detail_without_crossing_sku_facts(storage):
+    storage.upsert_raw(raw_phone(id="sku", name="苹果iPhone 18 Pro(2TB)", brand="苹果", price=20499,
+        specs={"ROM容量": "2TB", "操作系统": "iOS 26", "RAM容量": "12GB", "电池容量": "4000mAh", "有线充电": "25W"}))
+    before = storage.get_phone("sku")
+    captured = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    storage.upsert_raw(raw_phone(id="official", name="iPhone 18 Pro", brand="苹果", origin="official", price=None,
+        fetched_at=captured, specs={"CPU型号": "A20 Pro", "操作系统": "iOS 27", "屏幕尺寸": "6.3英寸",
+            "屏幕刷新率": "120Hz", "ROM容量": "256GB", "RAM容量": "8GB", "电池容量": "5000mAh", "有线充电": "60W"}))
+    detail = storage.get_phone("sku")
+    listed = next(phone for phone in storage.list_phones() if phone["id"] == "sku")
+    assert listed == detail
+    assert detail["soc"] == "A20 Pro" and detail["display_inches"] == 6.3 and detail["refresh_hz"] == 120
+    assert detail["os"] == "iOS 27"
+    assert detail["reported_family_specs"]["os"] == "iOS 26"
+    os_conflict = next(conflict for conflict in detail["source_conflicts"] if conflict["field"] == "os")
+    assert os_conflict["reported_source"] == before["field_sources"]["os"]
+    assert os_conflict["fetched_at"] == captured
+    assert detail["field_sources"]["soc"]["origin"] == "official"
+    assert detail["field_sources"]["soc"]["fetched_at"] == captured
+    for field in ("price", "ram_gb", "storage_gb", "battery_mah", "charging_w", "fetched_at", "price_fetched_at"):
+        assert detail[field] == before[field]
+    assert detail["field_sources"]["price"] == before["field_sources"]["price"]
+    assert detail["specs"]["操作系统"] == "iOS 26"
+    storage.reclean()
+    assert storage.get_phone("sku")["soc"] == "A20 Pro"
+    assert storage.summary()["snapshots"] == 2
+
+
+def test_family_shared_specs_do_not_cross_pro_and_pro_max_or_refresh_quote_time(storage):
+    storage.upsert_raw(raw_phone(id="sku", name="苹果iPhone 18 Pro Max(512GB)", brand="苹果", specs={"ROM容量": "512GB"}))
+    storage.upsert_raw(raw_phone(id="official", name="iPhone 18 Pro", brand="苹果", origin="official", price=None,
+        specs={"CPU型号": "A20 Pro", "屏幕尺寸": "6.3英寸"}))
+    assert storage.get_phone("sku")["display_inches"] is None
+    assert storage.get_phone("sku")["soc"] is None
+
+
+def test_equal_time_official_family_sources_resolve_deterministically_for_list_and_detail(storage):
+    stamp = "2026-10-03T09:00:00+00:00"
+    for phone_id, soc in [("official-a", "A19 Pro"), ("official-z", "A20 Pro")]:
+        storage.upsert_raw(raw_phone(id=phone_id, name="iPhone 18 Pro", brand="苹果", origin="official", price=None,
+            fetched_at=stamp, specs={"CPU型号": soc}))
+    listed = {phone["id"]: phone for phone in storage.list_phones()}
+    for phone_id in listed:
+        assert storage.get_phone(phone_id) == listed[phone_id]
+        assert listed[phone_id]["soc"] == "A20 Pro"
+
+
+def test_apple_soc_brand_prefix_and_same_ios_description_are_not_false_spec_conflicts(storage):
+    storage.upsert_raw(raw_phone(id="sku", name="苹果iPhone 18 Pro(256GB)", brand="苹果",
+        specs={"CPU型号": "苹果 A20 Pro", "操作系统": "iOS 27"}))
+    storage.upsert_raw(raw_phone(id="official", name="iPhone 18 Pro", brand="苹果", origin="official", price=None,
+        specs={"CPU型号": "A20 Pro", "操作系统": "iOS 27 iOS移动操作系统介绍"}))
+    phone = storage.get_phone("sku")
+    assert phone["soc"] == "A20 Pro"
+    assert phone["reported_family_specs"]["soc"] == "苹果 A20 Pro"
+    assert "source_conflicts" not in phone
+
+
 def test_upsert_retains_snapshot_and_cleaned_record(storage):
     phone = storage.upsert_raw(raw_phone())
 

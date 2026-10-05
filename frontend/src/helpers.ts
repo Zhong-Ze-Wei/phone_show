@@ -115,6 +115,63 @@ export function requestPreferences(value: Preferences): Preferences {
   };
 }
 
+export function variantRequestUrl(
+  id: string,
+  preferences: Preferences,
+): string {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(requestPreferences(preferences))) {
+    if (value === null) continue;
+    if (Array.isArray(value)) {
+      for (const item of value) query.append(key, String(item));
+    } else {
+      query.set(key, String(value));
+    }
+  }
+  return `/api/phones/${encodeURIComponent(id)}/variants?${query}`;
+}
+
+export function variantLabel(
+  phone: Pick<Phone, "ram_gb" | "storage_gb" | "price">,
+): string {
+  const storage =
+    phone.storage_gb === 1024
+      ? "1TB"
+      : phone.storage_gb === 2048
+        ? "2TB"
+        : `${phone.storage_gb}GB`;
+  const capacity =
+    phone.storage_gb === null
+      ? "配置待核实"
+      : phone.ram_gb === null
+        ? storage
+        : `${phone.ram_gb}GB + ${storage}`;
+  const price =
+    phone.price === null
+      ? "价格待核实"
+      : `¥${phone.price.toLocaleString("zh-CN", { maximumFractionDigits: 0 })}`;
+  return `${capacity} · ${price}`;
+}
+
+export interface VariantSelection {
+  context: string;
+  phone: Phone;
+}
+
+export function phoneWithVariant(
+  base: Phone,
+  choice: VariantSelection | undefined,
+  context: string,
+): Phone {
+  if (!choice || choice.context !== context) return base;
+  return {
+    ...choice.phone,
+    family_name: base.family_name ?? choice.phone.family_name,
+    variant_count: choice.phone.variant_count ?? base.variant_count,
+    variant_summary: choice.phone.variant_summary ?? base.variant_summary,
+  };
+}
+
 export function toggleSaved(phones: Phone[], phone: Phone): Phone[] {
   const unique = phones.filter(
     (item, index, all) =>

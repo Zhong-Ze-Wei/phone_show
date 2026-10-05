@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 import httpx
 import pytest
@@ -9,6 +10,104 @@ from phone_assistant.cleaning import clean_phone
 
 
 TIME = "2026-10-04T08:00:00+00:00"
+
+
+@pytest.fixture
+def apple_18_specs():
+    return (Path(__file__).parent / 'fixtures' / 'apple_18_pro_specs_excerpt.html').read_text(encoding='utf-8')
+
+
+def test_apple_real_rowspan_parameters_reach_normalized_fields(apple_18_specs):
+    source = 'https://www.apple.com.cn/iphone-18-pro/specs/'
+    captured = '2026-10-05T12:50:33.552970+00:00'
+    raws = official.parse_specifications(apple_18_specs, source, 'apple', fetched_at=captured)
+    assert [raw['name'] for raw in raws] == ['iPhone 18 Pro', 'iPhone 18 Pro Max']
+    for raw in raws:
+        phone = clean_phone(raw)
+        assert phone['refresh_hz'] == 120
+        assert phone['camera_mp'] == 48
+        assert phone['nfc'] is True
+        assert phone['five_g'] is True
+        assert phone['soc'] == 'A20 Pro'
+        assert 'ProMotion' in raw['specs']['显示屏']
+        assert '支持读卡器模式的 NFC' in raw['specs']['蜂窝网络和 无线连接']
+        assert raw['specs_source_url'] == source
+        assert raw['specs_fetched_at'] == captured
+        assert raw['specs']['芯片'].startswith('A20 Pro 芯片 6 核中央处理器')
+
+
+def test_apple_real_shared_rows_keep_model_specific_values_and_unknowns(apple_18_specs):
+    raws = official.parse_specifications(apple_18_specs, 'https://www.apple.com.cn/iphone-18-pro/specs/', 'apple', fetched_at=TIME)
+    phones = [clean_phone(raw) for raw in raws]
+    assert [phone['display_inches'] for phone in phones] == [6.3, 6.9]
+    assert [phone['weight_g'] for phone in phones] == [211, 249]
+    assert '最长可达 34 小时' in raws[0]['specs']['电源和电池']
+    assert '最长可达 43 小时' in raws[1]['specs']['电源和电池']
+    for raw, phone in zip(raws, phones):
+        assert '60 瓦或更大功率电源适配器' in raw['specs']['电源和电池']
+        assert [phone[field] for field in ('ram_gb', 'storage_gb', 'battery_mah', 'charging_w', 'price')] == [None] * 5
+
+
+def test_apple_specific_columns_follow_explicit_model_headings():
+    html = '''<title>iPhone 18 Pro - 技术规格</title>
+    <div class="techspecs-columnheader">iPhone 18 Pro</div><div class="techspecs-columnheader">iPhone 18 Pro Max</div>
+    <div class="techspecs-row"><div class="techspecs-rowheader">显示屏</div>
+    <div class="techspecs-column"><strong class="techspecs-small-heading">iPhone 18 Pro Max</strong>6.9英寸 刷新率最高120Hz</div>
+    <div class="techspecs-column"><strong class="techspecs-small-heading">iPhone 18 Pro</strong>6.3英寸 刷新率最高90Hz</div>
+    <div class="techspecs-column" aria-colspan="2">HDR显示</div></div>'''
+    raws = official.parse_specifications(html, 'https://www.apple.com.cn/iphone-18-pro/specs/', 'apple', fetched_at=TIME)
+    assert [clean_phone(raw)['display_inches'] for raw in raws] == [6.3, 6.9]
+    assert [clean_phone(raw)['refresh_hz'] for raw in raws] == [90, 120]
+    assert all('HDR显示' in raw['specs']['显示屏'] for raw in raws)
+
+
+def test_apple_missing_evidence_is_not_inferred_from_other_features():
+    html = '''<title>iPhone 18 Pro - 技术规格</title>
+    <div class="techspecs-row"><div class="techspecs-rowheader">显示屏</div><div class="techspecs-column">ProMotion技术</div></div>
+    <div class="techspecs-row"><div class="techspecs-rowheader">摄像头</div><div class="techspecs-column">4800万像素超广角</div></div>
+    <div class="techspecs-row"><div class="techspecs-rowheader">前置摄像头</div><div class="techspecs-column">1800万像素主摄</div></div>
+    <div class="techspecs-row"><div class="techspecs-rowheader">MagSafe 和 无线充电</div><div class="techspecs-column">配件识别NFC 60瓦适配器</div></div>
+    <div class="techspecs-row"><div class="techspecs-rowheader">视频通话</div><div class="techspecs-column">1080p 120fps</div></div>
+    <div class="techspecs-row"><div class="techspecs-rowheader">容量</div><div class="techspecs-column">256GB 512GB</div></div>'''
+    phone = clean_phone(official.parse_specifications(html, 'https://www.apple.com.cn/iphone-18-pro/specs/', 'apple', fetched_at=TIME)[0])
+    assert [phone[field] for field in ('refresh_hz', 'camera_mp', 'nfc', 'five_g', 'charging_w', 'storage_gb', 'ram_gb', 'battery_mah')] == [None] * 8
+
+
+def test_apple_headerless_row_does_not_inherit_expired_rowspan():
+    html = '''<title>iPhone 18 Pro - 技术规格</title>
+    <div class="techspecs-row"><div class="techspecs-rowheader" aria-rowspan="2">显示屏</div><div class="techspecs-column">6.3英寸</div></div>
+    <div class="techspecs-row"><div class="techspecs-column">刷新率最高120Hz</div></div>
+    <div class="techspecs-row"><div class="techspecs-column">无关240Hz参数</div></div>'''
+    raw = official.parse_specifications(html, 'https://www.apple.com.cn/iphone-18-pro/specs/', 'apple', fetched_at=TIME)[0]
+    assert '120Hz' in raw['specs']['显示屏']
+    assert '240Hz' not in raw['specs']['显示屏']
+
+
+def test_apple_canonical_parameters_keep_official_field_evidence(apple_18_specs, tmp_path):
+    from phone_assistant.storage import Storage
+    source = 'https://www.apple.com.cn/iphone-18-pro/specs/'
+    raws = official.parse_specifications(apple_18_specs, source, 'apple', fetched_at=TIME)
+    storage = Storage(tmp_path / 'phones.sqlite3')
+    storage.import_many(raws)
+    for raw in raws:
+        phone = storage.get_phone(raw['id'])
+        for field in ('camera_mp', 'refresh_hz', 'nfc', 'five_g', 'soc'):
+            evidence = phone['field_sources'][field]
+            assert evidence['origin'] == 'official'
+            assert evidence['source_url'] == source
+            assert evidence['fetched_at'] == TIME
+        for key in ('主摄像素', '屏幕刷新率', 'NFC', '网络类型', '芯片型号'):
+            assert phone['specs_sources'][key]['source_url'] == source
+            assert phone['specs_sources'][key]['fetched_at'] == TIME
+
+
+def test_apple_explicit_negative_nfc_and_five_g_remain_negative():
+    html = '''<title>iPhone 18 Pro - 技术规格</title>
+    <div class="techspecs-row"><div class="techspecs-rowheader">蜂窝网络和<br>无线连接</div>
+    <div class="techspecs-column">不支持5G，不支持读卡器模式的NFC</div></div>'''
+    phone = clean_phone(official.parse_specifications(html, 'https://www.apple.com.cn/iphone-18-pro/specs/', 'apple', fetched_at=TIME)[0])
+    assert phone['nfc'] is False
+    assert phone['five_g'] is False
 
 
 def vivo_section(title, values):

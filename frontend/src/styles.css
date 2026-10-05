@@ -3143,6 +3143,60 @@ svg {
   font-size: 12px;
   line-height: 1.8;
 }
+.variant-picker {
+  margin-top: 9px;
+}
+.variant-picker label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.variant-picker label > span {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #95a9c3;
+}
+.variant-select {
+  flex: 1;
+  width: 0;
+  min-width: 0;
+  height: 31px;
+  padding: 4px 5px;
+  font-size: 11px;
+  border: 1px solid #3a5269;
+  background: #151f2d;
+  color: #c4d9f2;
+  border-radius: 5px;
+}
+.variant-status {
+  margin-top: 5px;
+  color: #d1b887;
+  font-size: 11px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.variant-error {
+  color: #eea3ae;
+}
+.phone-card[aria-busy="true"] .card-image-wrap {
+  opacity: 0.65;
+}
+.selected-phone-preview .variant-picker,
+.dialog-inner .variant-picker {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+@media (max-width: 540px) {
+  .variant-picker label > span,
+  .variant-select,
+  .variant-status {
+    font-size: 12px;
+  }
+  .variant-select {
+    height: 36px;
+  }
+}
 .catalogue-card-status > span {
   display: inline-block;
   color: #adcaec;

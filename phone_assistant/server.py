@@ -5,10 +5,10 @@ import json
 import logging
 import threading
 from pathlib import Path
-from typing import Literal
+from typing import Annotated, Literal
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -19,7 +19,10 @@ from phone_assistant.advisor import explain
 from phone_assistant.assistant import api_error_message
 from phone_assistant.chat import ChatStreamingResponse, Persona, prepare_chat_context, stream_chat
 from phone_assistant.config import PROJECT_ROOT, Settings
-from phone_assistant.recommendation import PRIORITIES, Preferences, budget_warning, is_purchase_candidate, match_phone, recommend
+from phone_assistant.recommendation import (
+    PRIORITIES, Preferences, budget_warning, family_metadata, family_variants,
+    is_purchase_candidate, match_phone, recommend, variant_record,
+)
 from phone_assistant.storage import Storage
 
 logger = logging.getLogger(__name__)
@@ -163,6 +166,18 @@ def create_app(storage: Storage | None = None, settings: Settings | None = None,
         if phone is None:
             raise HTTPException(status_code=404, detail="没有找到这款手机。")
         return {"phone": phone}
+
+    @app.get("/api/phones/{phone_id}/variants")
+    def variants(phone_id: str, filters: Annotated[FilterRequest, Query()]):
+        phone = storage.get_phone(phone_id)
+        if phone is None:
+            raise HTTPException(status_code=404, detail="没有找到这款手机。")
+        key = phone.get("family_key") or phone["id"]
+        members = [record for record in storage.list_phones() if (record.get("family_key") or record["id"]) == key]
+        preferences = filters.preferences()
+        metadata = family_metadata(members, preferences)
+        return {"phones": [{**variant_record(record, preferences), **metadata} for record in family_variants(members, preferences)],
+            "family_key": key, "family_name": metadata["family_name"]}
 
     @app.post("/api/compare")
     def comparison(request: CompareRequest):

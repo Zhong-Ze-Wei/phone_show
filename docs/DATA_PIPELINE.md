@@ -58,6 +58,7 @@ report = run_sync(storage=Storage(), force=True, progress=print)
 - `source_url` 指向产品页面；`price_source_url` 和 `specs_source_url` 分别记录参考价和规格的真实来源。
 - `new_from_source`、`new_release_catalog_url`、`source_position` 指明具体新品模块证据；`catalog_fetched_at`、`discovered_at` 使用该目录的真实响应时间，与规格响应时间分别保存。系列版本继承所属新品的目录证据。
 - “即将上市”“价格面议”等状态不覆盖另一已采来源的同 SKU 确定报价；没有同 SKU 证据时价格仍未知。官网“起价”不能充当任意容量 SKU 的确定报价。
+- 系列参数表完成了某个配置，但该配置仍没有确定参考价时，继续访问这个配置已发现的真实产品首页读取独立报价。参数完成不代表报价完成；补价只更新该 SKU 的 `price`、`price_source_url`、`price_fetched_at`，保留原规格与规格采集时间。未知价或失败不伪造报价，失败仍进入同步报告。
 
 交给清洗层的原始字段：`id`、`name`、`brand`、`price`、`image_url`、`source_url`、`fetched_at`、`availability`、`specs`、`origin`。`specs` 是详细参数页中文参数名到原文的平面映射。`fetched_at` 与 `specs_fetched_at` 使用详细参数响应的实际 UTC ISO 时间，`price_fetched_at` 使用报价所在列表、系列或产品首页响应的实际时间。恢复缓存不会把旧响应日期改为今天；旧缓存缺少元数据时，时间保持未知。旧 Excel 导入不伪造抓取时间。
 

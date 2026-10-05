@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta, timezone
 
 import pytest
 
-from phone_assistant.recommendation import Preferences, match_phone, recommend
+from phone_assistant.recommendation import Preferences, family_variants, match_phone, recommend
 
 
 def phone(id="1", **fields):
@@ -173,7 +173,7 @@ def test_discovery_chooses_in_budget_sku_before_expensive_or_unknown_official_ge
     assert discovery['id'] == '256'
     assert discovery['discovery_status'] == 'within_budget'
     assert not any('超过当前' in reason for reason in discovery['discovery_reasons'])
-    assert discovery['discovery_variant_count'] == 3
+    assert discovery['discovery_variant_count'] == 2  # 官网目录记录不算第三个容量。
 
 
 def test_discovery_when_all_over_budget_chooses_lowest_price_meeting_capacity():
@@ -320,6 +320,41 @@ def test_default_storage_is_unrestricted_and_only_explicit_capacity_filters():
     assert [record["id"] for record in recommend(rows, Preferences(min_storage=256))["phones"]] == ["large"]
 
 
+def test_family_cards_expose_deduplicated_real_versions_and_explain_filtered_out_capacities():
+    rows = [phone(str(storage), name=f"苹果iPhone 18 Pro({storage}GB)", brand="苹果", family_key="苹果:18pro",
+        storage_gb=storage, ram_gb=None, price=20499 if storage == 2048 else None, new_from_source=True)
+        for storage in (256, 512, 1024, 2048)]
+    rows += [phone("generic", name="iPhone 18 Pro", origin="official", brand="苹果", family_key="苹果:18pro",
+        storage_gb=None, ram_gb=None, price=None, new_from_source=True)]
+    result = recommend(rows, Preferences(query="iPhone18", min_storage=512))
+    for card in (result["phones"][0], result["catalogue"]["phones"][0], result["discovery"]["phones"][0]):
+        assert card["family_name"] == "iPhone 18 Pro"
+        assert card["variant_count"] == len(card["variant_summary"]) == 4
+        assert {variant["storage_gb"] for variant in card["variant_summary"]} == {256, 512, 1024, 2048}
+        assert all("specs" not in variant for variant in card["variant_summary"])
+        small = next(variant for variant in card["variant_summary"] if variant["id"] == "256")
+        assert small["matches_preferences"] is False and "insufficient_storage" in small["variant_codes"]
+    assert result["catalogue"]["phones"][0]["catalogue_variant_count"] == 4
+
+
+def test_variants_deduplicate_sources_but_keep_distinct_ram_and_choose_matching_quote():
+    rows = [phone("over", name="机型(8GB+256GB)", family_key="same", ram_gb=8, storage_gb=256, price=5000),
+        phone("good", name="机型(8GB+256GB)", family_key="same", ram_gb=8, storage_gb=256, price=2999),
+        phone("other-ram", name="机型(12GB+256GB)", family_key="same", ram_gb=12, storage_gb=256, price=3999),
+        phone("partial", name="机型", family_key="same", ram_gb=None, storage_gb=256, price=None),
+        phone("generic", name="机型", family_key="same", origin="official", storage_gb=None, price=None)]
+    variants = family_variants(rows, Preferences(budget_max=3000))
+    assert [(record["id"], record["ram_gb"], record["storage_gb"]) for record in variants] == [("good", 8, 256), ("other-ram", 12, 256)]
+
+
+def test_family_without_concrete_capacity_keeps_one_generic_and_never_invents_configuration():
+    rows = [phone("old", name="iPhone Example", family_key="same", origin="legacy", storage_gb=None, ram_gb=None, price=4000),
+        phone("official", name="iPhone Example", family_key="same", origin="official", storage_gb=None, ram_gb=None, price=None)]
+    variants = family_variants(rows, Preferences())
+    assert len(variants) == 1 and variants[0]["id"] == "official"
+    assert variants[0]["storage_gb"] is None and variants[0]["price"] is None
+
+
 def test_catalogue_search_is_complete_beyond_result_limit_and_marks_purchase_restrictions():
     rows = [phone(str(index), name=f"iPhone Catalogue {index}", origin="legacy", availability="historical", fetched_at=None)
         for index in range(65)]
@@ -358,7 +393,8 @@ def test_catalogue_family_prefers_eligible_variant_and_current_official_facts_ov
     result = recommend(rows, Preferences(query="iPhone", budget_max=4000))["catalogue"]
     assert result["total"] == 2
     assert [record["id"] for record in result["phones"]] == ["base", "official"]
-    assert all(record["catalogue_variant_count"] == 2 for record in result["phones"])
+    counts = {record["family_key"]: record["catalogue_variant_count"] for record in result["phones"]}
+    assert counts == {"current": 2, "17": 1}  # 同 RAM/容量的历史预测与官网资料只算一种配置。
     rows[:2] = [phone("base", name="iPhone Current(256GB)", family_key="current", storage_gb=256, price=5000),
         phone("large", name="iPhone Current(512GB)", family_key="current", storage_gb=512, price=6000)]
     records = recommend(rows, Preferences(query="iPhone", budget_max=4000))["catalogue"]["phones"]

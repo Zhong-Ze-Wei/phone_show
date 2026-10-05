@@ -4,6 +4,7 @@ from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
+import re
 import sqlite3
 from uuid import uuid4
 
@@ -16,6 +17,8 @@ DEFAULT_STORAGE_PATH = PROJECT_ROOT / "data" / "phones.sqlite3"
 _METADATA = {"id", "specs", "issues", "quality_score", "cleaning_version", "field_sources", "specs_sources", "_corrects_fetched_at"}
 _SOURCE_FIELDS = {"origin", "availability", "fetched_at", "source_url", "price_source_url", "specs_source_url", "price_fetched_at", "specs_fetched_at", "release_source_url", "release_fetched_at", "image_source_url", "image_fetched_at", "storage_source_url", "storage_fetched_at"}
 _RELEASE_FIELDS = ("release_date", "release_year", "release_month", "release_precision")
+_FAMILY_SPEC_FIELDS = ("soc", "os", "os_family", "display_inches", "refresh_hz", "weight_g",
+    "thickness_mm", "nfc", "five_g", "waterproof", "camera_mp")
 
 
 def _now() -> str:
@@ -151,6 +154,67 @@ def _with_official_release(phones: list[dict]) -> list[dict]:
     return result
 
 
+def _family_spec_agrees(phone: dict, field: str, previous: object, official: object) -> bool:
+    if previous == official:
+        return True
+    if phone.get("brand") == "苹果" and field in ("soc", "os"):
+        pattern = r"\bA\d{1,2}(?:\s*Pro)?" if field == "soc" else r"\biOS\s*\d+(?:\.\d+)*"
+        reported = re.search(pattern, str(previous), re.I)
+        published = re.search(pattern, str(official), re.I)
+        if reported and published:
+            return re.sub(r"\s+", "", reported.group()).casefold() == re.sub(r"\s+", "", published.group()).casefold()
+    return False
+
+
+def _with_official_family_specs(phones: list[dict]) -> list[dict]:
+    """同一型号采用有溯源的官网通用参数；SKU价格、容量和功率不共享。"""
+    official: dict[str, dict] = {}
+    for phone in phones:
+        if phone.get("origin") != "official":
+            continue
+        for field in _FAMILY_SPEC_FIELDS:
+            value = phone.get(field)
+            if value is None or value == "":
+                continue
+            source = phone.get("field_sources", {}).get(field) or {
+                "origin": "official", "source_url": phone.get("specs_source_url") or phone.get("source_url"),
+                "fetched_at": phone.get("specs_fetched_at") or phone.get("fetched_at"),
+            }
+            if source.get("origin") != "official" or not source.get("fetched_at"):
+                continue
+            fields = official.setdefault(phone["family_key"], {})
+            previous = fields.get(field)
+            if previous is None or (_rank(source), phone["id"]) > (_rank(previous[1]), previous[2]):
+                fields[field] = (value, source, phone["id"])
+    result = []
+    for phone in phones:
+        record = dict(phone)
+        provenance = dict(phone.get("field_sources", {}))
+        reported = dict(phone.get("reported_family_specs", {}))
+        conflicts = list(phone.get("source_conflicts", []))
+        issues = list(phone.get("issues", []))
+        for field, (value, source, source_id) in official.get(phone["family_key"], {}).items():
+            previous = phone.get(field)
+            if previous is not None and previous != value:
+                reported[field] = previous
+            if previous is not None and not _family_spec_agrees(phone, field, previous, value):
+                conflicts.append({"field": field, "reported": {field: previous}, "official": {field: value},
+                    "reported_source": dict(phone.get("field_sources", {}).get(field, {})),
+                    "source_url": source.get("source_url"), "fetched_at": source.get("fetched_at")})
+                issues.append({"field": field, "code": "family_spec_source_conflict", "severity": "warning",
+                    "message": f"同型号官网与该配置来源的 {field} 参数不一致；规范显示采用官网证据，原参数与来源保留。"})
+            record[field] = value
+            provenance[field] = {**source, "shared_from_id": source_id} if source_id != phone["id"] else dict(source)
+        record["field_sources"] = provenance
+        record["issues"] = issues
+        if reported:
+            record["reported_family_specs"] = reported
+        if conflicts:
+            record["source_conflicts"] = conflicts
+        result.append(record)
+    return result
+
+
 class Storage:
     def __init__(self, path: Path = DEFAULT_STORAGE_PATH):
         self.path = Path(path)
@@ -236,7 +300,7 @@ class Storage:
     def list_phones(self) -> list[dict]:
         with self._connection() as connection:
             phones = [json.loads(row[0]) for row in connection.execute("SELECT record_json FROM phones ORDER BY id")]
-        return _with_official_release(phones)
+        return _with_official_family_specs(_with_official_release(phones))
 
     def get_phone(self, id: str) -> dict | None:
         with self._connection() as connection:
@@ -247,7 +311,7 @@ class Storage:
             official = [json.loads(item[0]) for item in connection.execute(
                 "SELECT record_json FROM phones WHERE json_extract(record_json,'$.origin')='official' "
                 "AND json_extract(record_json,'$.family_key')=? AND id<>?", (phone["family_key"], str(id))) ]
-        return _with_official_release([phone, *official])[0]
+        return _with_official_family_specs(_with_official_release([phone, *official]))[0]
 
     def summary(self) -> dict:
         phones = self.list_phones()

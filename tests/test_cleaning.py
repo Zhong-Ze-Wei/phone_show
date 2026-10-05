@@ -14,6 +14,24 @@ def raw_phone(**changes):
     return raw
 
 
+def test_spaced_zol_main_screen_system_and_primary_camera_labels_keep_original_specs():
+    specs = {"主 屏幕尺寸": "6.3英寸", "主 屏幕刷新率": "120Hz", "出厂系统内核": "iOS 27",
+        "后置摄像头1 后置摄像头": "4800万像素", "前置摄像头1 前置摄像头": "1800万像素"}
+    record = clean_phone(raw_phone(name="苹果iPhone 18 Pro(256GB)", brand="苹果", specs=specs))
+    assert record["display_inches"] == 6.3
+    assert record["refresh_hz"] == 120
+    assert record["os_family"] == "iOS"
+    assert record["camera_mp"] == 48
+    assert record["specs"] == specs
+    assert record["battery_mah"] is None and record["charging_w"] is None
+
+
+def test_apple_adapter_watts_and_playback_hours_are_not_phone_charge_or_battery_capacity():
+    record = clean_phone(raw_phone(name="iPhone 18 Pro", brand="苹果", origin="official", specs={
+        "电源和电池": "视频播放31小时，搭配60W电源适配器约20分钟充至50%", "续航时间": "31小时", "适配器": "60W"}))
+    assert record["charging_w"] is None and record["battery_mah"] is None
+
+
 @pytest.mark.parametrize("price,expected", [("￥ 247.4万 [北京 4GB厂商指导价]", 2474000), ("2.5万元", 25000), ("¥2.5千", 2500)])
 def test_currency_multiplier_is_not_discarded(price, expected):
     assert clean_phone(raw_phone(name="VERTU眼镜蛇", brand="VERTU", price=price))["price"] == expected

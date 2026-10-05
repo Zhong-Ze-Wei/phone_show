@@ -227,6 +227,68 @@ def budget_warning(phone: dict, preferences: Preferences) -> str | None:
     return None
 
 
+def _variant_source_key(phone: dict, preferences: Preferences) -> tuple:
+    current_quote = phone.get("price") is not None and _price_is_current(phone) and is_current(phone) and is_released(phone)
+    days = fetched_days(phone)
+    trusted = phone.get("origin") in ("zol", "official") and days is not None and days <= 30
+    price = phone.get("price")
+    return (not is_purchase_candidate(phone, preferences), not current_quote, not trusted,
+        phone.get("origin") != "official", -phone.get("quality_score", 0), price is None,
+        price if price is not None else 0, phone["id"])
+
+
+def family_variants(members: list[dict], preferences: Preferences) -> list[dict]:
+    """按真实 RAM/容量去重；有具体容量时，未指明容量的目录记录不算配置。"""
+    specific = [phone for phone in members if phone.get("storage_gb") is not None]
+    if not specific:
+        return [min(members, key=lambda phone: _variant_source_key(phone, preferences))]
+    known_ram = {phone["storage_gb"] for phone in specific if phone.get("ram_gb") is not None}
+    groups: dict[tuple, list[dict]] = {}
+    for phone in specific:
+        if phone.get("ram_gb") is None and phone["storage_gb"] in known_ram:
+            continue
+        groups.setdefault((phone.get("ram_gb"), phone["storage_gb"]), []).append(phone)
+    variants = [min(records, key=lambda phone: _variant_source_key(phone, preferences)) for records in groups.values()]
+    return sorted(variants, key=lambda phone: (phone["storage_gb"], phone.get("ram_gb") is None,
+        phone.get("ram_gb") or 0, phone["id"]))
+
+
+def family_name(members: list[dict]) -> str:
+    source = min(members, key=lambda phone: (phone.get("origin") != "official", phone.get("storage_gb") is not None,
+        len(phone["name"]), phone["id"]))
+    name = re.sub(r"\s*\([^)]*(?:\d\s*(?:GB|TB|MB)|全网通)[^)]*\)", "", source["name"], flags=re.I).strip()
+    name = re.sub(r"\s+\d+\s*(?:GB|TB|MB)(?:\s*[+/]\s*\d+\s*(?:GB|TB|MB))?\s*$", "", name, flags=re.I)
+    return re.sub(r"^苹果\s*", "", name) if source.get("brand") == "苹果" else name
+
+
+def variant_record(phone: dict, preferences: Preferences) -> dict:
+    """各配置独立重算匹配与警告，不借用代表版本的资格或价格。"""
+    record = match_phone(phone, preferences)
+    constraints = _constraint_reasons(phone, preferences)
+    matches = _matches_identity(phone, preferences) and (preferences.include_history or is_current(phone)) and not constraints
+    reasons = _catalogue_reasons(phone, preferences)
+    reasons.extend(reason for reason in constraints if reason[0] not in {code for code, _ in reasons})
+    if not _matches_identity(phone, preferences):
+        reasons.append(("identity", "不符合当前品牌、系统或搜索条件，仅供配置比较"))
+    return {**record, "budget_warning": budget_warning(phone, preferences), "matches_preferences": bool(matches),
+        "recommendation_eligible": is_purchase_candidate(phone, preferences),
+        "variant_codes": [code for code, _ in reasons], "variant_reasons": [message for _, message in reasons],
+        "catalogue_codes": [code for code, _ in reasons], "catalogue_reasons": [message for _, message in reasons],
+        "catalogue_status": reasons[0][0] if reasons else "current"}
+
+
+def family_metadata(members: list[dict], preferences: Preferences) -> dict:
+    variants = family_variants(members, preferences)
+    keys = ("id", "name", "ram_gb", "storage_gb", "price", "source_url", "fetched_at", "price_source_url", "price_fetched_at",
+        "budget_warning", "matches_preferences", "recommendation_eligible", "variant_codes", "variant_reasons")
+    summary = []
+    for phone in variants:
+        record = variant_record(phone, preferences)
+        summary.append({**{key: record.get(key) for key in keys}, "availability": phone.get("availability") or "unknown",
+            "field_sources": {key: value for key, value in phone.get("field_sources", {}).items() if key in ("price", "ram_gb", "storage_gb")}})
+    return {"family_name": family_name(members), "variant_count": len(variants), "variant_summary": summary}
+
+
 def _catalogue_reasons(phone: dict, preferences: Preferences) -> list[tuple[str, str]]:
     reasons = []
     days = fetched_days(phone)
@@ -288,14 +350,18 @@ def search_catalogue(phones: list[dict], preferences: Preferences) -> dict:
         record = match_phone(phone, preferences)
         families.setdefault(phone.get("family_key") or phone["id"], []).append(record)
     result = []
+    all_members: dict[str, list[dict]] = {}
+    for phone in phones:
+        all_members.setdefault(phone.get("family_key") or phone["id"], []).append(phone)
     for members in families.values():
         representative = min(members, key=lambda phone: _catalogue_variant_key(phone, preferences))
         reasons = _catalogue_reasons(representative, preferences)
         representative.update(catalogue_reasons=[message for _, message in reasons],
             catalogue_codes=[code for code, _ in reasons],
             catalogue_status=reasons[0][0] if reasons else "current",
-            catalogue_variant_count=len(members),
             recommendation_eligible=is_purchase_candidate(representative, preferences))
+        metadata = family_metadata(all_members[representative.get("family_key") or representative["id"]], preferences)
+        representative.update(metadata, catalogue_variant_count=metadata["variant_count"])
         result.append(representative)
     result.sort(key=lambda phone: _catalogue_sort_key(phone, preferences))
     return {"phones": [card_record(phone) for phone in result], "total": len(result), "returned": len(result)}
@@ -337,9 +403,13 @@ def discover_new_releases(phones: list[dict], preferences: Preferences) -> dict:
     for phone in discoveries:
         families.setdefault(phone.get("family_key") or phone["id"], []).append(phone)
     result = []
+    all_members: dict[str, list[dict]] = {}
+    for phone in phones:
+        all_members.setdefault(phone.get("family_key") or phone["id"], []).append(phone)
     for members in families.values():
         representative = min(members, key=lambda phone: _discovery_variant_key(phone, preferences))
-        representative["discovery_variant_count"] = len(members)
+        metadata = family_metadata(all_members[representative.get("family_key") or representative["id"]], preferences)
+        representative.update(metadata, discovery_variant_count=metadata["variant_count"])
         result.append(representative)
     result.sort(key=lambda phone: (not is_released(phone), *(-part for part in release_sort_key(phone)), 0 if phone.get("origin") == "official" else 1, phone["name"]))
     return {"phones": [card_record(phone) for phone in result], "total": len(result), "returned": len(result)}
@@ -466,6 +536,11 @@ def recommend(phones: list[dict], preferences: Preferences, limit: int = 60) -> 
     for phone in candidates:
         families.setdefault(phone.get("family_key") or phone["id"], phone)
     results = list(families.values())
+    all_members: dict[str, list[dict]] = {}
+    for phone in phones:
+        all_members.setdefault(phone.get("family_key") or phone["id"], []).append(phone)
+    for phone in results[:limit]:
+        phone.update(family_metadata(all_members[phone.get("family_key") or phone["id"]], preferences))
     matching_families = set(families)
     counts = {key: len(value - matching_families) for key, value in excluded.items()}
     return {"phones": [card_record(phone) for phone in results[:limit]], "total": len(results), "coverage": {"records": len(phones), "current_records": current, "unknown_price": len((excluded["unknown_price"] | excluded["stale_price"]) - matching_families), "excluded": counts, "budget_suggestion": min((price for family, price in over_budget_prices if family not in matching_families), default=None), "matching_variants": len(candidates), "returned": min(limit, len(results))}, "catalogue": search_catalogue(phones, preferences), "discovery": discover_new_releases(phones, preferences), "updated_at": max((phone.get("fetched_at") or "" for phone in phones), default="") or None, "preferences": asdict(preferences), "ranking_policy": ranking_policy(preferences)}
